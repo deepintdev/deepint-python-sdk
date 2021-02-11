@@ -5,7 +5,7 @@
 </p>
 
 ##### DeepIntelligence SDK
-deepint is a python package to work with <a href="https://deepint.net/" target="_blank" >DeepIntelligence<a> in a more easy and intuitive way, allowing the programmer to devolp in a fast way the data, analisys and visualization flows.
+deepint is a python package to work with <a href="https://deepint.net/" target="_blank" >DeepIntelligence<a> in a more easy and intuitive way, allowing the programmer to develop in a fast way the data, analisys and visualization flows.
 The package consists in a wrapper arround <a href="https://app.deepint.net/api/v1/documentation/" target="_blank" >DeepIntelligence API<a>, with some extra facilities.
 
 ##### Deep Intelligence 
@@ -26,7 +26,7 @@ Visit the DeepIntelligence on it's <a href="https://deepint.net/" target="_blank
 - **generate doc**: install documentation dependencies with `python3 -m pip install -e deepint-sdk[docs]`, then go to the docs foleder and run `make html`
 
 ## Documentation
-Visit the documentation page at <a href="#" target="_blanck">pipy</a> or <a href="#" target="_blanck">readthedocs</a> 
+Visit the documentation page at <a href="#" target="_blanck">pipy</a> or <a href="https://deepint-python-sdk.readthedocs.io/en/latest/" target="_blanck">readthedocs</a> 
 
 ## Setup credentials
 Credentials can be set up with one of the following methods (the token is loaded in the priority defined in the order of the following items):
