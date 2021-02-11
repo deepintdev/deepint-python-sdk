@@ -28,7 +28,7 @@ setup(
     download_url='https://github.com/deepintdev/deepint-python-SDK/archive/master.zip',
     license='Copyright',
     author='Deep Intelligence',
-    author_email='"Deep Intelligence" <devs@deepint.net>',
+    author_email='devs@deepint.net',
     description='deepint is a python package to work with Deep Intelligence in a more easy and intuitive way.',
     long_description=readme(),
     long_description_content_type='text/markdown',
