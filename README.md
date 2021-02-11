@@ -5,7 +5,7 @@
 </p>
 
 ##### DeepIntelligence SDK
-deepint is a python package to work with <a href="https://deepint.net/" target="_blank" >DeepIntelligence<a> in a more easy and intuitive way, allowing the programmer to devolp in a fast way the data, analisys and visualization flows.
+deepint is a python package to work with <a href="https://deepint.net/" target="_blank" >DeepIntelligence<a> in a more easy and intuitive way, allowing the programmer to develop in a fast way the data, analisys and visualization flows.
 The package consists in a wrapper arround <a href="https://app.deepint.net/api/v1/documentation/" target="_blank" >DeepIntelligence API<a>, with some extra facilities.
 
 ##### Deep Intelligence 
