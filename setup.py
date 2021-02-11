@@ -22,20 +22,31 @@ def requirements(filename):
 
 setup(
     name='deepint',
-    version='0.1',
+    version='1.0',
     packages=find_packages(),
     url='https://deepint.net/',
-    download_url='AAAAAAAAAAAAAAAA',
-    license='AAAAAAAAAAAAAA',
-    author='AAAAAAAAAAAA',
-    author_email='AAAAAAAAAA',
-    description='AAAAAAAAAAAA',
+    download_url='https://github.com/deepintdev/deepint-python-SDK/archive/master.zip',
+    license='Copyright',
+    author='Deep Intelligence',
+    author_email='devs@deepint.net',
+    description='deepint is a python package to work with Deep Intelligence in a more easy and intuitive way.',
     long_description=readme(),
     long_description_content_type='text/markdown',
     install_requires=requirements(filename='requirements.txt'),
     include_package_data=True,
     classifiers=[
-        "AAAAAAAAAAAAAA"
+        "Development Status :: 4 - Beta",
+        "Programming Language :: Python :: 3 :: Only",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Intended Audience :: Developers",
+        "Topic :: Scientific/Engineering :: Artificial Intelligence",
+        "Topic :: Database :: Database Engines/Servers",
+        "Topic :: Scientific/Engineering :: Visualization",
+        "Topic :: Scientific/Engineering :: Information Analysis",
+        "Topic :: Software Development :: Libraries"
     ],
     python_requires='>=3',
     extras_require={
@@ -43,11 +54,12 @@ setup(
         "docs": requirements(filename='docs/requirements.txt')
     },
     keywords=', '.join([
-        'AAAAAAAAAAAAA'
+        'deepint', 'Deep Intelligence', 'datawarehouse', 'analysis',
+        'big data', 'IoT', 'Industry 4.0', 'Healthcare', 'smart cities'
     ]),
     project_urls={
-        'Bug Reports': 'AAAAAAAAAA',
-        'Source': 'AAAAAAAAAAA',
-        'Documentation': 'AAAAAAAAAAAAAAAAAAAA'
+        'Bug Reports': 'https://github.com/deepintdev/deepint-python-SDK/issues',
+        'Source': 'https://github.com/deepintdev/deepint-python-SDK',
+        'Documentation': 'https://deepint-python-sdk.readthedocs.io/en/latest/'
     },
 )
