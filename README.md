@@ -19,7 +19,7 @@ Our extensive team of data analysis experts will be at your complete disposal fo
 
 Visit the DeepIntelligence on it's <a href="https://deepint.net/" target="_blank" >website<a>.
 
-## Installation (not ready to use because it needs the package to be published)
+## Installation
 
 - **install**: `python3 -m pip install deepint`
 - **run tests**: install test dependencies with `python3 -m pip install deepint-sdk[tests]`, then go to the tests foleder and run `pytest -vv test.py`
