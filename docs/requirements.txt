@@ -1,4 +1,4 @@
-deepint==1.0.1
+deepint
 pandas==1.1.4
 numpy==1.18.3
 asyncio==3.4.3
