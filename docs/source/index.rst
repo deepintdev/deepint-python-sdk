@@ -4,7 +4,7 @@ Deep Intelligence SDK for Python documentation
 .. image:: https://deepint.net/sites/default/files/logo2.svg
     :align: center
 
-deepint is a python package to work with `Deep Intelligence <https://deepint.net/>`_ in a more easy and intuitive way, allowing the programmer to devolp in a fast way the data, analisys and visualization flows.
+deepint is a python package to work with `Deep Intelligence <https://deepint.net/>`_ in a more easy and intuitive way, allowing the programmer to develop in a fast way the data, analisys and visualization flows.
 The package consists in a wrapper arround `Deep Intelligence API <https://app.deepint.net/api/v1/documentation/>`_, with some extra facilities:
 
 .. toctree::
@@ -18,7 +18,7 @@ The package consists in a wrapper arround `Deep Intelligence API <https://app.de
 
 Deep Intelligence 
 -----------------
-Deep Intelligence has been designed to help you select optimal AI & Machine Learning algorithms for the analysis of your business’ datasets. This platform can be customized to read any type of data from webs, files, databases, sensors…, it can also stream data in real time if needed, it’s all very simple!
+Deep Intelligence has been designed to help you select optimal AI & Machine Learning algorithms for the analysis of your business’ datasets. This platform can be customized to read any type of data from webs, files, databases and sensors  among others. It can also stream data in real time if needed, it’s all very simple!
 
 A highly attractive, user-friendly and intuitive visualization environment will guide you in the creation and configuration of algorithms that will analyze your data optimally. The platform makes it possible to create dashboards for better visualization experience, moreover, they can be easily integrated into any other online application. Improve your business decision-making without any expert IT knowledge!
 
