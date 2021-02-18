@@ -1,11 +1,11 @@
-DeepIntelligence SDK for Python documentation
+Deep Intelligence SDK for Python documentation
 =============================================
 
 .. image:: https://deepint.net/sites/default/files/logo2.svg
     :align: center
 
-deepint is a python package to work with `DeepIntelligence <https://deepint.net/>`_ in a more easy and intuitive way, allowing the programmer to devolp in a fast way the data, analisys and visualization flows.
-The package consists in a wrapper arround `DeepIntelligence API <https://app.deepint.net/api/v1/documentation/>`_, with some extra facilities:
+deepint is a python package to work with `Deep Intelligence <https://deepint.net/>`_ in a more easy and intuitive way, allowing the programmer to devolp in a fast way the data, analisys and visualization flows.
+The package consists in a wrapper arround `Deep Intelligence API <https://app.deepint.net/api/v1/documentation/>`_, with some extra facilities:
 
 .. toctree::
    :maxdepth: 1
@@ -26,7 +26,7 @@ Deep Intelligence is a platform for Fintech, IoT, Smart Cities, Smart Grids, Bio
 
 Our extensive team of data analysis experts will be at your complete disposal for any information, guidance and support you may need.
 
-Visit the DeepIntelligence on it's `website <https://deepint.net/>`_.
+Visit the Deep Intelligence on it's `website <https://deepint.net/>`_.
 
 
 Installation 
@@ -39,12 +39,12 @@ You can install the package in multiple ways
 
 * from GitHub via PyPI::
 
-    $ python -m pip install https://github.com/deepint/deepint-python-sdk/archive/master.zip
+    $ python -m pip install https://github.com/deepintdev/deepint-python-SDK/archive/master.zip
 
 
 FAQ 
 ---
-* **Q**: How do I authenticate? **A**: Visit the `authentication <_info/authentication.html>`_ section to learn how token can be providen.
+* **Q**: How do I authenticate or obtain a token? **A**: Visit the `authentication <_info/authentication.html>`_ section to learn how token can be obtained and providen.
 * **Q**: How do I create and update a source? or How can I retrieve data from a Source or train a model? **A**: Visit the `usage <_info/usage.html>`_ section to learn the basics.
 
 
@@ -53,8 +53,9 @@ Indices and tables
 
 * :ref:`genindex`
 * :ref:`modindex`
+* :ref:`search`
 
 
 Disclaimer 
 ------------
-DeepIntelligence SDK for Python © Copyright 2021 by Deep Intelligence. All rights reserved.
+Deep Intelligence SDK for Python © Copyright 2021 by Deep Intelligence. All rights reserved.
