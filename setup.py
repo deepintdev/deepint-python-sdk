@@ -60,6 +60,6 @@ setup(
     project_urls={
         'Bug Reports': 'https://github.com/deepintdev/deepint-python-SDK/issues',
         'Source': 'https://github.com/deepintdev/deepint-python-SDK',
-        'Documentation': 'https://deepint-python-sdk.readthedocs.io/en/latest/'
+        'Documentation': 'https://deepint-python-sdk.readthedocs.io/en/latest/index.html'
     },
 )
