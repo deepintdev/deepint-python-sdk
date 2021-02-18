@@ -26,7 +26,7 @@ Visit the DeepIntelligence on it's <a href="https://deepint.net/" target="_blank
 - **generate doc**: install documentation dependencies with `python3 -m pip install -e deepint-sdk[docs]`, then go to the docs foleder and run `make html`
 
 ## Documentation
-Visit the documentation page at <a href="https://pypi.org/project/deepint/1.0/" target="_blanck">Pypi</a> or <a href="https://deepint-python-sdk.readthedocs.io/en/latest/" target="_blanck">readthedocs</a> 
+Visit the documentation page at <a href="https://pypi.org/project/deepint/" target="_blanck">Pypi</a> or <a href="https://deepint-python-sdk.readthedocs.io/en/latest/index.html" target="_blanck">readthedocs</a> 
 
 ## Setup credentials
 Credentials can be set up with one of the following methods (the token is loaded in the priority defined in the order of the following items):
