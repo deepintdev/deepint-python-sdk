@@ -22,7 +22,7 @@ Visit the DeepIntelligence on it's <a href="https://deepint.net/" target="_blank
 ## Installation
 
 - **install**: `python3 -m pip install deepint`
-- **run tests**: install test dependencies with `python3 -m pip install deepint-sdk[tests]`, then go to the tests foleder and run `pytest -vv test.py`
+- **run tests**: install test dependencies with `python3 -m pip install deepint-sdk[tests]`, then define the enviroment variables `DEEPINT_TOKEN`, `DEEPINT_ORGANIZATION` and `TEST_CSV` (the last one is a CSV file to test the features of the SKD). Finally, go to the tests foleder and run `pytest -vv test.py`
 - **generate doc**: install documentation dependencies with `python3 -m pip install -e deepint-sdk[docs]`, then go to the docs foleder and run `make html`
 
 ## Documentation
@@ -30,13 +30,15 @@ Visit the documentation page at <a href="https://pypi.org/project/deepint/" targ
 
 ## Setup credentials
 Credentials can be set up with one of the following methods (the token is loaded in the priority defined in the order of the following items):
- - instance credentials object with the token optional parameter `c = Credentials(token='a token')`
- - create a environment variable called `DEEPINT_TOKEN` with the token value.
- - create a .ini file in your home directory called `.deepint` coninting in the `DEFAULT` section a key called `token` like in following example
+ - instance credentials object with the token and organization optional parameters `c = Credentials(token='a token', organization='a organization')`
+ - create a environment variable called `DEEPINT_TOKEN` with the token value and another one called `DEEPINT_ORGANIZATION` with the organization.
+ - create a .ini file in your home directory called `.deepint` coninting in the `DEFAULT` section the keys `token` and `organization` like in following example
      ```
      [DEFAULT]
      token=a token
+     organization=a organization id
      ```
+To learn more about credentials setup, please visit the <a href="https://deepint-python-sdk.readthedocs.io/en/latest/_info/authentication.html" target="_blank" >official documentation<a>.
 
 ## Usage of main components
 
