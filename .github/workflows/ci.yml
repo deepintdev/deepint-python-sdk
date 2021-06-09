@@ -52,4 +52,5 @@ jobs:
         TEST_CSV: ${{ secrets.TEST_CSV }}
         DEEPINT_TOKEN: ${{ secrets.DEEPINT_TOKEN }}
         DEEPINT_ORGANIZATION: ${{ secrets.DEEPINT_ORGANIZATION }}
-      run: python -m pytest -vv tests/test.py
+      working-directory: tests
+      run: python -m pytest test.py

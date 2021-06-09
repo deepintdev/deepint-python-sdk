@@ -4,6 +4,7 @@
 # See LICENSE for details.
 
 import os
+import uuid
 import pandas as pd
 from time import sleep
 
@@ -23,6 +24,8 @@ TEST_ALERT_NAME = 'automated_python_sdk_test_alert'
 TEST_ALERT_DESC = 'Automated python SDK test alert'
 TEST_ALERT_SUBSCRIPTIONS = ['franpintosantos@usal.es']
 
+def serve_name(object_type):
+    return f'{object_type}_{uuid.uuid4()}'
 
 def test_credentials_load():
     # test token given in enviroment
@@ -67,7 +70,7 @@ def test_workspace_CRUD():
     org.clean()
 
     # create
-    original_ws = org.workspaces.create(name=TEST_WS_NAME, description=TEST_WS_DESC)
+    original_ws = org.workspaces.create(name=serve_name(TEST_WS_NAME), description=TEST_WS_DESC)
 
     # retrieve (single)
     retrieved_ws = Workspace.build(credentials=org.credentials, workspace_id=original_ws.info.workspace_id)
@@ -96,16 +99,16 @@ def test_source_CRUD():
     # load organization and create workspace
     org = Organization.build()
     org.clean()
-    ws = org.workspaces.create(name=TEST_WS_NAME, description=TEST_WS_DESC)
+    ws = org.workspaces.create(name=serve_name(TEST_WS_NAME), description=TEST_WS_DESC)
 
     # create empty source
-    empty_source = ws.sources.create(name=TEST_SRC_NAME, description=TEST_SRC_DESC, features=[])
+    empty_source = ws.sources.create(name=serve_name(TEST_SRC_NAME), description=TEST_SRC_DESC, features=[])
     assert (not empty_source.features.fetch_all())
     empty_source.delete()
 
     # create source
     data = pd.read_csv(TEST_CSV)
-    source = ws.sources.create_and_initialize(name=TEST_SRC_NAME, description=TEST_SRC_DESC, data=data)
+    source = ws.sources.create_and_initialize(name=serve_name(TEST_SRC_NAME), description=TEST_SRC_DESC, data=data)
 
     # retrieve
     retrieved_src = Source.build(source_id=source.info.source_id, workspace_id=ws.info.workspace_id,
@@ -172,9 +175,9 @@ def test_task_CRUD():
     # load organization and create workspace and source
     org = Organization.build()
     org.clean()
-    ws = org.workspaces.create(name=TEST_WS_NAME, description=TEST_WS_DESC)
+    ws = org.workspaces.create(name=serve_name(TEST_WS_NAME), description=TEST_WS_DESC)
     data = pd.read_csv(TEST_CSV)
-    source = ws.sources.create_and_initialize(name=TEST_SRC_NAME, description=TEST_SRC_DESC, data=data)
+    source = ws.sources.create_and_initialize(name=serve_name(TEST_SRC_NAME), description=TEST_SRC_DESC, data=data)
 
     # retrieve
     tasks = ws.tasks.fetch_all(force_reload=True)
@@ -202,11 +205,11 @@ def test_alert_CRUD():
     # load organization and create workspace and source
     org = Organization.build()
     org.clean()
-    ws = org.workspaces.create(name=TEST_WS_NAME, description=TEST_WS_DESC)
-    source = ws.sources.create(name=TEST_SRC_NAME, description=TEST_SRC_DESC, features=[])
+    ws = org.workspaces.create(name=serve_name(TEST_WS_NAME), description=TEST_WS_DESC)
+    source = ws.sources.create(name=serve_name(TEST_SRC_NAME), description=TEST_SRC_DESC, features=[])
 
     # create
-    alert = ws.alerts.create(name=TEST_ALERT_NAME, description=TEST_ALERT_DESC, subscriptions=TEST_ALERT_SUBSCRIPTIONS,
+    alert = ws.alerts.create(name=serve_name(TEST_ALERT_NAME), description=TEST_ALERT_DESC, subscriptions=TEST_ALERT_SUBSCRIPTIONS,
                              color='#FF00FF', alert_type=AlertType.update, source_id=source.info.source_id)
 
     # retrieve (single)
@@ -242,9 +245,9 @@ def test_model_CRUD():
     # load organization, create workspace and source (with initialization)
     org = Organization.build()
     org.clean()
-    ws = org.workspaces.create(name=TEST_WS_NAME, description=TEST_WS_DESC)
+    ws = org.workspaces.create(name=serve_name(TEST_WS_NAME), description=TEST_WS_DESC)
     data = pd.read_csv(TEST_CSV)
-    source = ws.sources.create_and_initialize(name=TEST_SRC_NAME, description=TEST_SRC_DESC, data=data)
+    source = ws.sources.create_and_initialize(name=serve_name(TEST_SRC_NAME), description=TEST_SRC_DESC, data=data)
 
     # create model    
     target_feature = None
@@ -252,7 +255,7 @@ def test_model_CRUD():
         if f.feature_type == FeatureType.numeric:
             target_feature = f
             break
-    model = ws.models.create(name=TEST_MODEL_NAME, description=TEST_MODEL_DESC, model_type=ModelType.regressor,
+    model = ws.models.create(name=serve_name(TEST_MODEL_NAME), description=TEST_MODEL_DESC, model_type=ModelType.regressor,
                              method=ModelMethod.tree, source=source, target_feature_name=target_feature.name)
 
     # retrieve
@@ -313,21 +316,21 @@ def test_url_parser():
     org = Organization.build()
     org.clean()
 
-    workspace = org.workspaces.create(name=TEST_WS_NAME, description=TEST_WS_DESC)
+    workspace = org.workspaces.create(name=serve_name(TEST_WS_NAME), description=TEST_WS_DESC)
 
     data = pd.read_csv(TEST_CSV)
-    source = workspace.sources.create_and_initialize(name=TEST_SRC_NAME, description=TEST_SRC_DESC, data=data)
+    source = workspace.sources.create_and_initialize(name=serve_name(TEST_SRC_NAME), description=TEST_SRC_DESC, data=data)
 
     target_feature = None
     for f in source.features.fetch_all():
         if f.feature_type == FeatureType.numeric:
             target_feature = f
             break
-    model = workspace.models.create(name=TEST_MODEL_NAME, description=TEST_MODEL_DESC, model_type=ModelType.regressor,
+    model = workspace.models.create(name=serve_name(TEST_MODEL_NAME), description=TEST_MODEL_DESC, model_type=ModelType.regressor,
                                     method=ModelMethod.tree,
                                     source=source, target_feature_name=target_feature.name)
 
-    alert = workspace.alerts.create(name=TEST_ALERT_NAME, description=TEST_ALERT_DESC,
+    alert = workspace.alerts.create(name=serve_name(TEST_ALERT_NAME), description=TEST_ALERT_DESC,
                                     subscriptions=TEST_ALERT_SUBSCRIPTIONS,
                                     color='#FF00FF', alert_type=AlertType.update, source_id=source.info.source_id)
 
