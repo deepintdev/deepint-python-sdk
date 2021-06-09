@@ -1,5 +1,5 @@
 Deep Intelligence SDK for Python documentation
-=============================================
+==============================================
 
 .. image:: https://deepint.net/sites/default/files/logo2.svg
     :align: center

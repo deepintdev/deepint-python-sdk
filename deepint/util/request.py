@@ -33,7 +33,7 @@ def retry_on(codes=('LIMIT', 'TIMEOUT_ERROR', 'BAD_GATEWAY'), times=3, time_betw
 def handle_request(credentials: Credentials = None, method: str = None, url: str = None, parameters: dict = None,
                    files: tuple = None):
     # build request parameters
-    header = {'x-auth-token': credentials.token}
+    header = {'x-auth-token': credentials.token, 'x-deepint-organization': credentials.organization}
 
     if parameters is not None:
         parameters = {k: parameters[k] for k in parameters if parameters[k] is not None}
