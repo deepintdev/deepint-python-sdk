@@ -5,7 +5,7 @@ on:
     branches: master
 
 jobs:
-  release-pipy:
+  release:
     runs-on: ubuntu-latest
     steps:
     - name: download last changes
