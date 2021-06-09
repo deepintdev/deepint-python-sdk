@@ -10,9 +10,14 @@ from time import sleep
 
 from deepint import *
 
-TEST_CSV = os.environ.get('TEST_CSV')
-DEEPINT_TOKEN = os.environ.get('DEEPINT_TOKEN')
-DEEPINT_ORGANIZATION = os.environ.get('DEEPINT_ORGANIZATION')
+#TEST_CSV = os.environ.get('TEST_CSV')
+#DEEPINT_TOKEN = os.environ.get('DEEPINT_TOKEN')
+#DEEPINT_ORGANIZATION = os.environ.get('DEEPINT_ORGANIZATION')
+TEST_CSV = 'https://gist.githubusercontent.com/michhar/2dfd2de0d4f8727f873422c5d959fff5/raw/fa71405126017e6a37bea592440b4bee94bf7b9e/titanic.csv'
+
+DEEPINT_ORGANIZATION = '0000017729441860-c00e07b1-9decdc46-d0b91467'
+DEEPINT_TOKEN = 'p1Hhedoz9fi2mUfso6MrQQDxH6ROXOSI9nUuOpgp1EGQRfdlhadwQxY7TB179RH5Ot357K01MFR77e4m7au6mQ'
+
 
 TEST_WS_NAME = 'automated_python_sdk_test_ws'
 TEST_WS_DESC = 'Automated python SDK test ws'
@@ -55,32 +60,32 @@ def test_credentials_load():
     os.environ["DEEPINT_ORGANIZATION"] = DEEPINT_ORGANIZATION
 
 
-def test_organization_CRUD():
-    # create
-    org = Organization.build()
-    org.clean()
-
-    assert (org.account is not None)
-    assert (not list(org.workspaces.fetch_all()))
+#def test_organization_CRUD():
+#    # create
+#    org = Organization.build()
+#    org.clean()
+#
+#    assert (org.account is not None)
+#    assert (not list(org.workspaces.fetch_all()))
 
 
 def test_workspace_CRUD():
     # load organization
     org = Organization.build()
-    org.clean()
 
     # create
-    original_ws = org.workspaces.create(name=serve_name(TEST_WS_NAME), description=TEST_WS_DESC)
+    ws_name = serve_name(TEST_WS_NAME)
+    original_ws = org.workspaces.create(name=ws_name, description=TEST_WS_DESC)
 
     # retrieve (single)
     retrieved_ws = Workspace.build(credentials=org.credentials, workspace_id=original_ws.info.workspace_id)
     assert (
-                retrieved_ws.info.workspace_id == original_ws.info.workspace_id and retrieved_ws.info.name == TEST_WS_NAME and retrieved_ws.info.description == TEST_WS_DESC)
+                retrieved_ws.info.workspace_id == original_ws.info.workspace_id and retrieved_ws.info.name == ws_name and retrieved_ws.info.description == TEST_WS_DESC)
 
     # update
-    original_ws.update(name=f'{TEST_WS_NAME}2', description=f'{TEST_WS_DESC}2')
+    original_ws.update(name=f'{ws_name}2', description=f'{TEST_WS_DESC}2')
     retrieved_ws.load()
-    assert (retrieved_ws.info.name == f'{TEST_WS_NAME}2' and retrieved_ws.info.description == f'{TEST_WS_DESC}2')
+    assert (retrieved_ws.info.name == f'{ws_name}2' and retrieved_ws.info.description == f'{TEST_WS_DESC}2')
 
     # retrieve (in organization)
     selected_ws = org.workspaces.fetch(workspace_id=original_ws.info.workspace_id)
@@ -98,28 +103,29 @@ def test_workspace_CRUD():
 def test_source_CRUD():
     # load organization and create workspace
     org = Organization.build()
-    org.clean()
     ws = org.workspaces.create(name=serve_name(TEST_WS_NAME), description=TEST_WS_DESC)
 
     # create empty source
-    empty_source = ws.sources.create(name=serve_name(TEST_SRC_NAME), description=TEST_SRC_DESC, features=[])
+    src_name = serve_name(TEST_SRC_NAME)
+    empty_source = ws.sources.create(name=src_name, description=TEST_SRC_DESC, features=[])
     assert (not empty_source.features.fetch_all())
     empty_source.delete()
 
     # create source
     data = pd.read_csv(TEST_CSV)
-    source = ws.sources.create_and_initialize(name=serve_name(TEST_SRC_NAME), description=TEST_SRC_DESC, data=data)
+    src_name = serve_name(TEST_SRC_NAME)
+    source = ws.sources.create_and_initialize(name=src_name, description=TEST_SRC_DESC, data=data)
 
     # retrieve
     retrieved_src = Source.build(source_id=source.info.source_id, workspace_id=ws.info.workspace_id,
                                  credentials=org.credentials)
     assert (
-                retrieved_src.info.source_id == source.info.source_id and retrieved_src.info.name == TEST_SRC_NAME and retrieved_src.info.description == TEST_SRC_DESC)
+                retrieved_src.info.source_id == source.info.source_id and retrieved_src.info.name == src_name and retrieved_src.info.description == TEST_SRC_DESC)
 
     # update source info
-    source.update(name=f'{TEST_SRC_NAME}2', description=f'{TEST_SRC_DESC}2')
+    source.update(name=f'{src_name}2', description=f'{TEST_SRC_DESC}2')
     retrieved_src.load()
-    assert (retrieved_src.info.name == f'{TEST_SRC_NAME}2' and retrieved_src.info.description == f'{TEST_SRC_DESC}2')
+    assert (retrieved_src.info.name == f'{src_name}2' and retrieved_src.info.description == f'{TEST_SRC_DESC}2')
 
     # update features
     feature = source.features.fetch(index=0, force_reload=True)
@@ -156,14 +162,16 @@ def test_source_CRUD():
         assert True
 
     # create if not exists
-    source = ws.sources.create_if_not_exists('test')
-    source1 = ws.sources.create_if_not_exists('test')
+    src_name = serve_name(TEST_SRC_NAME)
+    source = ws.sources.create_if_not_exists(src_name)
+    source1 = ws.sources.create_if_not_exists(src_name)
     assert (source == source1)
     source.delete()
 
     # create if not exists (with initialization)
-    source = ws.sources.create_and_initialize_if_not_exists('test', data)
-    source1 = ws.sources.create_and_initialize_if_not_exists('test', data)
+    src_name = serve_name(TEST_SRC_NAME)
+    source = ws.sources.create_and_initialize_if_not_exists(src_name, data)
+    source1 = ws.sources.create_and_initialize_if_not_exists(src_name, data)
     assert (source == source1)
     source.delete()
 
@@ -174,10 +182,11 @@ def test_source_CRUD():
 def test_task_CRUD():
     # load organization and create workspace and source
     org = Organization.build()
-    org.clean()
-    ws = org.workspaces.create(name=serve_name(TEST_WS_NAME), description=TEST_WS_DESC)
+    ws_name = serve_name(TEST_WS_NAME)
+    ws = org.workspaces.create(name=ws_name, description=TEST_WS_DESC)
     data = pd.read_csv(TEST_CSV)
-    source = ws.sources.create_and_initialize(name=serve_name(TEST_SRC_NAME), description=TEST_SRC_DESC, data=data)
+    src_name = serve_name(TEST_SRC_NAME)
+    source = ws.sources.create_and_initialize(name=src_name, description=TEST_SRC_DESC, data=data)
 
     # retrieve
     tasks = ws.tasks.fetch_all(force_reload=True)
@@ -204,25 +213,27 @@ def test_task_CRUD():
 def test_alert_CRUD():
     # load organization and create workspace and source
     org = Organization.build()
-    org.clean()
-    ws = org.workspaces.create(name=serve_name(TEST_WS_NAME), description=TEST_WS_DESC)
-    source = ws.sources.create(name=serve_name(TEST_SRC_NAME), description=TEST_SRC_DESC, features=[])
+    ws_name = serve_name(TEST_WS_NAME)
+    ws = org.workspaces.create(name=ws_name, description=TEST_WS_DESC)
+    src_name = serve_name(TEST_SRC_NAME)
+    source = ws.sources.create(name=src_name, description=TEST_SRC_DESC, features=[])
 
     # create
-    alert = ws.alerts.create(name=serve_name(TEST_ALERT_NAME), description=TEST_ALERT_DESC, subscriptions=TEST_ALERT_SUBSCRIPTIONS,
+    alert_name = serve_name(TEST_ALERT_NAME)
+    alert = ws.alerts.create(name=alert_name, description=TEST_ALERT_DESC, subscriptions=TEST_ALERT_SUBSCRIPTIONS,
                              color='#FF00FF', alert_type=AlertType.update, source_id=source.info.source_id)
 
     # retrieve (single)
     retrieved_alert = Alert.build(credentials=org.credentials, workspace_id=ws.info.workspace_id,
                                   alert_id=alert.info.alert_id)
     assert (
-                retrieved_alert.info.alert_id == alert.info.alert_id and retrieved_alert.info.name == TEST_ALERT_NAME and retrieved_alert.info.description == TEST_ALERT_DESC)
+                retrieved_alert.info.alert_id == alert.info.alert_id and retrieved_alert.info.name == alert_name and retrieved_alert.info.description == TEST_ALERT_DESC)
 
     # update
-    retrieved_alert.update(name=f'{TEST_ALERT_NAME}2', description=f'{TEST_ALERT_DESC}2')
+    retrieved_alert.update(name=f'{alert_name}2', description=f'{TEST_ALERT_DESC}2')
     retrieved_alert.load()
     assert (
-                retrieved_alert.info.name == f'{TEST_ALERT_NAME}2' and retrieved_alert.info.description == f'{TEST_ALERT_DESC}2')
+                retrieved_alert.info.name == f'{alert_name}2' and retrieved_alert.info.description == f'{TEST_ALERT_DESC}2')
 
     # retrieve (in organization)
     selected_alert = ws.alerts.fetch(alert_id=retrieved_alert.info.alert_id, force_reload=True)
@@ -244,10 +255,11 @@ def test_alert_CRUD():
 def test_model_CRUD():
     # load organization, create workspace and source (with initialization)
     org = Organization.build()
-    org.clean()
-    ws = org.workspaces.create(name=serve_name(TEST_WS_NAME), description=TEST_WS_DESC)
+    ws_name = serve_name(TEST_WS_NAME)
+    ws = org.workspaces.create(name=ws_name, description=TEST_WS_DESC)
     data = pd.read_csv(TEST_CSV)
-    source = ws.sources.create_and_initialize(name=serve_name(TEST_SRC_NAME), description=TEST_SRC_DESC, data=data)
+    src_name = serve_name(TEST_SRC_NAME)
+    source = ws.sources.create_and_initialize(name=src_name, description=TEST_SRC_DESC, data=data)
 
     # create model    
     target_feature = None
@@ -255,20 +267,21 @@ def test_model_CRUD():
         if f.feature_type == FeatureType.numeric:
             target_feature = f
             break
-    model = ws.models.create(name=serve_name(TEST_MODEL_NAME), description=TEST_MODEL_DESC, model_type=ModelType.regressor,
+    model_name = serve_name(TEST_MODEL_NAME)
+    model = ws.models.create(name=model_name, description=TEST_MODEL_DESC, model_type=ModelType.regressor,
                              method=ModelMethod.tree, source=source, target_feature_name=target_feature.name)
 
     # retrieve
     retrieved_model = Model.build(model_id=model.info.model_id, workspace_id=ws.info.workspace_id,
                                   credentials=org.credentials)
     assert (
-                retrieved_model.info.model_id == model.info.model_id and retrieved_model.info.name == TEST_MODEL_NAME and retrieved_model.info.description == TEST_MODEL_DESC)
+                retrieved_model.info.model_id == model.info.model_id and retrieved_model.info.name == model_name and retrieved_model.info.description == TEST_MODEL_DESC)
 
     # update source info
-    model.update(name=f'{TEST_MODEL_NAME}2', description=f'{TEST_MODEL_DESC}2')
+    model.update(name=f'{model_name}2', description=f'{TEST_MODEL_DESC}2')
     retrieved_model.load()
     assert (
-                retrieved_model.info.name == f'{TEST_MODEL_NAME}2' and retrieved_model.info.description == f'{TEST_MODEL_DESC}2')
+                retrieved_model.info.name == f'{model_name}2' and retrieved_model.info.description == f'{TEST_MODEL_DESC}2')
 
     # get model evaluation
     evaluation = model.predictions.evaluation()
@@ -314,7 +327,6 @@ def test_model_CRUD():
 def test_url_parser():
     # load organization and create workspace, source and alert
     org = Organization.build()
-    org.clean()
 
     workspace = org.workspaces.create(name=serve_name(TEST_WS_NAME), description=TEST_WS_DESC)
 
@@ -386,7 +398,6 @@ def test_url_parser():
 
 if __name__ == '__main__':
     test_credentials_load()
-    test_organization_CRUD()
     test_workspace_CRUD()
     test_source_CRUD()
     test_task_CRUD()
