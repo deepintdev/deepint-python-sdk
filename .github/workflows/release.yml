@@ -16,8 +16,6 @@ jobs:
         python-version: 3.9
     - name: install package dependencies
       run: pip install .
-    - name: install package doc dependencies
-      run: pip install .[docs]
   release-pipy:
     runs-on: ubuntu-latest
     needs: install
