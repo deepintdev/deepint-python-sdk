@@ -531,30 +531,35 @@ class WorkspaceSources:
         # if not exists, create
         return self.create(name, '', [])
 
-    def create_and_initialize_if_not_exists(self, name: str, data: pd.DataFrame, **kwargs) -> Source:
-        """Creates a source and initializes it, if it doesn't exist any source with same name. 
+    def create_else_update(self, name:str, data: pd.DataFrame, **kwargs) -> Source:
+        """Creates a source and initializes it, if it doesn't exist any source with same name. Else updates the source's instances. 
         
         The source is created with the :obj:`deepint.core.worksapce.WorkspaceSources.create_and_initialize`, so it's 
-        reccomended to read the documentation of that method to learn more about the possible artguments of creation.
-        Before creation, the source is loaded and stored locally in the internal list of sources in the current instance.
+        reccomended to read the documentation of that method to learn more about the possible arguments of creation  (that can be 
+        providen in the **kwargs). Before creation, the source is loaded and stored locally in the internal list of sources in the 
+        current instance. Also it's remmarkable that the source instance's are updated with the :obj:`deepint.core.source.SourceInstances.update`
+        method, so it's reccomended to read the documentation of that method to learn more about the possible arguments of update (that 
+        can be providen in the **kwargs).
 
         Args:
-            name: new source's name.
-            data: data to in initialize the source. The source's feature names and data types are extracted from the given DataFrame.
+            name: source's name.
+            data: data to in initialize the source. The source's feature names and data types are extracted from the given DataFrame. It the source also created, is updated with the given data.
 
         Returns:
-            the created and initialized (if wait_for_initialization is set to True) source.
+            the affected source, updated if it was existing and created and initialized (if wait_for_initialization is providen and set to True) in other case.
         """
 
         # retrieve selected source
         selected_source = self.fetch(name=name, force_reload=True)
 
-        # if exists return
+        # if exists update else create
         if selected_source is not None:
-            return selected_source
+            selected_source.instances.update(data=data,**kwargs)
+        else:
+            selected_source = self.create_and_initialize(name, '', data, **kwargs)
 
-        # if not exists, create
-        return self.create_and_initialize(name, '', data, **kwargs)
+        return selected_source
+
 
     def fetch(self, source_id: str = None, name: str = None, force_reload: bool = False) -> Optional[Source]:
         """Search for a source in the workspace.
@@ -1099,6 +1104,12 @@ class Workspace:
         self.sources = WorkspaceSources(self, sources)
         self.dashboards = WorkspaceDashboards(self, dashboards)
         self.visualizations = WorkspaceVisualizations(self, visualizations)
+
+    def __eq__(self, other):
+        if not isinstance(other, Workspace):
+            return False
+        else:
+            return self.info == other.info
 
     @classmethod
     def build(cls, workspace_id: str, credentials: Credentials = None) -> 'Workspace':

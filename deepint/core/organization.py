@@ -67,6 +67,30 @@ class OrganizationWorkspaces:
 
         return new_workspace
 
+    def create_if_not_exists(self, name: str) -> Workspace:
+        """Creates a workspace in current organization if not exists, else retrieves the given worksapce.
+
+        The source is created with the :obj:`deepint.core.organization.OrganizationWorkspaces.create`, so it's reccomended to 
+        read the documentation of that method to learn more about the possible artguments of creation.
+        Before creation, the workspace is loaded and stored locally in the internal list of workspaces in the current instance.
+
+        Args:
+            name: new workspace's name.
+        
+        Returns:
+            the created workspace if not exists, else the retrieved workspace
+        """
+
+        # retrieve selected workspace
+        selected_workspace = self.fetch(name=name, force_reload=True)
+
+        # if exists return
+        if selected_workspace is not None:
+            return selected_workspace
+
+        # if not exists, create
+        return self.create(name, '')
+
     def fetch(self, workspace_id: str = None, name: str = None, force_reload: bool = False) -> Optional[Workspace]:
         """Search for a workspace in the organization.
 
