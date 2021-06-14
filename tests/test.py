@@ -5,6 +5,7 @@
 
 import os
 import uuid
+import platform
 import pandas as pd
 from time import sleep
 
@@ -15,15 +16,16 @@ DEEPINT_TOKEN = os.environ.get('DEEPINT_TOKEN')
 DEEPINT_ORGANIZATION = os.environ.get('DEEPINT_ORGANIZATION')
 
 # objects names
-TEST_WS_NAME = 'automated_python_sdk_test_ws'
-TEST_WS_DESC = 'Automated python SDK test ws'
-TEST_SRC_NAME = 'automated_python_sdk_test_src'
-TEST_SRC_DESC = 'Automated python SDK test src'
-TEST_MODEL_NAME = 'automated_python_sdk_test_model'
-TEST_MODEL_DESC = 'Automated python SDK test model'
-TEST_ALERT_NAME = 'automated_python_sdk_test_alert'
-TEST_ALERT_DESC = 'Automated python SDK test alert'
-TEST_ALERT_SUBSCRIPTIONS = ['example@example.com']
+PYTHON_VERSION_NAME = platform.python_version()
+TEST_WS_NAME = f'{PYTHON_VERSION_NAME}_automated_python_sdk_test_ws'
+TEST_WS_DESC = f'{PYTHON_VERSION_NAME}_Automated python SDK test ws'
+TEST_SRC_NAME = f'{PYTHON_VERSION_NAME}_automated_python_sdk_test_src'
+TEST_SRC_DESC = f'{PYTHON_VERSION_NAME}_Automated python SDK test src'
+TEST_MODEL_NAME = f'{PYTHON_VERSION_NAME}_automated_python_sdk_test_model'
+TEST_MODEL_DESC = f'{PYTHON_VERSION_NAME}_Automated python SDK test model'
+TEST_ALERT_NAME = f'{PYTHON_VERSION_NAME}_automated_python_sdk_test_alert'
+TEST_ALERT_DESC = f'{PYTHON_VERSION_NAME}_Automated python SDK test alert'
+TEST_ALERT_SUBSCRIPTIONS = [f'{PYTHON_VERSION_NAME}_example@example.com']
 
 
 def serve_name(object_type):
