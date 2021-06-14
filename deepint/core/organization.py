@@ -125,9 +125,16 @@ class OrganizationWorkspaces:
                     return ws
 
         if self._generator is not None:
-            for ws in self._generator:
-                if ws.info.workspace_id == workspace_id or ws.info.name == name:
-                    return ws
+            try:
+                for ws in self._generator:
+                    if ws.info.workspace_id == workspace_id or ws.info.name == name:
+                        return ws
+            except:
+                # if there is an exception, a workspace does not exist anymore and needs to be reloaded
+                self.load()
+                for ws in self._generator:
+                    if ws.info.workspace_id == workspace_id or ws.info.name == name:
+                        return ws
 
         return None
 
