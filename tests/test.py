@@ -5,32 +5,32 @@
 
 import os
 import uuid
+import platform
 import pandas as pd
 from time import sleep
 
 from deepint import *
 
-#TEST_CSV = os.environ.get('TEST_CSV')
-#DEEPINT_TOKEN = os.environ.get('DEEPINT_TOKEN')
-#DEEPINT_ORGANIZATION = os.environ.get('DEEPINT_ORGANIZATION')
-TEST_CSV = 'https://gist.githubusercontent.com/michhar/2dfd2de0d4f8727f873422c5d959fff5/raw/fa71405126017e6a37bea592440b4bee94bf7b9e/titanic.csv'
+TEST_CSV = os.environ.get('TEST_CSV')
+DEEPINT_TOKEN = os.environ.get('DEEPINT_TOKEN')
+DEEPINT_ORGANIZATION = os.environ.get('DEEPINT_ORGANIZATION')
 
-DEEPINT_ORGANIZATION = '0000017729441860-c00e07b1-9decdc46-d0b91467'
-DEEPINT_TOKEN = 'p1Hhedoz9fi2mUfso6MrQQDxH6ROXOSI9nUuOpgp1EGQRfdlhadwQxY7TB179RH5Ot357K01MFR77e4m7au6mQ'
+# objects names
+PYTHON_VERSION_NAME = platform.python_version()
+TEST_WS_NAME = f'{PYTHON_VERSION_NAME}_automated_python_sdk_test_ws'
+TEST_WS_DESC = f'{PYTHON_VERSION_NAME}_Automated python SDK test ws'
+TEST_SRC_NAME = f'{PYTHON_VERSION_NAME}_automated_python_sdk_test_src'
+TEST_SRC_DESC = f'{PYTHON_VERSION_NAME}_Automated python SDK test src'
+TEST_MODEL_NAME = f'{PYTHON_VERSION_NAME}_automated_python_sdk_test_model'
+TEST_MODEL_DESC = f'{PYTHON_VERSION_NAME}_Automated python SDK test model'
+TEST_ALERT_NAME = f'{PYTHON_VERSION_NAME}_automated_python_sdk_test_alert'
+TEST_ALERT_DESC = f'{PYTHON_VERSION_NAME}_Automated python SDK test alert'
+TEST_ALERT_SUBSCRIPTIONS = [f'{PYTHON_VERSION_NAME}_example@example.com']
 
-
-TEST_WS_NAME = 'automated_python_sdk_test_ws'
-TEST_WS_DESC = 'Automated python SDK test ws'
-TEST_SRC_NAME = 'automated_python_sdk_test_src'
-TEST_SRC_DESC = 'Automated python SDK test src'
-TEST_MODEL_NAME = 'automated_python_sdk_test_model'
-TEST_MODEL_DESC = 'Automated python SDK test model'
-TEST_ALERT_NAME = 'automated_python_sdk_test_alert'
-TEST_ALERT_DESC = 'Automated python SDK test alert'
-TEST_ALERT_SUBSCRIPTIONS = ['franpintosantos@usal.es']
 
 def serve_name(object_type):
     return f'{object_type}_{uuid.uuid4()}'
+
 
 def test_credentials_load():
     # test token given in enviroment
@@ -98,6 +98,13 @@ def test_workspace_CRUD():
         assert False
     except DeepintHTTPError:
         assert True
+
+    # create if not exists
+    ws_name = serve_name(TEST_WS_NAME)
+    ws = org.workspaces.create_if_not_exists(ws_name)
+    ws1 = org.workspaces.create_if_not_exists(ws_name)
+    assert (ws == ws1)
+    ws.delete()
 
 
 def test_source_CRUD():
@@ -168,10 +175,10 @@ def test_source_CRUD():
     assert (source == source1)
     source.delete()
 
-    # create if not exists (with initialization)
+    # create if not exists (with initialization and update)
     src_name = serve_name(TEST_SRC_NAME)
-    source = ws.sources.create_and_initialize_if_not_exists(src_name, data)
-    source1 = ws.sources.create_and_initialize_if_not_exists(src_name, data)
+    source = ws.sources.create_else_update(src_name, data)
+    source1 = ws.sources.create_else_update(src_name, data)
     assert (source == source1)
     source.delete()
 
@@ -198,13 +205,16 @@ def test_task_CRUD():
     assert (task.info.status == TaskStatus.success)
 
     # delete task
-    data = pd.read_csv(TEST_CSV)
-    task = source.instances.update(data=data)
-    task.delete()
-    # wait a little until task is stopped
-    sleep(5)
-    task.load()
-    assert (task.info.status == TaskStatus.failed or task.info.status == TaskStatus.success)
+    try:
+        data = pd.read_csv(TEST_CSV)
+        task = source.instances.update(data=data)
+        task.delete()
+        # wait a little until task is stopped
+        sleep(5)
+        task.load()
+        assert (task.info.status == TaskStatus.failed or task.info.status == TaskStatus.success)
+    except:
+        pass
 
     # delete workspace
     ws.delete()

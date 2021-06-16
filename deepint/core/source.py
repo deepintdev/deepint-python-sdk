@@ -344,7 +344,8 @@ class SourceInstances:
                replace: bool = False,
                pk: str = None,
                date_format_feature: int = None,
-               send_with_index: bool = False) -> Task:
+               send_with_index: bool = False,
+               **kwargs) -> Task:
         """Updates a source's instances.
 
         Args:
