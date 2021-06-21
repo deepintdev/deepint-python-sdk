@@ -200,8 +200,8 @@ if source == source1:
 source.delete()
 
 # create (with initialization) source if not exists, else only retrieve
-source = ws.sources.create_and_initialize_if_not_exists('test', data)
-source1 = ws.sources.create_and_initialize_if_not_exists('test', data)
+source = ws.sources.create_else_update(('test', data)
+source1 = ws.sources.create_else_update('test', data)
 if source == source1:
     print('source is equal to source1 because the method works!')
 source.delete()
