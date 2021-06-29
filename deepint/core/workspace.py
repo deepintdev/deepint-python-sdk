@@ -584,7 +584,9 @@ class WorkspaceSources:
             selected_source.instances.update(data=data,**kwargs)
 
         else:
-            selected_source = self.create_and_initialize(name, '', data, **kwargs)
+            if 'description' not in kwargs:
+                kwargs['description'] = ''
+            selected_source = self.create_and_initialize(name, data, **kwargs)
 
         return selected_source
 
