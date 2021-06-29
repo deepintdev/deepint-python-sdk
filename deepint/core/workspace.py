@@ -10,7 +10,7 @@ from typing import Any, List, Dict, Optional, Generator
 from ..auth import Credentials
 from ..error import DeepintBaseError
 from ..util import handle_request, handle_paginated_request, parse_date, parse_url
-from .source import Source, SourceFeature
+from .source import Source, SourceFeature, FeatureType
 from .model import Model, ModelMethod, ModelType
 from .task import Task, TaskStatus
 from .alert import Alert, AlertType
@@ -531,7 +531,7 @@ class WorkspaceSources:
         # if not exists, create
         return self.create(name, '', [])
 
-    def create_else_update(self, name:str, data: pd.DataFrame, **kwargs) -> Source:
+    def create_else_update(self, name:str, data: pd.DataFrame, delete_instances_on_feature_update: bool = True, **kwargs) -> Source:
         """Creates a source and initializes it, if it doesn't exist any source with same name. Else updates the source's instances. 
         
         The source is created with the :obj:`deepint.core.worksapce.WorkspaceSources.create_and_initialize`, so it's 
@@ -541,9 +541,12 @@ class WorkspaceSources:
         method, so it's reccomended to read the documentation of that method to learn more about the possible arguments of update (that 
         can be providen in the **kwargs).
 
+        Note: if features change, then the source instances are deleted
+
         Args:
             name: source's name.
             data: data to in initialize the source. The source's feature names and data types are extracted from the given DataFrame. It the source also created, is updated with the given data.
+            delete_instances_on_feature_update: if set to False the instances are not deleted on features change.
 
         Returns:
             the affected source, updated if it was existing and created and initialized (if wait_for_initialization is providen and set to True) in other case.
@@ -554,7 +557,32 @@ class WorkspaceSources:
 
         # if exists update else create
         if selected_source is not None:
+            
+            # calculate features
+            new_features = SourceFeature.from_dataframe(df=data)
+
+            # update features if changed
+            for f in new_features:
+                current_feature = selected_source.features.fetch(name=f.name)
+                if (current_feature is None) or (f != current_feature):
+
+                    # delete previous instances
+                    if delete_instances_on_feature_update:
+                        selected_source.instances.clean()
+
+                    # update features
+                    t = selected_source.features.update(features=new_features)
+                    t.resolve()
+
+                    # update source
+                    selected_source.load()
+                    selected_source.features.load()
+
+                    break
+
+            # update source instances
             selected_source.instances.update(data=data,**kwargs)
+
         else:
             selected_source = self.create_and_initialize(name, '', data, **kwargs)
 

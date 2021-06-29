@@ -122,14 +122,11 @@ class SourceFeature:
         if not isinstance(other, SourceFeature):
             return False
         else:
-            d1, d2, = self.to_dict(), other.to_dict()
-            for k in d1:
-                if d1[k] != d2[k]:
-                    return False
-            return True
+            return self.name == other.name and (self.feature_type == other.feature_type or self.feature_type == FeatureType.unknown or other.feature_type == FeatureType.unknown)
 
     def __str__(self):
         return '<SourceFeature ' + ' '.join([f'{k}={v}' for k, v in self.to_dict().items()]) + '>'
+
 
     @staticmethod
     def from_dict(obj: Any) -> 'SourceFeature':
@@ -449,6 +446,16 @@ class SourceFeatures:
         self._features = features
         if self._features is not None:
             self._features.sort(key=lambda x: x.index)
+
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, SourceFeatures):
+            return False
+        else:
+            for f in self._features:
+                other_f = other.fetch(name=f.name) 
+                if (other_f is not None) and f != other_f:
+                    return False
+            return True
 
     def load(self):
         """Loads a source's features.

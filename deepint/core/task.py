@@ -3,6 +3,7 @@
 # Copyright 2021 Deep Intelligence
 # See LICENSE for details.
 
+import time
 import enum
 import asyncio
 from datetime import datetime
@@ -228,19 +229,8 @@ class Task:
         url = f'https://app.deepint.net/api/v1/workspace/{self.workspace_id}/task/{self.info.task_id}'
         response = handle_request(method='DELETE', url=url, credentials=self.credentials)
 
-    async def _resolve(self, poll_interval: int = 3):
-        """Waits for the task to be finished asynchronously.
-        
-        Args:
-            poll_interval: Number of seconds between task status checks (it consists in a query to API). If not provided the default value is 3.
-        """
 
-        self.load()
-        while self.info.status == TaskStatus.pending or self.info.status == TaskStatus.running:
-            await asyncio.sleep(poll_interval)
-            self.load()
-
-    def resolve(self, raise_on_error=True, **kwargs):
+    def resolve(self, raise_on_error=True, poll_interval: int = 3):
         """Waits for the task to be finished
         
         Args:
@@ -249,9 +239,11 @@ class Task:
             poll_interval: Number of seconds between task status checks (it consists in a query to API). If not provided the default value is 3.
         """
 
-        r = [self._resolve(**kwargs)]
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(asyncio.wait(r))
+        self.load()
+        while self.info.status == TaskStatus.pending or self.info.status == TaskStatus.running:
+            time.sleep(poll_interval)
+            self.load()
+
         if raise_on_error and self.is_errored():
             raise DeepintTaskError(task=self.info.task_id, name=self.info.name, code=self.info.error_code,
                                    message=self.info.error_description)
