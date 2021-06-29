@@ -11,9 +11,12 @@ from time import sleep
 
 from deepint import *
 
+
 TEST_CSV = os.environ.get('TEST_CSV')
+TEST_CSV2 = os.environ.get('TEST_CSV2')
 DEEPINT_TOKEN = os.environ.get('DEEPINT_TOKEN')
 DEEPINT_ORGANIZATION = os.environ.get('DEEPINT_ORGANIZATION')
+
 
 # objects names
 PYTHON_VERSION_NAME = platform.python_version()
@@ -176,10 +179,13 @@ def test_source_CRUD():
     source.delete()
 
     # create if not exists (with initialization and update)
+    data2 = pd.read_csv(TEST_CSV2)
     src_name = serve_name(TEST_SRC_NAME)
     source = ws.sources.create_else_update(src_name, data)
-    source1 = ws.sources.create_else_update(src_name, data)
+    source1 = ws.sources.create_else_update(src_name, data2, replace=True)
     assert (source == source1)
+    assert (source.features == source1.features)
+
     source.delete()
 
     # delete workspace
