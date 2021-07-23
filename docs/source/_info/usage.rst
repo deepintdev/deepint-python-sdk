@@ -11,7 +11,7 @@ Load organization and access information and components
 
     from deepint import Organization
 
-    org = Organization.build()
+    org = Organization.build(organization_id="3a874c05-26d1-4b8c-894d-caf90e40078b")
 
     print(org.account)
     print(org.workspaces.fetch_all())
@@ -44,9 +44,9 @@ Create workspace, source, alert and model
 
 .. code-block:: python3
 
-    from deepint import Organization, AlerType, ModelType, ModelMethod
+    from deepint import Organization, AlertType, ModelType, ModelMethod
 
-    org = Organization.build()
+    org = Organization.build(organization_id="3a874c05-26d1-4b8c-894d-caf90e40078b")
     workspace = org.workspaces.create(name='example', description='example')
     source = workspace.sources.create(name='example', description='example', features=[])
     target_feature = source.features.fetch_all()[0]
@@ -62,19 +62,18 @@ Load elements with builder
 
     from deepint import Organization, Workspace, Model, Alert, Task, Alert, Source
 
-    org = Organization.build()
-
     t_id = 'f88cd9ac-8bc7-49db-ab49-b53512b6adc9'
     a_id = 'ce92588d-700a-42d6-92f9-76863b648359'
     m_id = 'a1dec81d-b46d-44a0-8c7d-3d9db6b45449'
     ws_id = '03f695f2-8b6a-4b7d-9f66-e2479f8025a4'
     src_id = 'e7da542c-f38c-42bf-bc1d-e89eac179047'
+    org_id = 'organization_id="3a874c05-26d1-4b8c-894d-caf90e40078b'
 
-    ws = Workspace.build(credentials=org.credentials, workspace_id=ws_id)
-    task = Task.build(task_id=a_id, workspace_id=ws_id, credentials=org.credentials)
-    model = Model.build(model_id=a_id, workspace_id=ws_id, credentials=org.credentials)
-    alert = Alert.build(alert_id=a_id, workspace_id=ws_id, credentials=org.credentials)
-    src = Source.build(source_id=src_id, workspace_id=ws_id, credentials=org.credentials)
+    ws = Workspace.build(credentials=org.credentials, workspace_id=ws_id, organization_id=org_id)
+    task = Task.build(task_id=a_id, workspace_id=ws_id, organization_id=org_id, credentials=org.credentials)
+    model = Model.build(model_id=a_id, workspace_id=ws_id, organization_id=org_id, credentials=org.credentials)
+    alert = Alert.build(alert_id=a_id, workspace_id=ws_id, organization_id=org_id, credentials=org.credentials)
+    src = Source.build(source_id=src_id, workspace_id=ws_id, organization_id=org_id, credentials=org.credentials)
 
 
 Load elements with URL
@@ -84,24 +83,24 @@ Load elements with URL
 
     from deepint import Organization, Workspace, Model, Alert, Task, Alert, Source
 
-    org = Organization.build()
 
     t_id = 'f88cd9ac-8bc7-49db-ab49-b53512b6adc9'
     a_id = 'ce92588d-700a-42d6-92f9-76863b648359'
     m_id = 'a1dec81d-b46d-44a0-8c7d-3d9db6b45449'
     ws_id = '03f695f2-8b6a-4b7d-9f66-e2479f8025a4'
     src_id = 'e7da542c-f38c-42bf-bc1d-e89eac179047'
+    org_id = 'organization_id="3a874c05-26d1-4b8c-894d-caf90e40078b'
 
-    ws = Workspace.from_url(url=f'https://app.deepint.net/workspace?ws={ws_id}', credentials=org.credentials)
-    ws = Workspace.from_url(url=f'https://app.deepint.net/api/v1/workspace/{ws_id}', credentials=org.credentials)
-    t = Task.from_url(url=f'https://app.deepint.net/api/v1/workspace/{ws_id}/task/{t_id}', credentials=org.credentials)
-    t = Task.from_url(url=f'https://app.deepint.net/workspace?ws={ws_id}&s=task&i={t_id}', credentials=org.credentials)
-    m = Model.from_url(url=f'https://app.deepint.net/workspace?ws={ws_id}&s=model&i={m_id}', credentials=org.credentials)
-    m = Model.from_url(url=f'https://app.deepint.net/api/v1/workspace/{ws_id}/models/{m_id}', credentials=org.credentials)
-    a = Alert.from_url(url=f'https://app.deepint.net/workspace?ws={ws_id}&s=alert&i={a_id}', credentials=org.credentials)
-    a = Alert.from_url(url=f'https://app.deepint.net/api/v1/workspace/{ws_id}/alerts/{a_id}', credentials=org.credentials)
-    src = Source.from_url(url=f'https://app.deepint.net/workspace?ws={ws_id}&s=source&i={src_id}', credentials=org.credentials)
-    src = Source.from_url(url=f'https://app.deepint.net/api/v1/workspace/{ws_id}/source/{src_id}', credentials=org.credentials)
+    ws = Workspace.from_url(url=f'https://app.deepint.net/o/{org_id}/workspace?ws={ws_id}', credentials=org.credentials)
+    ws = Workspace.from_url(url=f'https://app.deepint.net/api/v1/workspace/{ws_id}', credentials=org.credentials, organization_id=org_id)
+    t = Task.from_url(url=f'https://app.deepint.net/api/v1/workspace/{ws_id}/task/{t_id}', credentials=org.credentials, organization_id=org_id)
+    t = Task.from_url(url=f'https://app.deepint.net/o/{org_id}/workspace?ws={ws_id}&s=task&i={t_id}', credentials=org.credentials)
+    m = Model.from_url(url=f'https://app.deepint.net/o/{org_id}/workspace?ws={ws_id}&s=model&i={m_id}', credentials=org.credentials)
+    m = Model.from_url(url=f'https://app.deepint.net/api/v1/workspace/{ws_id}/models/{m_id}', credentials=org.credentials, organization_id=org_id)
+    a = Alert.from_url(url=f'https://app.deepint.net/o/{org_id}/workspace?ws={ws_id}&s=alert&i={a_id}', credentials=org.credentials)
+    a = Alert.from_url(url=f'https://app.deepint.net/api/v1/workspace/{ws_id}/alerts/{a_id}', credentials=org.credentials, organization_id=org_id)
+    src = Source.from_url(url=f'https://app.deepint.net/o/{org_id}/workspace?ws={ws_id}&s=source&i={src_id}', credentials=org.credentials)
+    src = Source.from_url(url=f'https://app.deepint.net/api/v1/workspace/{ws_id}/source/{src_id}', credentials=org.credentials, organization_id=org_id)
 
 
 Create source from dataframe
@@ -112,7 +111,7 @@ Create source from dataframe
     import pandas as pd
     from deepint import Organization, Source
 
-    org = Organization.build()
+    org = Organization.build(organization_id="3a874c05-26d1-4b8c-894d-caf90e40078b")
     ws = org.workspaces.fetch(name='example')
 
     # create empty source
@@ -133,7 +132,7 @@ Use sources
 
     ws_id = '03f695f2-8b6a-4b7d-9f66-e2479f8025a4'
 
-    org = Organization.build()
+    org = Organization.build(organization_id="3a874c05-26d1-4b8c-894d-caf90e40078b")
     ws = org.workspaces.fetch(workspace_id='example')
 
     # create source from dataframe (creates columns with the index, name nad type)
@@ -174,8 +173,8 @@ Use sources
     source.delete()
 
     # create (with initialization) source if not exists, else only retrieve
-    source = ws.sources.create_and_initialize_if_not_exists('test', data)
-    source1 = ws.sources.create_and_initialize_if_not_exists('test', data)
+    source = ws.sources.create_else_update(('test', data)
+    source1 = ws.sources.create_else_update('test', data)
     if source == source1:
         print('source is equal to source1 because the method works!')
     source.delete()
@@ -192,7 +191,7 @@ Use models
     import pandas as pd
     from deepint import Organization, Model, Task
 
-    org = Organization.build()
+    org = Organization.build(organization_id="3a874c05-26d1-4b8c-894d-caf90e40078b")
     ws = org.workspaces.fetch(name='example')
     data = pd.read_csv('example.csv')
     source = ws.sources.create_and_initialize(name='example', description='example', data=data)
@@ -233,7 +232,7 @@ Use tasks
     from deepint import Organization, Model, Task, TaskStatus
     from deepint DeepintTaskError
 
-    org = Organization.build()
+    org = Organization.build(organization_id="3a874c05-26d1-4b8c-894d-caf90e40078b")
     ws = org.workspaces.fetch(name='example')
 
     # retrieve tasks by status
@@ -256,4 +255,3 @@ Use tasks
     t.load()
     if t.is_errored():
       print('an errror occurred')
-

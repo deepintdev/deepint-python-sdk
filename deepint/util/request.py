@@ -31,9 +31,13 @@ def retry_on(codes=('LIMIT', 'TIMEOUT_ERROR', 'BAD_GATEWAY'), times=3, time_betw
 
 @retry_on(codes=('LIMIT', 'TIMEOUT_ERROR', 'BAD_GATEWAY'), times=3)
 def handle_request(credentials: Credentials = None, method: str = None, url: str = None, parameters: dict = None,
-                   files: tuple = None):
+                   headers: dict = None, files: tuple = None):
     # build request parameters
-    header = {'x-auth-token': credentials.token, 'x-deepint-organization': credentials.organization}
+    auth_header = {'x-auth-token': credentials.token}
+    if headers is None:
+        header = headers
+    else:
+        header = {**auth_header, **headers}
 
     if parameters is not None:
         parameters = {k: parameters[k] for k in parameters if parameters[k] is not None}
@@ -64,9 +68,9 @@ def handle_request(credentials: Credentials = None, method: str = None, url: str
 
 
 def handle_paginated_request(credentials: Credentials = None, method: str = None, url: str = None,
-                             parameters: dict = None, files: tuple = None):
+                             headers: dict = None, parameters: dict = None, files: tuple = None):
     # first response
-    response = handle_request(credentials=credentials, method=method, url=url, parameters=parameters, files=files)
+    response = handle_request(credentials=credentials, method=method, url=url, parameters=parameters, headers=headers, files=files)
 
     # update state and return items
     yield from response['items']
@@ -80,7 +84,7 @@ def handle_paginated_request(credentials: Credentials = None, method: str = None
     while next_page < total_pages:
         # update parameters and perform request
         parameters['page'] = next_page
-        response = handle_request(credentials=credentials, method=method, url=url, parameters=parameters, files=files)
+        response = handle_request(credentials=credentials, method=method, url=url, headers=headers, parameters=parameters, files=files)
 
         # update state and return items
         yield from response['items']
