@@ -12,8 +12,8 @@ from time import sleep
 from deepint import *
 
 
-TEST_CSV = os.environ.get('TEST_CSV')
-TEST_CSV2 = os.environ.get('TEST_CSV2')
+TEST_CSV = 'https://people.sc.fsu.edu/~jburkardt/data/csv/grades.csv'
+TEST_CSV2 = 'https://people.sc.fsu.edu/~jburkardt/data/csv/grades.csv'
 DEEPINT_TOKEN = os.environ.get('DEEPINT_TOKEN')
 DEEPINT_ORGANIZATION = os.environ.get('DEEPINT_ORGANIZATION')
 
