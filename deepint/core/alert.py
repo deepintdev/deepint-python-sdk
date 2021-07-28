@@ -210,7 +210,7 @@ class Alert:
         return alert
 
     @classmethod
-    def from_url(cls, url: str, credentials: Credentials = None) -> 'Alert':
+    def from_url(cls, url: str, organization_id: str = None, credentials: Credentials = None) -> 'Alert':
         """Builds a alert from it's API or web associated URL.
 
         The url must contain the workspace's id and the alert's id as in the following examples:

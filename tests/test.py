@@ -17,6 +17,7 @@ TEST_CSV2 = os.environ.get('TEST_CSV2')
 DEEPINT_TOKEN = os.environ.get('DEEPINT_TOKEN')
 DEEPINT_ORGANIZATION = os.environ.get('DEEPINT_ORGANIZATION')
 
+
 # objects names
 PYTHON_VERSION_NAME = platform.python_version()
 TEST_WS_NAME = f'{PYTHON_VERSION_NAME}_automated_python_sdk_test_ws'
@@ -413,5 +414,9 @@ def test_url_parser():
 if __name__ == '__main__':
     test_credentials_load()
     #test_organization_CRUD()
+    test_workspace_CRUD()
+    test_source_CRUD()
+    test_task_CRUD()
+    test_alert_CRUD()
     test_model_CRUD()
     test_url_parser()
