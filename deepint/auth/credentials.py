@@ -17,15 +17,13 @@ class Credentials:
 
     Attributes:
         token: Token to access the deepint.net API that must be used to authenticate each transaction.
-        organization: Id of the organization to access the deepint.net API that must be used to authenticate each transaction.
     """
 
-    def __init__(self, token: str, organization: str) -> None:
+    def __init__(self, token: str) -> None:
         self.token = token
-        self.organization = organization
 
     @classmethod
-    def build(cls, token: str = None, organization: str = None) -> 'Credentials':
+    def build(cls, token: str = None) -> 'Credentials':
         """Instances a :obj:`deepint_sdk.auth.Credentials` with one of the provided methods.
         
         The priority of credentials loading is the following:
@@ -38,37 +36,35 @@ class Credentials:
         Example:
             [DEFAULT]
             token=a token
-            organiztion= a organization
 
         Args:
             token : Token to access the deepint.net API that must be used to authenticate each transaction.
-            organization: Id of the organization to access the deepint.net API that must be used to authenticate each transaction.
 
         Returns:
             An instanced credentials object.
         """
 
-        if token is None or organization is None:
+        if token is None:
             for f in [cls._load_env, cls._load_home_file]:
-                token, organization = f()
-                if token is not None and organization is not None:
+                token = f()
+                if token is not None:
                     break
-        if token is None or organization is None:
+        if token is None:
             raise DeepintCredentialsError()
 
-        cred = Credentials(token=token, organization=organization)
+        cred = Credentials(token=token)
 
         return cred
 
     @classmethod
     def _load_env(cls) -> tuple:
-        """Loads the credentials values from the environment variables ```DEEPINT_TOKEN``` and ```DEEPINT_ORGANIZATION```
+        """Loads the credentials values from the environment variables ```DEEPINT_TOKEN```
         
         Returns:
-            The value of the ```DEEPINT_TOKEN``` and ```DEEPINT_ORGANIZATION``` environment variables. If the any of the variables is not declared in environment, the retrieved value will be None, otherwise will be the value stored in that variable.
+            The value of the ```DEEPINT_TOKEN``` environment variable. If the any of the variables is not declared in environment, the retrieved value will be None, otherwise will be the value stored in that variable.
         """
 
-        return os.environ.get('DEEPINT_TOKEN'), os.environ.get('DEEPINT_ORGANIZATION') 
+        return os.environ.get('DEEPINT_TOKEN')
 
     @classmethod
     def _load_home_file(cls) -> tuple:
@@ -79,10 +75,9 @@ class Credentials:
         Example:
             [DEFAULT]
             token=a token
-            organiztion= a organization
 
         Returns:
-            The value of the token and organization stored in the file.
+            The value of the token stored in the file.
         """
 
         home_folder = os.path.expanduser("~")
@@ -96,22 +91,18 @@ class Credentials:
 
             try:
                 token = config['DEFAULT']['token']
-                organization = config['DEFAULT']['organization']
             except:
                 token = None
-                organization = None
 
-            return token, organization
+            return token
 
-    def update_credentials(self, token: str, organization: str) -> None:
+    def update_credentials(self, token: str) -> None:
         """Updates the token value.
         
         Alternative of updating directly the token value accessing the attribute :obj:`deepint_sdk.auth.Credentials.token`.
 
         Args:
             token: token to replace current token stored in :obj:`deepint_sdk.auth.Credentials.token`.
-            organization: Id of the organization to access the deepint.net API that must be used to authenticate each transaction.
         """
 
         self.token = token
-        self.organization = organization

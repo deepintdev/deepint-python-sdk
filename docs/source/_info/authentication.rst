@@ -10,16 +10,15 @@ How to setup credentials
 ------------------------
 
 Credentials can be set up with one of the following methods (the token is loaded in the priority defined in the order of the following items):
- - instance credentials object with the token optional parameter `c = Credentials(token='a token', organization='your organization id')`
- - create a environment variable called `DEEPINT_TOKEN` with the token value and an enviroment variable called `DEEPINT_ORGANIZATION`.
- - create a .ini file in your home directory called `.deepint` coninting in the `DEFAULT` section the keys called `token` and `organization` like in following example
+ - instance credentials object with the token optional parameter `c = Credentials(token='a token')`
+ - create a environment variable called `DEEPINT_TOKEN` with the token value.
+ - create a .ini file in your home directory called `.deepint` coninting in the `DEFAULT` section the keys called `token` like in following example
 
 .. code-block::
    :caption: ~/.deepint.ini
 
 	[DEFAULT]
 	token=a token
-   organization=a organziation
 
 
 
@@ -42,14 +41,3 @@ Finally, by pressing the key button as shown in the image below, the token is ob
    :width: 600
 
 It is important to highlight that the token is associated to the user and not to the organization, which means that the same token can be used to access multiple organizations.
-
-
-
-How to obtain the organization id
----------------------------------
-
-In order to operate with Deep Intelligence workspaces, it is neccesary to provide the organization identifier. To obtain that identifier, you must go to the organization settings page, that you can find in the left bar.
-
-.. image:: ../../static/images/obtain_organization.PNG
-   :width: 600
-

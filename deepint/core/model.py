@@ -256,7 +256,8 @@ class ModelPredictions:
 
         # request
         url = f'https://app.deepint.net/api/v1/workspace/{self.model.workspace_id}/models/{self.model.info.model_id}/evaluation'
-        response = handle_request(method='GET', url=url, credentials=self.model.credentials)
+        headers = {'x-deepint-organization': self.model.organization_id}
+        response = handle_request(method='GET', url=url, headers=headers, credentials=self.model.credentials)
 
         return response
 
@@ -301,7 +302,8 @@ class ModelPredictions:
         # request
         url = f'https://app.deepint.net/api/v1/workspace/{self.model.workspace_id}/models/{self.model.info.model_id}/predict'
         parameters = {'inputs': inputs}
-        response = handle_request(method='GET', url=url, credentials=self.model.credentials, parameters=parameters)
+        headers = {'x-deepint-organization': self.model.organization_id}
+        response = handle_request(method='GET', url=url, headers=headers, parameters=parameters, credentials=self.model.credentials)
 
         # map response
         try:
@@ -353,7 +355,8 @@ class ModelPredictions:
         # request
         url = f'https://app.deepint.net/api/v1/workspace/{self.model.workspace_id}/models/{self.model.info.model_id}/batch-predict'
         parameters = {'data': inputs}
-        response = handle_request(method='POST', url=url, credentials=self.model.credentials, parameters=parameters)
+        headers = {'x-deepint-organization': self.model.organization_id}
+        response = handle_request(method='POST', url=url, headers=headers, parameters=parameters, credentials=self.model.credentials)
 
         # map response
         try:
@@ -418,8 +421,9 @@ class ModelPredictions:
 
         # request
         url = f'https://app.deepint.net/api/v1/workspace/{self.model.workspace_id}/models/{self.model.info.model_id}/predict-1d'
+        headers = {'x-deepint-organization': self.model.organization_id}
         parameters = {'inputs': inputs, 'vary': variations_feature_index, 'values': variations}
-        response = handle_request(method='POST', url=url, credentials=self.model.credentials, parameters=parameters)
+        response = handle_request(method='POST', url=url, headers=headers, parameters=parameters, credentials=self.model.credentials)
 
         # map response
         try:
@@ -441,6 +445,7 @@ class Model:
     or :obj:`deepint.core.model.Model.from_url` methods. 
     
     Attributes:
+        organization_id: organization where model is located.
         workspace_id: workspace where model is located.
         info: :obj:`deepint.core.model.ModelInfo` to operate with model's information.
         input_features: :obj:`list` of :obj:`deepint.core.model.ModelFeature` to operate with model's input features.
@@ -450,8 +455,9 @@ class Model:
                  not provided, the credentials are generated with the :obj:`deepint.auth.credentials.Credentials.build`.
     """
 
-    def __init__(self, workspace_id: str, credentials: Credentials, info: ModelInfo, input_features: List[ModelFeature],
-                 output_features: ModelFeature) -> None:
+    def __init__(self, organization_id: str, workspace_id: str, credentials: Credentials, info: ModelInfo, 
+                 input_features: List[ModelFeature], output_features: ModelFeature) -> None:
+        self.organization_id = organization_id
         self.info = info
         self.credentials = credentials
         self.workspace_id = workspace_id
@@ -471,12 +477,13 @@ class Model:
             return self.info == other.info
 
     @classmethod
-    def build(cls, workspace_id: str, model_id: str, credentials: Credentials = None) -> 'Model':
+    def build(cls,organization_id: str, workspace_id: str, model_id: str, credentials: Credentials = None) -> 'Model':
         """Builds a model.
         
         Note: when model is created, the model's information and features are retrieved from API.
 
         Args:
+            organization_id: organization where model is located.
             workspace_id: workspace where model is located.
             model_id: model's id.
             credentials: credentials to authenticate with Deep Intelligence API and be allowed to perform operations over the model. If
@@ -490,25 +497,28 @@ class Model:
         info = ModelInfo(model_id=model_id, name=None, description=None, model_type=None, method=None, created=None,
                          last_modified=None,
                          last_access=None, source_train=None, configuration=None, size_bytes=None)
-        model = cls(workspace_id=workspace_id, credentials=credentials, info=info, input_features=None,
-                      output_features=None)
+        model = cls(organization_id=organization_id, workspace_id=workspace_id, credentials=credentials, info=info, 
+                      input_features=None, output_features=None)
         model.load()
         return model
 
     @classmethod
-    def from_url(cls, url: str, credentials: Credentials = None) -> 'Model':
+    def from_url(cls, url: str, organization_id: str = None, credentials: Credentials = None) -> 'Model':
         """Builds a model from it's API or web associated URL.
 
         The url must contain the workspace's id and the model's id as in the following examples:
 
         Example:
-            - https://app.deepint.net/workspace?ws=f0e2095f-fe2b-479e-be4b-bbc77207f42d&s=model&i=db98f976-f4bb-43d5-830e-bc18a3a89641
+            - https://app.deepint.net/o/3a874c05-26d1-4b8c-894d-caf90e40078b/workspace?ws=f0e2095f-fe2b-479e-be4b-bbc77207f42d&s=model&i=db98f976-f4bb-43d5-830e-bc18a3a89641
             - https://app.deepint.net/api/v1/workspace/f0e2095f-fe2b-479e-be4b-bbc77207f42/models/db98f976-f4bb-43d5-830e-bc18a3a89641
         
         Note: when model is created, the model's information and features are retrieved from API.
+            Also it is remmarkable that if the API URL is providen, the organization_id must be provided in the optional parameter, otherwise
+            this ID won't be found on the URL and the Organization will not be created, raising a value error.
 
         Args:
             url: the model's API or web associated URL.
+            organization_id: the id of the organziation. Must be providen if the API URL is used.
             credentials: credentials to authenticate with Deep Intelligence API and be allowed to perform operations over the model. If
                  not provided, the credentials are generated with the :obj:`deepint.auth.credentials.Credentials.build`.
 
@@ -518,10 +528,15 @@ class Model:
 
         url_info = parse_url(url)
 
+        if 'organization_id' not in url_info and organization_id is None:
+            raise ValueError('Fields organization_id must be in url to build the object. Or providen as optional parameter.')
+
         if 'workspace_id' not in url_info or 'model_id' not in url_info:
             raise ValueError('Fields workspace_id and model_id must be in url to build the object.')
 
-        return cls.build(workspace_id=url_info['workspace_id'], model_id=url_info['model_id'], credentials=credentials)
+        organization_id = url_info['organization_id'] if 'organization_id' in url_info else organization_id
+        return cls.build(organization_id=organization_id, workspace_id=url_info['workspace_id'], model_id=url_info['model_id'], 
+                credentials=credentials)
 
     def load(self):
         """Loads the model's information.
@@ -531,7 +546,8 @@ class Model:
 
         # request
         url = f'https://app.deepint.net/api/v1/workspace/{self.workspace_id}/models/{self.info.model_id}'
-        response = handle_request(method='GET', url=url, credentials=self.credentials)
+        headers = {'x-deepint-organization': self.organization_id}
+        response = handle_request(method='GET', url=url, headers=headers, credentials=self.credentials)
 
         # map results
         self.info = ModelInfo.from_dict(response)
@@ -552,8 +568,9 @@ class Model:
 
         # request
         url = f'https://app.deepint.net/api/v1/workspace/{self.workspace_id}/models/{self.info.model_id}'
+        headers = {'x-deepint-organization': self.organization_id}
         parameters = {'name': name, 'description': description}
-        response = handle_request(method='POST', url=url, credentials=self.credentials, parameters=parameters)
+        response = handle_request(method='POST', url=url, headers=headers, parameters=parameters, credentials=self.credentials)
 
         # update local state
         self.info.name = name
@@ -565,7 +582,8 @@ class Model:
 
         # request
         url = f'https://app.deepint.net/api/v1/workspace/{self.workspace_id}/models/{self.info.model_id}'
-        handle_request(method='DELETE', url=url, credentials=self.credentials)
+        headers = {'x-deepint-organization': self.organization_id}
+        handle_request(method='DELETE', url=url, headers=headers, credentials=self.credentials)
 
     def to_dict(self) -> Dict[str, Any]:
         """Builds a dictionary containing the information stored in current object.

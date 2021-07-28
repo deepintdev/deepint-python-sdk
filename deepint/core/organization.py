@@ -32,11 +32,12 @@ class OrganizationWorkspaces:
 
         # request
         url = f'https://app.deepint.net/api/v1/workspaces'
-        response = handle_request(method='GET', url=url, credentials=self.organization.credentials)
+        headers = {'x-deepint-organization': self.organization.organization_id}
+        response = handle_request(method='GET', url=url, headers=headers, credentials=self.organization.credentials)
 
         # map results
-        self._generator = (Workspace.build(workspace_id=w['id'], credentials=self.organization.credentials) for w in
-                           response)
+        self._generator = (Workspace.build(organization_id=self.organization.organization_id, workspace_id=w['id'],
+                           credentials=self.organization.credentials) for w in response)
 
     def create(self, name: str, description: str) -> Workspace:
         """Creates a workspace in current organization.
@@ -53,12 +54,13 @@ class OrganizationWorkspaces:
 
         # request
         url = f'https://app.deepint.net/api/v1/workspaces/'
+        headers = {'x-deepint-organization': self.organization.organization_id}
         parameters = {'name': name, 'description': description}
         response = handle_request(method='POST', url=url, credentials=self.organization.credentials,
-                                  parameters=parameters)
+                                  parameters=parameters, headers=headers)
 
         # map results
-        new_workspace = Workspace.build(workspace_id=response['workspace_id'],
+        new_workspace = Workspace.build(organization_id=self.organization.organization_id, workspace_id=response['workspace_id'],
                                         credentials=self.organization.credentials)
 
         # update local state
@@ -174,27 +176,36 @@ class Organization:
         method.
     
     Attributes:
+        organization_id: the id of the organization.
         workspaces: :obj:`deepint.core.organization.OrganizationWorkspaces` to operate with organization's workspaces.
         account: :obj:`dict` containing information about the providen token, like permissions and associated account details like id or name.
         credentials: credentials to authenticate with Deep Intelligence API and be allowed to perform operations over the task. If
                  not provided, the credentials are generated with the :obj:`deepint.auth.credentials.Credentials.build`.
     """
 
-    def __init__(self, credentials: Credentials, workspaces: List[Workspace], account: Dict[Any, Any]) -> None:
+    def __init__(self, organization_id: str, credentials: Credentials, workspaces: List[Workspace], account: Dict[Any, Any]) -> None:
         self.account = account
         self.credentials = credentials
+        self.organization_id = organization_id
         self.workspaces = OrganizationWorkspaces(self, workspaces)
 
     def __str__(self):
         return f'<Organization account={self.account}>'
 
+    def __eq__(self, other):
+        if not isinstance(other, Organization):
+            return False
+        else:
+            return self.organization_id == other.organization_id
+            
     @classmethod
-    def build(cls, credentials: Credentials = None) -> 'Organization':
+    def build(cls, organization_id: str = None, credentials: Credentials = None) -> 'Organization':
         """Builds an organization.
         
         Note: when organization is created, the organization's information and account are retrieved from API.
 
         Args:
+            organization_id: the id of the organization.
             credentials: credentials to authenticate with Deep Intelligence API and be allowed to perform operations over the organization. If
                  not provided, the credentials are generated with the :obj:`deepint.auth.credentials.Credentials.build`.
 
@@ -203,10 +214,42 @@ class Organization:
         """
 
         credentials = credentials if credentials is not None else Credentials.build()
-        org = cls(credentials=credentials, workspaces=None, account=None)
+        org = cls(organization_id=organization_id, credentials=credentials, workspaces=None, account=None)
         org.load()
         org.workspaces.load()
         return org
+
+    @classmethod
+    def from_url(cls, url: str, organization_id: str = None, credentials: Credentials = None) -> 'Workspace':
+        """Builds an organization from it's API or web associated URL.
+
+        The url must contain the workspace's id as in the following examples:
+
+        Example:
+            - https://app.deepint.net/o/3a874c05-26d1-4b8c-894d-caf90e40078b/workspace?ws=f0e2095f-fe2b-479e-be4b-bbc77207f42d
+            - https://app.deepint.net/api/v1/workspace/f0e2095f-fe2b-479e-be4b-bbc77207f42
+        
+        Note: when organization is created, the organization's information and list of it's associated objects (workspaces) are loaded. 
+            Also it is remmarkable that if the API URL is providen, the organization_id must be provided in the optional parameter, otherwise
+            this ID won't be found on the URL and the Organization will not be created, raising a value error.
+
+        Args:
+            url: the workspace's API or web associated URL.
+            organization_id: the id of the organziation. Must be providen if the API URL is used.
+            credentials: credentials to authenticate with Deep Intelligence API and be allowed to perform operations over the workspace. If
+                 not provided, the credentials are generated with the :obj:`deepint.auth.credentials.Credentials.build`.
+
+        Returns:
+            the workspace build with the URL and credentials.
+        """
+
+        url_info = parse_url(url)
+
+        if 'organization_id' not in url_info and organization_id is None:
+            raise ValueError('Fields organization_id must be in url to build the object. Or providen as optional parameter.')
+
+        organization_id = url_info['organization_id'] if 'organization_id' in url_info else organization_id
+        return cls.build(organization_id=organization_id, credentials=credentials)
 
     def load(self):
         """Loads the organization's information and account.
@@ -216,10 +259,12 @@ class Organization:
 
         # request
         url = f'https://app.deepint.net/api/v1/who'
-        response_who = handle_request(method='GET', url=url, credentials=self.credentials)
+        headers = {'x-deepint-organization': self.organization_id}
+        response_who = handle_request(method='GET', url=url, headers=headers, credentials=self.credentials)
 
         url = f'https://app.deepint.net/api/v1/profile'
-        response_profile = handle_request(method='GET', url=url, credentials=self.credentials)
+        headers = {'x-deepint-organization': self.organization_id}
+        response_profile = handle_request(method='GET', url=url, headers=headers, credentials=self.credentials)
 
         # map results
         response = {**response_who, **response_profile}

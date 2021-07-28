@@ -146,7 +146,8 @@ class AlertInstances:
     def fetch(self) -> List[Dict]:
         # request
         url = f'https://app.deepint.net/api/v1/workspace/{self.alert.workspace_id}/alerts/{self.alert.info.alert_id}/instances'
-        response = handle_request(method='GET', url=url, credentials=self.alert.credentials, parameters=parameters)
+        headers = {'x-deepint-organization': self.alert.organization_id}
+        response = handle_request(method='GET', url=url, headers=headers, parameters=parameters, credentials=self.alert.credentials)
 
         # format response
         return response
@@ -159,6 +160,7 @@ class Alert:
     or :obj:`deepint.core.alert.Alert.from_url` methods. 
     
     Attributes:
+        organization_id: organization where alert is located.
         workspace_id: workspace where alert is located.
         info: :obj:`deepint.core.alert.AlertInfo` to operate with alert's information.
         instances: :obj:`deepint.core.alert.AlertInstances` to operate with alert's instances.
@@ -166,10 +168,11 @@ class Alert:
                  not provided, the credentials are generated with the :obj:`deepint.auth.credentials.Credentials.build`.
     """
 
-    def __init__(self, workspace_id: str, credentials: Credentials, info: AlertInfo) -> None:
+    def __init__(self, organization_id: str, workspace_id: str, credentials: Credentials, info: AlertInfo) -> None:
         self.info = info
         self.credentials = credentials
         self.workspace_id = workspace_id
+        self.organization_id = organization_id
         self.instances = AlertInstances(self)
 
     def __str__(self):
@@ -182,12 +185,13 @@ class Alert:
             return self.info == other.info
 
     @classmethod
-    def build(cls, workspace_id: str, alert_id: str, credentials: Credentials = None) -> 'Alert':
+    def build(cls, organization_id: str, workspace_id: str, alert_id: str, credentials: Credentials = None) -> 'Alert':
         """Builds an alert.
         
         Note: when alert is created, the alert's information is retrieved from API.
 
         Args:
+            organization_id: organization where alert is located.
             workspace_id: workspace where alert is located.
             alert_id: alert's id.
             credentials: credentials to authenticate with Deep Intelligence API and be allowed to perform operations over the alert. If
@@ -201,24 +205,27 @@ class Alert:
         alert_info = AlertInfo(alert_id=alert_id, name=None, description=None, created=None, last_modified=None,
                                subscriptions=None, color=None, alert_type=None, source_id=None, condition=None,
                                time_stall=None)
-        alert = cls(workspace_id=workspace_id, credentials=credentials, info=alert_info)
+        alert = cls(organization_id=organization_id, workspace_id=workspace_id, credentials=credentials, info=alert_info)
         alert.load()
         return alert
 
     @classmethod
-    def from_url(cls, url: str, credentials: Credentials = None) -> 'Alert':
+    def from_url(cls, url: str, organization_id: str = None, credentials: Credentials = None) -> 'Alert':
         """Builds a alert from it's API or web associated URL.
 
         The url must contain the workspace's id and the alert's id as in the following examples:
 
         Example:
-            - https://app.deepint.net/workspace?ws=f0e2095f-fe2b-479e-be4b-bbc77207f42d&s=alert&i=db98f976-f4bb-43d5-830e-bc18a3a89641
+            - https://app.deepint.net/o/3a874c05-26d1-4b8c-894d-caf90e40078b/workspace?ws=f0e2095f-fe2b-479e-be4b-bbc77207f42d&s=alert&i=db98f976-f4bb-43d5-830e-bc18a3a89641
             - https://app.deepint.net/api/v1/workspace/f0e2095f-fe2b-479e-be4b-bbc77207f42/alerts/db98f976-f4bb-43d5-830e-bc18a3a89641
         
         Note: when alert is created, the alert's information is retrieved from API.
+            Also it is remmarkable that if the API URL is providen, the organization_id must be provided in the optional parameter, otherwise
+            this ID won't be found on the URL and the Organization will not be created, raising a value error.
 
         Args:
             url: the alert's API or web associated URL.
+            organization_id: the id of the organziation. Must be providen if the API URL is used.
             credentials: credentials to authenticate with Deep Intelligence API and be allowed to perform operations over the alert. If
                  not provided, the credentials are generated with the :obj:`deepint.auth.credentials.Credentials.build`.
 
@@ -228,10 +235,14 @@ class Alert:
 
         url_info = parse_url(url)
 
+        if 'organization_id' not in url_info and organization_id is None:
+            raise ValueError('Fields organization_id must be in url to build the object. Or providen as optional parameter.')
+
         if 'workspace_id' not in url_info or 'alert_id' not in url_info:
             raise ValueError('Fields workspace_id and alert_id must be in url to build the object.')
 
-        return cls.build(workspace_id=url_info['workspace_id'], alert_id=url_info['alert_id'], credentials=credentials)
+        organization_id = url_info['organization_id'] if 'organization_id' in url_info else organization_id
+        return cls.build(organization_id=organization_id, workspace_id=url_info['workspace_id'], alert_id=url_info['alert_id'], credentials=credentials)
 
     def load(self):
         """Loads the alert's information.
@@ -241,7 +252,8 @@ class Alert:
 
         # request
         url = f'https://app.deepint.net/api/v1/workspace/{self.workspace_id}/alerts/{self.info.alert_id}'
-        response = handle_request(method='GET', url=url, credentials=self.credentials)
+        headers = {'x-deepint-organization': self.organization_id}
+        response = handle_request(method='GET', url=url, headers=headers, credentials=self.credentials)
 
         # map results
         self.info = AlertInfo.from_dict(response)
@@ -276,7 +288,7 @@ class Alert:
 
         # request
         url = f'https://app.deepint.net/api/v1/workspace/{self.workspace_id}/alerts/{self.info.alert_id}'
-
+        headers = {'x-deepint-organization': self.organization_id}
         parameters = {
             'name': name,
             'description': description,
@@ -287,8 +299,7 @@ class Alert:
             'condition': condition,
             'time_stall': time_stall
         }
-
-        response = handle_request(method='POST', url=url, credentials=self.credentials, parameters=parameters)
+        response = handle_request(method='POST', url=url, headers=headers, parameters=parameters, credentials=self.credentials)
 
         # map results
         self.info.name = name
@@ -305,7 +316,8 @@ class Alert:
 
         # request
         url = f'https://app.deepint.net/api/v1/workspace/{self.workspace_id}/alerts/{self.info.alert_id}'
-        handle_request(method='DELETE', url=url, credentials=self.credentials)
+        headers = {'x-deepint-organization': self.organization_id}
+        handle_request(method='DELETE', url=url, headers=headers, credentials=self.credentials)
 
     def to_dict(self) -> Dict[str, Any]:
         """Builds a dictionary containing the information stored in current object.

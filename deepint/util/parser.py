@@ -45,6 +45,12 @@ def parse_url(url):
             elif path_pieces[arg] == 'alerts':
                 ids['alert_id'] = path_pieces[arg + 1]
     else:
+
+        path_pieces = pieces.path.split('/')
+        for arg in range(len(path_pieces)):
+            if path_pieces[arg] == 'o':
+                ids['organization_id'] = path_pieces[arg + 1]
+            
         # extract from args
         query_pieces = {}
         for arg in pieces.query.split('&'):

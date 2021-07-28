@@ -12,8 +12,8 @@ from time import sleep
 from deepint import *
 
 
-TEST_CSV = os.environ.get('TEST_CSV')
-TEST_CSV2 = os.environ.get('TEST_CSV2')
+TEST_CSV = 'https://people.sc.fsu.edu/~jburkardt/data/csv/grades.csv'
+TEST_CSV2 = 'https://people.sc.fsu.edu/~jburkardt/data/csv/grades.csv'
 DEEPINT_TOKEN = os.environ.get('DEEPINT_TOKEN')
 DEEPINT_ORGANIZATION = os.environ.get('DEEPINT_ORGANIZATION')
 
@@ -36,52 +36,49 @@ def serve_name(object_type):
 
 
 def test_credentials_load():
+
     # test token given in enviroment
     os.environ["DEEPINT_TOKEN"] = "token"
-    os.environ["DEEPINT_ORGANIZATION"] = "org"
     c = Credentials.build()
     del os.environ['DEEPINT_TOKEN']
     assert (c.token == "token")
-    assert (c.organization == "org")
 
     # test token given in credentials file
     credentials_file = f'{os.path.expanduser("~")}/.deepint.ini'
     with open(credentials_file, 'w+') as f:
-        f.write("[DEFAULT]\ntoken = file\norganization = org")
+        f.write("[DEFAULT]\ntoken = file")
     c = Credentials.build()
     os.unlink(credentials_file)
     assert (c.token == "file")
-    assert (c.organization == "org")
 
     # test token given locally
-    c = Credentials.build(token='local', organization='local_org')
+    c = Credentials.build(token='local')
     assert (c.token == "local")
-    assert (c.organization == "local_org")
 
     # set token to default
     os.environ["DEEPINT_TOKEN"] = DEEPINT_TOKEN
     os.environ["DEEPINT_ORGANIZATION"] = DEEPINT_ORGANIZATION
 
 
-#def test_organization_CRUD():
-#    # create
-#    org = Organization.build()
-#    org.clean()
-#
-#    assert (org.account is not None)
-#    assert (not list(org.workspaces.fetch_all()))
+def test_organization_CRUD():
+    # create
+    org = Organization.build(organization_id=DEEPINT_ORGANIZATION)
+    org.clean()
+
+    assert (org.account is not None)
+    assert (not list(org.workspaces.fetch_all()))
 
 
 def test_workspace_CRUD():
     # load organization
-    org = Organization.build()
+    org = Organization.build(organization_id=DEEPINT_ORGANIZATION)
 
     # create
     ws_name = serve_name(TEST_WS_NAME)
     original_ws = org.workspaces.create(name=ws_name, description=TEST_WS_DESC)
 
     # retrieve (single)
-    retrieved_ws = Workspace.build(credentials=org.credentials, workspace_id=original_ws.info.workspace_id)
+    retrieved_ws = Workspace.build(organization_id=DEEPINT_ORGANIZATION, credentials=org.credentials, workspace_id=original_ws.info.workspace_id)
     assert (
                 retrieved_ws.info.workspace_id == original_ws.info.workspace_id and retrieved_ws.info.name == ws_name and retrieved_ws.info.description == TEST_WS_DESC)
 
@@ -97,7 +94,7 @@ def test_workspace_CRUD():
     # delete 
     original_ws.delete()
     try:
-        ws = Workspace.build(credentials=org.credentials, workspace_id=original_ws.info.workspace_id)
+        ws = Workspace.build(organization_id=DEEPINT_ORGANIZATION, credentials=org.credentials, workspace_id=original_ws.info.workspace_id)
         assert False
     except DeepintHTTPError:
         assert True
@@ -112,7 +109,7 @@ def test_workspace_CRUD():
 
 def test_source_CRUD():
     # load organization and create workspace
-    org = Organization.build()
+    org = Organization.build(organization_id=DEEPINT_ORGANIZATION)
     ws = org.workspaces.create(name=serve_name(TEST_WS_NAME), description=TEST_WS_DESC)
 
     # create empty source
@@ -127,7 +124,7 @@ def test_source_CRUD():
     source = ws.sources.create_and_initialize(name=src_name, description=TEST_SRC_DESC, data=data)
 
     # retrieve
-    retrieved_src = Source.build(source_id=source.info.source_id, workspace_id=ws.info.workspace_id,
+    retrieved_src = Source.build(organization_id=DEEPINT_ORGANIZATION, source_id=source.info.source_id, workspace_id=ws.info.workspace_id,
                                  credentials=org.credentials)
     assert (
                 retrieved_src.info.source_id == source.info.source_id and retrieved_src.info.name == src_name and retrieved_src.info.description == TEST_SRC_DESC)
@@ -165,7 +162,7 @@ def test_source_CRUD():
     # delete source
     source.delete()
     try:
-        src = Source.build(source_id=source.info.source_id, workspace_id=ws.info.workspace_id,
+        src = Source.build(organization_id=DEEPINT_ORGANIZATION, source_id=source.info.source_id, workspace_id=ws.info.workspace_id,
                            credentials=org.credentials)
         assert False
     except DeepintHTTPError:
@@ -194,7 +191,7 @@ def test_source_CRUD():
 
 def test_task_CRUD():
     # load organization and create workspace and source
-    org = Organization.build()
+    org = Organization.build(organization_id=DEEPINT_ORGANIZATION)
     ws_name = serve_name(TEST_WS_NAME)
     ws = org.workspaces.create(name=ws_name, description=TEST_WS_DESC)
     data = pd.read_csv(TEST_CSV)
@@ -228,7 +225,7 @@ def test_task_CRUD():
 
 def test_alert_CRUD():
     # load organization and create workspace and source
-    org = Organization.build()
+    org = Organization.build(organization_id=DEEPINT_ORGANIZATION)
     ws_name = serve_name(TEST_WS_NAME)
     ws = org.workspaces.create(name=ws_name, description=TEST_WS_DESC)
     src_name = serve_name(TEST_SRC_NAME)
@@ -240,7 +237,7 @@ def test_alert_CRUD():
                              color='#FF00FF', alert_type=AlertType.update, source_id=source.info.source_id)
 
     # retrieve (single)
-    retrieved_alert = Alert.build(credentials=org.credentials, workspace_id=ws.info.workspace_id,
+    retrieved_alert = Alert.build(organization_id=DEEPINT_ORGANIZATION, credentials=org.credentials, workspace_id=ws.info.workspace_id,
                                   alert_id=alert.info.alert_id)
     assert (
                 retrieved_alert.info.alert_id == alert.info.alert_id and retrieved_alert.info.name == alert_name and retrieved_alert.info.description == TEST_ALERT_DESC)
@@ -258,7 +255,7 @@ def test_alert_CRUD():
     # delete 
     alert.delete()
     try:
-        a = Alert.build(credentials=org.credentials, workspace_id=retrieved_alert.info.alert_id,
+        a = Alert.build(credentials=org.credentials, organization_id=DEEPINT_ORGANIZATION, workspace_id=retrieved_alert.info.alert_id,
                         alert_id=alert.info.alert_id)
         assert False
     except DeepintHTTPError:
@@ -270,7 +267,7 @@ def test_alert_CRUD():
 
 def test_model_CRUD():
     # load organization, create workspace and source (with initialization)
-    org = Organization.build()
+    org = Organization.build(organization_id=DEEPINT_ORGANIZATION)
     ws_name = serve_name(TEST_WS_NAME)
     ws = org.workspaces.create(name=ws_name, description=TEST_WS_DESC)
     data = pd.read_csv(TEST_CSV)
@@ -288,7 +285,7 @@ def test_model_CRUD():
                              method=ModelMethod.tree, source=source, target_feature_name=target_feature.name)
 
     # retrieve
-    retrieved_model = Model.build(model_id=model.info.model_id, workspace_id=ws.info.workspace_id,
+    retrieved_model = Model.build(organization_id=DEEPINT_ORGANIZATION, model_id=model.info.model_id, workspace_id=ws.info.workspace_id,
                                   credentials=org.credentials)
     assert (
                 retrieved_model.info.model_id == model.info.model_id and retrieved_model.info.name == model_name and retrieved_model.info.description == TEST_MODEL_DESC)
@@ -318,7 +315,7 @@ def test_model_CRUD():
         0] is not None)
 
     # vary model
-    vary_target_feature = source.features.fetch_all()
+    vary_target_feature = source.features.fetch_all()[0]
     for f in source.features.fetch_all():
         if f.feature_type == FeatureType.numeric and f.name != target_feature.name:
             vary_target_feature = f
@@ -331,7 +328,7 @@ def test_model_CRUD():
     # delete source
     model.delete()
     try:
-        m = Model.build(model_id=model.info.model_id, workspace_id=ws.info.workspace_id, credentials=org.credentials)
+        m = Model.build(organization_id=DEEPINT_ORGANIZATION, model_id=model.info.model_id, workspace_id=ws.info.workspace_id, credentials=org.credentials)
         assert False
     except DeepintHTTPError:
         assert True
@@ -342,7 +339,7 @@ def test_model_CRUD():
 
 def test_url_parser():
     # load organization and create workspace, source and alert
-    org = Organization.build()
+    org = Organization.build(organization_id=DEEPINT_ORGANIZATION)
 
     workspace = org.workspaces.create(name=serve_name(TEST_WS_NAME), description=TEST_WS_DESC)
 
@@ -370,42 +367,44 @@ def test_url_parser():
     m_id = model.info.model_id
     src_id = source.info.source_id
     ws_id = workspace.info.workspace_id
+    org_id = workspace.organization_id
 
     # check
-    ws = Workspace.from_url(url=f'https://app.deepint.net/workspace?ws={ws_id}', credentials=org.credentials)
+    ws = Workspace.from_url(url=f'https://app.deepint.net/o/{org_id}/workspace?ws={ws_id}', credentials=org.credentials)
     assert (ws.info.workspace_id == ws_id)
 
-    ws = Workspace.from_url(url=f'https://app.deepint.net/api/v1/workspace/{ws_id}', credentials=org.credentials)
+    ws = Workspace.from_url(url=f'https://app.deepint.net/api/v1/workspace/{ws_id}', organization_id=org_id, credentials=org.credentials)
     assert (ws.info.workspace_id == ws_id)
 
-    src = Source.from_url(url=f'https://app.deepint.net/workspace?ws={ws_id}&s=source&i={src_id}',
+    src = Source.from_url(url=f'https://app.deepint.net/o/{org_id}/workspace?ws={ws_id}&s=source&i={src_id}',
                           credentials=org.credentials)
     assert (src.workspace_id == ws_id and src.info.source_id == src_id)
 
-    src = Source.from_url(url=f'https://app.deepint.net/api/v1/workspace/{ws_id}/source/{src_id}',
-                          credentials=org.credentials)
+    src = Source.from_url(url=f'https://app.deepint.net/api/v1/workspace/{ws_id}/source/{src_id}', 
+                          organization_id=org_id, credentials=org.credentials)
     assert (src.workspace_id == ws_id and src.info.source_id == src_id)
+
+    a = Alert.from_url(url=f'https://app.deepint.net/o/{org_id}/workspace?ws={ws_id}&s=alert&i={a_id}',
+                       credentials=org.credentials)
+    assert (a.info.alert_id == a_id)
 
     a = Alert.from_url(url=f'https://app.deepint.net/api/v1/workspace/{ws_id}/alerts/{a_id}',
-                       credentials=org.credentials)
+                         organization_id=org_id, credentials=org.credentials)
     assert (a.info.alert_id == a_id)
 
-    a = Alert.from_url(url=f'https://app.deepint.net/workspace?ws={ws_id}&s=alert&i={a_id}',
-                       credentials=org.credentials)
-    assert (a.info.alert_id == a_id)
-
-    t = Task.from_url(url=f'https://app.deepint.net/api/v1/workspace/{ws_id}/task/{t_id}', credentials=org.credentials)
+    t = Task.from_url(url=f'https://app.deepint.net/o/{org_id}/workspace?ws={ws_id}&s=task&i={t_id}', credentials=org.credentials)
     assert (t.info.task_id == t_id)
 
-    t = Task.from_url(url=f'https://app.deepint.net/workspace?ws={ws_id}&s=task&i={t_id}', credentials=org.credentials)
+    t = Task.from_url(url=f'https://app.deepint.net/api/v1/workspace/{ws_id}/task/{t_id}', organization_id=org_id, 
+                        credentials=org.credentials)
     assert (t.info.task_id == t_id)
 
-    m = Model.from_url(url=f'https://app.deepint.net/api/v1/workspace/{ws_id}/models/{m_id}',
+    m = Model.from_url(url=f'https://app.deepint.net/o/{org_id}/workspace?ws={ws_id}&s=model&i={m_id}',
                        credentials=org.credentials)
     assert (m.info.model_id == m_id)
 
-    m = Model.from_url(url=f'https://app.deepint.net/workspace?ws={ws_id}&s=model&i={m_id}',
-                       credentials=org.credentials)
+    m = Model.from_url(url=f'https://app.deepint.net/api/v1/workspace/{ws_id}/models/{m_id}',
+                       organization_id=org_id, credentials=org.credentials)
     assert (m.info.model_id == m_id)
 
     # finally delete workspace
@@ -414,6 +413,7 @@ def test_url_parser():
 
 if __name__ == '__main__':
     test_credentials_load()
+    #test_organization_CRUD()
     test_workspace_CRUD()
     test_source_CRUD()
     test_task_CRUD()
