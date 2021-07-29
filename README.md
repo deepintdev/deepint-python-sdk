@@ -281,13 +281,6 @@ if t.is_errored():
 ##### Use visualizations
 
 ```python3
-    import pandas as pd
-    # TODO
-```
-
-##### Use dashboards
-
-```python3
 import pandas as pd
 from deepint import Organization, Visualization, Source
 
@@ -307,4 +300,10 @@ vis.update(name='example2', description='example2', source='source_id')
 
 # delete visualization
 vis.delete()
+```
+
+##### Use dashboards
+
+```python3
+
 ```
