@@ -14,132 +14,8 @@ from .source import Source, SourceFeature, FeatureType
 from .model import Model, ModelMethod, ModelType
 from .task import Task, TaskStatus
 from .alert import Alert, AlertType
-
-
-class Visualization:
-    """Stores the information of a Deep Intelligence visualization.
-    
-    Attributes:
-        visualization_id: visualization's id in format uuid4.
-        name: visualization's name.
-        description: visualization's description.
-        created: creation date.
-        last_modified: last modified date.
-        last_access: last access date.
-        visualization_type: type of visualization.
-    """
-
-    def __init__(self, visualization_id: str, created: datetime, last_modified: datetime, last_access: datetime,
-                 name: str, description: str, visualization_type: str) -> None:
-        self.visualization_id = visualization_id
-        self.created = created
-        self.last_modified = last_modified
-        self.last_access = last_access
-        self.name = name
-        self.description = description
-        self.visualization_type = visualization_type
-
-    def __eq__(self, other):
-        if not isinstance(other, Visualization):
-            return False
-        else:
-            return self.visualization_id == other.visualization_id
-
-    def __str__(self):
-        return '<Visualization ' + ' '.join([f'{k}={v}' for k, v in self.to_dict().items()]) + '>'
-
-    @staticmethod
-    def from_dict(obj: Any) -> 'Visualization':
-        """Builds a Visualization with a dictionary.
-
-        Args:
-            obj: :obj:`object` or :obj:`dict` containing the a serialized Visualization.
-
-        Returns:
-            Visualization containing the information stored in the given dictionary.
-        """
-        visualization_id = obj.get("id")
-        created = parse_date(obj.get("created"))
-        last_modified = parse_date(obj.get("last_modified"))
-        last_access = parse_date(obj.get("last_access"))
-        name = obj.get("name")
-        description = obj.get("description")
-        visualization_type = obj.get("visualization_type")
-        return Visualization(visualization_id, created, last_modified, last_access, name, description,
-                             visualization_type)
-
-    def to_dict(self) -> Dict[str, Any]:
-        """Builds a dictionary containing the information stored in current object.
-
-        Returns:
-            dictionary containing the information stored in the current object.
-        """
-
-        return {"id": self.visualization_id, "created": self.created.isoformat(),
-                "last_modified": self.last_modified.isoformat(), "last_access": self.last_access.isoformat(),
-                "name": self.name, "description": self.description,
-                "visualization_type": self.visualization_type}
-
-
-class Dashboard:
-    """Stores the information of a Deep Intelligence dashboard.
-    
-    Attributes:
-        dashboard_id: dashboard's id in format uuid4.
-        name: dashboard's name.
-        description: dashboard's description.
-        created: creation date.
-        last_modified: last modified date.
-        last_access: last access date.
-    """
-
-    def __init__(self, dashboard_id: str, created: datetime, last_modified: datetime, last_access: datetime, name: str,
-                 description: str) -> None:
-        self.dashboard_id = dashboard_id
-        self.created = created
-        self.last_modified = last_modified
-        self.last_access = last_access
-        self.name = name
-        self.description = description
-
-    def __eq__(self, other):
-        if not isinstance(other, Dashboard):
-            return False
-        else:
-            return self.dashboard_id == other.dashboard_id
-
-    def __str__(self):
-        return '<Dashboard ' + ' '.join([f'{k}={v}' for k, v in self.to_dict().items()]) + '>'
-
-    @staticmethod
-    def from_dict(obj: Any) -> 'Dashboard':
-        """Builds a Dashboard with a dictionary.
-
-        Args:
-            obj: :obj:`object` or :obj:`dict` containing the a serialized Dashboard.
-
-        Returns:
-            Dashboard containing the information stored in the given dictionary.
-        """
-
-        dashboard_id = obj.get("id")
-        created = parse_date(obj.get("created"))
-        last_modified = parse_date(obj.get("last_modified"))
-        last_access = parse_date(obj.get("last_access"))
-        name = obj.get("name")
-        description = obj.get("description")
-        return Dashboard(dashboard_id, created, last_modified, last_access, name, description)
-
-    def to_dict(self) -> Dict[str, Any]:
-        """Builds a dictionary containing the information stored in current object.
-
-        Returns:
-            dictionary containing the information stored in the current object.
-        """
-
-        return {"id": self.dashboard_id, "created": self.created.isoformat(),
-                "last_modified": self.last_modified.isoformat(), "last_access": self.last_access.isoformat(),
-                "name": self.name, "description": self.description}
+from .visualization import Visualization
+from .dashboard import Dashboard
 
 
 class WorkspaceInfo:
@@ -237,7 +113,32 @@ class WorkspaceVisualizations:
         self._generator = None
         self._visualizations = visualizations
 
-    def load(self):
+    def create(self, name: str, description: str, privacy: str, source: str, configuration: Dict[str, Any] = {}) -> Visualization:
+        """Creates a visualization in current workspace.
+        
+        Args:
+            name: new visualization's name.
+            description: new visualization's description.
+            
+        Returns:
+            The created visualization
+        """
+        url = f'https://app.deepint.net/api/v1/workspace/{self.workspace.info.workspace_id}/visualizations'
+        parameters = {'name': name, 'description': description, 'privacy': privacy, 'source': source, 'configuration': configuration}
+        headers = {'x-deepint-organization': self.workspace.organization_id}
+        response = handle_request(method='POST', url=url, headers=headers, parameters=parameters, credentials=self.workspace.credentials)
+
+        #map results
+        new_visualization = Visualization.build(workspace_id=self.workspace.info.workspace_id, visualization_id=response['visualization_id'],
+                            organization_id=self.workspace.organization_id, credentials=self.workspace.credentials)
+        
+        #update local state
+        self._visualizations = self._visualizations if self._visualizations is not None else []
+        self._visualizations.append(new_visualization)
+        
+        return new_visualization
+    
+    def load(self) -> None:
         """Loads a workspace's visualizations.
 
         If the visualizations were already loaded, this ones are replace by the new ones after retrieval.
@@ -250,7 +151,8 @@ class WorkspaceVisualizations:
 
         # map results
         self._visualizations = None
-        self._generator = (Visualization.from_dict(v) for v in response)
+        self._generator = (Visualization.build(workspace_id=self.workspace.info.workspace_id, visualization_id=v['id'],
+                                                organization_id=self.workspace.organization_id, source_id=None, credentials=self.workspace.credentials) for v in response)
 
     def fetch(self, visualization_id: str = None, name: str = None, force_reload: bool = False) -> Optional[Visualization]:
         """Search for a visualization in the workspace.

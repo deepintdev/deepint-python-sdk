@@ -29,6 +29,8 @@ TEST_MODEL_DESC = f'{PYTHON_VERSION_NAME}_Automated python SDK test model'
 TEST_ALERT_NAME = f'{PYTHON_VERSION_NAME}_automated_python_sdk_test_alert'
 TEST_ALERT_DESC = f'{PYTHON_VERSION_NAME}_Automated python SDK test alert'
 TEST_ALERT_SUBSCRIPTIONS = [f'{PYTHON_VERSION_NAME}_example@example.com']
+TEST_VISUALIZATION_NAME = f'{PYTHON_VERSION_NAME}_automated_python_sdk_test_visualization'
+TEST_VISUALIZATION_DESC = f'{PYTHON_VERSION_NAME}_Automated python SDK test visualization'
 
 
 def serve_name(object_type):
@@ -60,13 +62,13 @@ def test_credentials_load():
     os.environ["DEEPINT_ORGANIZATION"] = DEEPINT_ORGANIZATION
 
 
-def test_organization_CRUD():
-    # create
-    org = Organization.build(organization_id=DEEPINT_ORGANIZATION)
-    org.clean()
-
-    assert (org.account is not None)
-    assert (not list(org.workspaces.fetch_all()))
+#def test_organization_CRUD():
+#    # create
+#    org = Organization.build(organization_id=DEEPINT_ORGANIZATION)
+#    org.clean()
+#
+#    assert (org.account is not None)
+#    assert (not list(org.workspaces.fetch_all()))
 
 
 def test_workspace_CRUD():
@@ -337,6 +339,49 @@ def test_model_CRUD():
     ws.delete()
 
 
+def test_visualization_CRUD():
+    
+    # load organization
+    org = Organization.build()
+        
+    # create workspace
+    ws_name = serve_name(TEST_WS_NAME)
+    ws = org.workspaces.create(name=ws_name, description=TEST_WS_DESC)
+
+    # create source
+    data = pd.read_csv(TEST_CSV)
+    src_name = serve_name(TEST_SRC_NAME)
+    source = ws.sources.create_and_initialize(name=src_name, description=TEST_SRC_DESC, data=data)
+
+    # create visualization
+    visualization_name = serve_name(TEST_VISUALIZATION_NAME)
+    vis = ws.visualizations.create(name=visualization_name, description=TEST_VISUALIZATION_DESC, privacy='public', 
+        source=source.info.source_id, configuration={})
+    
+    # retrieve
+    retrieved_visualization = Visualization.build(visualization_id=vis.info.visualization_id, workspace_id=ws.info.workspace_id,
+                                                        credentials=org.credentials, organization_id=DEEPINT_ORGANIZATION)
+    assert (
+            retrieved_visualization.info.visualization_id == vis.info.visualization_id and retrieved_visualization.info.name == visualization_name 
+            and retrieved_visualization.info.description == TEST_VISUALIZATION_DESC)
+        
+    # update visualization
+    vis.update(name=f'{visualization_name}2', description=f'{TEST_VISUALIZATION_DESC}2', source=source.info.source_id)
+    retrieved_visualization.load()
+    assert (retrieved_visualization.info.name == f'{visualization_name}2' 
+        and retrieved_visualization.info.description == f'{TEST_VISUALIZATION_DESC}2')
+    
+    # delete visualization
+    vis.delete()
+    
+    # delete workspace
+    ws.delete()
+
+
+def test_dashboard_CRUD():
+    pass
+
+
 def test_url_parser():
     # load organization and create workspace, source and alert
     org = Organization.build(organization_id=DEEPINT_ORGANIZATION)
@@ -361,6 +406,8 @@ def test_url_parser():
 
     task = list(workspace.tasks.fetch_all(force_reload=True))[0]
 
+    visualization = workspace.visualizations.create(name=serve_name(TEST_VISUALIZATION_NAME), description=TEST_VISUALIZATION_DESC,
+                            privacy='public', source= source.info.source_id)
     # extract id
     t_id = task.info.task_id
     a_id = alert.info.alert_id
@@ -368,6 +415,8 @@ def test_url_parser():
     src_id = source.info.source_id
     ws_id = workspace.info.workspace_id
     org_id = workspace.organization_id
+    v_id = visualization.info.visualization_id
+
 
     # check
     ws = Workspace.from_url(url=f'https://app.deepint.net/o/{org_id}/workspace?ws={ws_id}', credentials=org.credentials)
@@ -407,6 +456,14 @@ def test_url_parser():
                        organization_id=org_id, credentials=org.credentials)
     assert (m.info.model_id == m_id)
 
+    v = Visualization.from_url(url=f'https://app.deepint.net/o/{org_id}/workspace?ws={ws_id}&s=visualization&i={v_id}',
+                        credentials=org.credentials)
+    assert (v.info.visualization_id == v_id)
+
+    v = Visualization.from_url(url=f'https://app.deepint.net/api/v1/workspace/{ws_id}/visualization/{v_id}', 
+        organization_id=org_id, credentials=org.credentials)
+    assert (v.info.visualization_id == v_id)    
+
     # finally delete workspace
     ws.delete()
 
@@ -419,4 +476,6 @@ if __name__ == '__main__':
     test_task_CRUD()
     test_alert_CRUD()
     test_model_CRUD()
+    test_visualization_CRUD()
+    test_dashboard_CRUD()
     test_url_parser()

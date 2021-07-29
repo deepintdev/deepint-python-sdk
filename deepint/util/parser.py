@@ -44,8 +44,9 @@ def parse_url(url):
                 ids['task_id'] = path_pieces[arg + 1]
             elif path_pieces[arg] == 'alerts':
                 ids['alert_id'] = path_pieces[arg + 1]
+            elif path_pieces[arg] == 'visualization':
+                ids['visualization_id'] = path_pieces[arg + 1]
     else:
-
         path_pieces = pieces.path.split('/')
         for arg in range(len(path_pieces)):
             if path_pieces[arg] == 'o':
