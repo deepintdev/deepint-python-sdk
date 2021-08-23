@@ -7,15 +7,16 @@ import pandas as pd
 from datetime import datetime
 from typing import Any, List, Dict, Optional, Generator
 
-from ..auth import Credentials
-from ..error import DeepintBaseError
-from ..util import handle_request, handle_paginated_request, parse_date, parse_url
-from .source import Source, SourceFeature, FeatureType
-from .model import Model, ModelMethod, ModelType
+from .dashboard import Dashboard
 from .task import Task, TaskStatus
 from .alert import Alert, AlertType
 from .visualization import Visualization
-from .dashboard import Dashboard
+from .model import Model, ModelMethod, ModelType
+from .source import Source, SourceFeature, FeatureType
+
+from ..auth import Credentials
+from ..error import DeepintBaseError
+from ..util import handle_request, handle_paginated_request, parse_date, parse_url
 
 
 class WorkspaceInfo:
@@ -235,6 +236,37 @@ class WorkspaceDashboards:
         self.workspace = workspace
         self._generator = None
         self._dashboards = dashboards
+    
+    def create(self, name: str, description: str, privacy: str, share_opt: str, restricted: bool, ga_id: str = None, configuration: Dict[str, Any] = {}) -> Dashboard:
+        """Creates a dashboard in the current workspace.
+        
+        Args
+            name: new dashboard's name
+            description: new dashboard's description
+            privacy: new dashboard's privacy
+            share_opt: Option for the shared dashboard GUI
+            ga_id: Opctional Google Analytics ID
+            restricted: True to check for explicit permission for shared dashboard
+            configuration: advanced option.
+        
+        Returns: 
+            The created dashboard
+        """
+
+        url = f'https://app.deepint.net/api/v1/workspace/{self.workspace.info.workspace_id}/dashboards'
+        parameters = {'name': name, 'description': description, 'privacy': privacy, 'shareOpt': share_opt, 'gaId': ga_id, 'restricted': restricted, 'configuration': configuration}
+        headers = {'x-deepint-organization': self.workspace.organization_id}
+        response = handle_request(method='POST', url=url, parameters=parameters, headers=headers, credentials=self.workspace.credentials)
+        
+        # map result
+        new_dashboard = Dashboard.build(workspace_id=self.workspace.info.workspace_id, organization_id=self.workspace.organization_id,
+                                        dashboard_id=response['dashboard_id'], credentials=self.workspace.credentials)
+        
+        # update local state
+        self._dashboards = self._dashboards if self._dashboards is not None else []
+        self._dashboards.append(new_dashboard)
+
+        return new_dashboard
 
     def load(self):
         """Loads a workspace's dashboards.
@@ -249,8 +281,9 @@ class WorkspaceDashboards:
 
         # map results
         self.dashboards = None
-        self._generator = (Dashboard.from_dict(d) for d in response)
-
+        self._generator = (Dashboard.build(organization_id=self.workspace.organization_id, workspace_id=self.workspace.info.workspace_id,
+                         dashboard_id=d['id'], credentials=self.workspace.credentials) for d in response)
+        
     def fetch(self, dashboard_id: str = None, name: str = None, force_reload: bool = False) -> Optional[Dashboard]:
         """Search for a dashboard in the workspace.
 
@@ -267,7 +300,7 @@ class WorkspaceDashboards:
                 :obj:`deepint.core.workspace.WorkspaceDashboards.load` method.
         
         Returns:
-            retrieved dashboard if found, and in other case None.
+            Retrieved dashboard if found, and in other case None.
         """
 
         # if set to true reload
@@ -297,7 +330,7 @@ class WorkspaceDashboards:
         The first time is invoked, builds a generator to retrieve dashboards directly from deepint.net API. However, 
         if there is stored dashboards and the force_reload option is not specified, only iterates in local 
         dashboards. In other case, it request the dashboards to deepint.net API and iterates over it.
-
+        
         Args:
             force_reload: if set to True, dashboards are reloaded before the search with the
                 :obj:`deepint.core.workspace.WorkspaceDashboard.load` method.
@@ -443,10 +476,10 @@ class WorkspaceSources:
         
         The source is created with the :obj:`deepint.core.worksapce.WorkspaceSources.create_and_initialize`, so it's 
         reccomended to read the documentation of that method to learn more about the possible arguments of creation  (that can be 
-        providen in the **kwargs). Before creation, the source is loaded and stored locally in the internal list of sources in the 
+        providen in kwargs). Before creation, the source is loaded and stored locally in the internal list of sources in the 
         current instance. Also it's remmarkable that the source instance's are updated with the :obj:`deepint.core.source.SourceInstances.update`
         method, so it's reccomended to read the documentation of that method to learn more about the possible arguments of update (that 
-        can be providen in the **kwargs).
+        can be providen in the kwargs).
 
         Note: if features change, then the source instances are deleted
 
@@ -1027,7 +1060,7 @@ class Workspace:
         tasks: :obj:`deepint.core.workspace.WorkspaceTasks` to operate with workspace's tasks.
         models: :obj:`deepint.core.workspace.WorkspaceModels` to operate with workspace's models.
         alerts: :obj:`deepint.core.workspace.WorkspaceAlerts` to operate with workspace's alerts.
-        sources: :obj:`deepint.core.workspace.WorkspaceDashboards` to operate with workspace's sources.
+        sources: :obj:`deepint.core.workspace.WorkspaceSources` to operate with workspace's sources.
         dashboards: :obj:`deepint.core.workspace.WorkspaceDashboards` to operate with workspace's dashboards.
         visualizations: :obj:`deepint.core.workspace.WorkspaceVisualizations` to operate with workspace's visualizations.
         credentials: credentials to authenticate with Deep Intelligence API and be allowed to perform operations over the workspace. If

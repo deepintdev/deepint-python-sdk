@@ -31,6 +31,8 @@ TEST_ALERT_DESC = f'{PYTHON_VERSION_NAME}_Automated python SDK test alert'
 TEST_ALERT_SUBSCRIPTIONS = [f'{PYTHON_VERSION_NAME}_example@example.com']
 TEST_VISUALIZATION_NAME = f'{PYTHON_VERSION_NAME}_automated_python_sdk_test_visualization'
 TEST_VISUALIZATION_DESC = f'{PYTHON_VERSION_NAME}_Automated python SDK test visualization'
+TEST_DASHBOARD_NAME = f'{PYTHON_VERSION_NAME}_automated_python_sdk_test_dashboard'
+TEST_DASHBOARD_DESC = f'{PYTHON_VERSION_NAME}_Automated python SDK test dashboard'
 
 
 def serve_name(object_type):
@@ -62,13 +64,14 @@ def test_credentials_load():
     os.environ["DEEPINT_ORGANIZATION"] = DEEPINT_ORGANIZATION
 
 
-#def test_organization_CRUD():
-#    # create
-#    org = Organization.build(organization_id=DEEPINT_ORGANIZATION)
-#    org.clean()
-#
-#    assert (org.account is not None)
-#    assert (not list(org.workspaces.fetch_all()))
+def test_organization_CRUD():
+    # create
+    #org = Organization.build(organization_id=DEEPINT_ORGANIZATION)
+    #org.clean()
+    #
+    #assert (org.account is not None)
+    #assert (not list(org.workspaces.fetch_all()))
+    pass
 
 
 def test_workspace_CRUD():
@@ -379,7 +382,35 @@ def test_visualization_CRUD():
 
 
 def test_dashboard_CRUD():
-    pass
+    
+    # load organization
+    org = Organization.build(organization_id=DEEPINT_ORGANIZATION)
+
+    # create workspace
+    ws_name = serve_name(TEST_WS_NAME)
+    ws = org.workspaces.create(name=ws_name, description=TEST_WS_DESC)
+
+    # create dashboard
+    dashboard_name = serve_name(TEST_DASHBOARD_NAME)
+    dash = ws.dashboards.create(name=dashboard_name, description=TEST_DASHBOARD_DESC, privacy='public',
+                                share_opt=" ", ga_id=" ", restricted=True, configuration={})
+
+    # retrieve
+    retrieved_dashboard = Dashboard.build(organization_id=DEEPINT_ORGANIZATION, workspace_id=ws.info.workspace_id,
+                                            dashboard_id=dash.info.dashboard_id, credentials=org.credentials)
+    assert (retrieved_dashboard.info.dashboard_id == dash.info.dashboard_id and retrieved_dashboard.info.name == dash.info.name
+            and retrieved_dashboard.info.description == TEST_DASHBOARD_DESC)
+
+    # update dashboard
+    dash.update(name=f'{dashboard_name}2', description=f'{TEST_DASHBOARD_DESC}2')
+    retrieved_dashboard.load()
+    assert (retrieved_dashboard.info.name == f'{dashboard_name}2' and retrieved_dashboard.info.description == f'{TEST_DASHBOARD_DESC}2')
+    
+    # delete visualization
+    dash.delete()
+    
+    # delete workspace
+    ws.delete()
 
 
 def test_url_parser():
@@ -408,6 +439,10 @@ def test_url_parser():
 
     visualization = workspace.visualizations.create(name=serve_name(TEST_VISUALIZATION_NAME), description=TEST_VISUALIZATION_DESC,
                             privacy='public', source= source.info.source_id)
+
+    dashboard = workspace.dashboards.create(name=serve_name(TEST_DASHBOARD_NAME), description=TEST_DASHBOARD_DESC, privacy='public',
+                                share_opt=" ", ga_id=" ", restricted=True, configuration={})
+
     # extract id
     t_id = task.info.task_id
     a_id = alert.info.alert_id
@@ -416,7 +451,7 @@ def test_url_parser():
     ws_id = workspace.info.workspace_id
     org_id = workspace.organization_id
     v_id = visualization.info.visualization_id
-
+    d_id = dashboard.info.dashboard_id
 
     # check
     ws = Workspace.from_url(url=f'https://app.deepint.net/o/{org_id}/workspace?ws={ws_id}', credentials=org.credentials)
@@ -463,6 +498,14 @@ def test_url_parser():
     v = Visualization.from_url(url=f'https://app.deepint.net/api/v1/workspace/{ws_id}/visualization/{v_id}', 
         organization_id=org_id, credentials=org.credentials)
     assert (v.info.visualization_id == v_id)    
+
+    d = Dashboard.from_url(url=f'https://app.deepint.net/o/{org_id}/workspace?ws={ws_id}&s=dashboard&i={d_id}',
+                        credentials=org.credentials)
+    assert (d.info.dashboard_id == d_id)
+
+    d = Dashboard.from_url(url=f'https://app.deepint.net/api/v1/workspace/{ws_id}/dashboard/{d_id}',
+                                organization_id=org_id,credentials=org.credentials)
+    assert (d.info.dashboard_id == d_id)
 
     # finally delete workspace
     ws.delete()

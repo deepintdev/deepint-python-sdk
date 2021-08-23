@@ -305,5 +305,18 @@ vis.delete()
 ##### Use dashboards
 
 ```python3
+from deepint import Credentials, Organization, Dashboard
 
+# load organization and create workspace
+org = Organization.build(organization_id='e612d27d-9c81-479f-a35f-85cac80c0718')
+ws = org.workspaces.create(name='example', description='example')
+
+# create dashboard
+dash = ws.dashboards.create(name='example', description='example', privacy='public', shareOpt="",
+                    gaId="", restricted=True, configuration={})
+# update dashboard
+dash.update(name='example2', description='example2')
+
+# delete dashboard
+dash.delete()
 ```
