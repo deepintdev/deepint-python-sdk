@@ -277,3 +277,46 @@ t.load()
 if t.is_errored():
   print('an errror occurred')
 ```
+
+##### Use visualizations
+
+```python3
+import pandas as pd
+from deepint import Organization, Visualization, Source
+
+# load organization and create workspace
+org = Organization.build(organization_id='a1faa528-1d42-4cf0-ae04-e122d0ddf9aa')
+ws = org.workspaces.create(name='example', description='example')
+
+# create a source for the visualization
+data = pd.read_csv('example.csv')
+src = ws.sources.create_and_initialize(name='exampe', description='exampe', data=data)
+
+# create visualization
+vis = ws.visualizations.create(name='example', description='example', privacy='public', source='source_id', configuration={})
+
+# update visualization
+vis.update(name='example2', description='example2', source='source_id')
+
+# delete visualization
+vis.delete()
+```
+
+##### Use dashboards
+
+```python3
+from deepint import Credentials, Organization, Dashboard
+
+# load organization and create workspace
+org = Organization.build(organization_id='e612d27d-9c81-479f-a35f-85cac80c0718')
+ws = org.workspaces.create(name='example', description='example')
+
+# create dashboard
+dash = ws.dashboards.create(name='example', description='example', privacy='public', shareOpt="",
+                    gaId="", restricted=True, configuration={})
+# update dashboard
+dash.update(name='example2', description='example2')
+
+# delete dashboard
+dash.delete()
+```

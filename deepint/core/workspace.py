@@ -7,139 +7,16 @@ import pandas as pd
 from datetime import datetime
 from typing import Any, List, Dict, Optional, Generator
 
+from .dashboard import Dashboard
+from .task import Task, TaskStatus
+from .alert import Alert, AlertType
+from .visualization import Visualization
+from .model import Model, ModelMethod, ModelType
+from .source import Source, SourceFeature, FeatureType
+
 from ..auth import Credentials
 from ..error import DeepintBaseError
 from ..util import handle_request, handle_paginated_request, parse_date, parse_url
-from .source import Source, SourceFeature, FeatureType
-from .model import Model, ModelMethod, ModelType
-from .task import Task, TaskStatus
-from .alert import Alert, AlertType
-
-
-class Visualization:
-    """Stores the information of a Deep Intelligence visualization.
-    
-    Attributes:
-        visualization_id: visualization's id in format uuid4.
-        name: visualization's name.
-        description: visualization's description.
-        created: creation date.
-        last_modified: last modified date.
-        last_access: last access date.
-        visualization_type: type of visualization.
-    """
-
-    def __init__(self, visualization_id: str, created: datetime, last_modified: datetime, last_access: datetime,
-                 name: str, description: str, visualization_type: str) -> None:
-        self.visualization_id = visualization_id
-        self.created = created
-        self.last_modified = last_modified
-        self.last_access = last_access
-        self.name = name
-        self.description = description
-        self.visualization_type = visualization_type
-
-    def __eq__(self, other):
-        if not isinstance(other, Visualization):
-            return False
-        else:
-            return self.visualization_id == other.visualization_id
-
-    def __str__(self):
-        return '<Visualization ' + ' '.join([f'{k}={v}' for k, v in self.to_dict().items()]) + '>'
-
-    @staticmethod
-    def from_dict(obj: Any) -> 'Visualization':
-        """Builds a Visualization with a dictionary.
-
-        Args:
-            obj: :obj:`object` or :obj:`dict` containing the a serialized Visualization.
-
-        Returns:
-            Visualization containing the information stored in the given dictionary.
-        """
-        visualization_id = obj.get("id")
-        created = parse_date(obj.get("created"))
-        last_modified = parse_date(obj.get("last_modified"))
-        last_access = parse_date(obj.get("last_access"))
-        name = obj.get("name")
-        description = obj.get("description")
-        visualization_type = obj.get("visualization_type")
-        return Visualization(visualization_id, created, last_modified, last_access, name, description,
-                             visualization_type)
-
-    def to_dict(self) -> Dict[str, Any]:
-        """Builds a dictionary containing the information stored in current object.
-
-        Returns:
-            dictionary containing the information stored in the current object.
-        """
-
-        return {"id": self.visualization_id, "created": self.created.isoformat(),
-                "last_modified": self.last_modified.isoformat(), "last_access": self.last_access.isoformat(),
-                "name": self.name, "description": self.description,
-                "visualization_type": self.visualization_type}
-
-
-class Dashboard:
-    """Stores the information of a Deep Intelligence dashboard.
-    
-    Attributes:
-        dashboard_id: dashboard's id in format uuid4.
-        name: dashboard's name.
-        description: dashboard's description.
-        created: creation date.
-        last_modified: last modified date.
-        last_access: last access date.
-    """
-
-    def __init__(self, dashboard_id: str, created: datetime, last_modified: datetime, last_access: datetime, name: str,
-                 description: str) -> None:
-        self.dashboard_id = dashboard_id
-        self.created = created
-        self.last_modified = last_modified
-        self.last_access = last_access
-        self.name = name
-        self.description = description
-
-    def __eq__(self, other):
-        if not isinstance(other, Dashboard):
-            return False
-        else:
-            return self.dashboard_id == other.dashboard_id
-
-    def __str__(self):
-        return '<Dashboard ' + ' '.join([f'{k}={v}' for k, v in self.to_dict().items()]) + '>'
-
-    @staticmethod
-    def from_dict(obj: Any) -> 'Dashboard':
-        """Builds a Dashboard with a dictionary.
-
-        Args:
-            obj: :obj:`object` or :obj:`dict` containing the a serialized Dashboard.
-
-        Returns:
-            Dashboard containing the information stored in the given dictionary.
-        """
-
-        dashboard_id = obj.get("id")
-        created = parse_date(obj.get("created"))
-        last_modified = parse_date(obj.get("last_modified"))
-        last_access = parse_date(obj.get("last_access"))
-        name = obj.get("name")
-        description = obj.get("description")
-        return Dashboard(dashboard_id, created, last_modified, last_access, name, description)
-
-    def to_dict(self) -> Dict[str, Any]:
-        """Builds a dictionary containing the information stored in current object.
-
-        Returns:
-            dictionary containing the information stored in the current object.
-        """
-
-        return {"id": self.dashboard_id, "created": self.created.isoformat(),
-                "last_modified": self.last_modified.isoformat(), "last_access": self.last_access.isoformat(),
-                "name": self.name, "description": self.description}
 
 
 class WorkspaceInfo:
@@ -237,7 +114,32 @@ class WorkspaceVisualizations:
         self._generator = None
         self._visualizations = visualizations
 
-    def load(self):
+    def create(self, name: str, description: str, privacy: str, source: str, configuration: Dict[str, Any] = {}) -> Visualization:
+        """Creates a visualization in current workspace.
+        
+        Args:
+            name: new visualization's name.
+            description: new visualization's description.
+            
+        Returns:
+            The created visualization
+        """
+        url = f'https://app.deepint.net/api/v1/workspace/{self.workspace.info.workspace_id}/visualizations'
+        parameters = {'name': name, 'description': description, 'privacy': privacy, 'source': source, 'configuration': configuration}
+        headers = {'x-deepint-organization': self.workspace.organization_id}
+        response = handle_request(method='POST', url=url, headers=headers, parameters=parameters, credentials=self.workspace.credentials)
+
+        #map results
+        new_visualization = Visualization.build(workspace_id=self.workspace.info.workspace_id, visualization_id=response['visualization_id'],
+                            organization_id=self.workspace.organization_id, credentials=self.workspace.credentials)
+        
+        #update local state
+        self._visualizations = self._visualizations if self._visualizations is not None else []
+        self._visualizations.append(new_visualization)
+        
+        return new_visualization
+    
+    def load(self) -> None:
         """Loads a workspace's visualizations.
 
         If the visualizations were already loaded, this ones are replace by the new ones after retrieval.
@@ -250,7 +152,8 @@ class WorkspaceVisualizations:
 
         # map results
         self._visualizations = None
-        self._generator = (Visualization.from_dict(v) for v in response)
+        self._generator = (Visualization.build(workspace_id=self.workspace.info.workspace_id, visualization_id=v['id'],
+                                                organization_id=self.workspace.organization_id, source_id=None, credentials=self.workspace.credentials) for v in response)
 
     def fetch(self, visualization_id: str = None, name: str = None, force_reload: bool = False) -> Optional[Visualization]:
         """Search for a visualization in the workspace.
@@ -333,6 +236,37 @@ class WorkspaceDashboards:
         self.workspace = workspace
         self._generator = None
         self._dashboards = dashboards
+    
+    def create(self, name: str, description: str, privacy: str, share_opt: str, restricted: bool, ga_id: str = None, configuration: Dict[str, Any] = {}) -> Dashboard:
+        """Creates a dashboard in the current workspace.
+        
+        Args
+            name: new dashboard's name
+            description: new dashboard's description
+            privacy: new dashboard's privacy
+            share_opt: Option for the shared dashboard GUI
+            ga_id: Opctional Google Analytics ID
+            restricted: True to check for explicit permission for shared dashboard
+            configuration: advanced option.
+        
+        Returns: 
+            The created dashboard
+        """
+
+        url = f'https://app.deepint.net/api/v1/workspace/{self.workspace.info.workspace_id}/dashboards'
+        parameters = {'name': name, 'description': description, 'privacy': privacy, 'shareOpt': share_opt, 'gaId': ga_id, 'restricted': restricted, 'configuration': configuration}
+        headers = {'x-deepint-organization': self.workspace.organization_id}
+        response = handle_request(method='POST', url=url, parameters=parameters, headers=headers, credentials=self.workspace.credentials)
+        
+        # map result
+        new_dashboard = Dashboard.build(workspace_id=self.workspace.info.workspace_id, organization_id=self.workspace.organization_id,
+                                        dashboard_id=response['dashboard_id'], credentials=self.workspace.credentials)
+        
+        # update local state
+        self._dashboards = self._dashboards if self._dashboards is not None else []
+        self._dashboards.append(new_dashboard)
+
+        return new_dashboard
 
     def load(self):
         """Loads a workspace's dashboards.
@@ -347,8 +281,9 @@ class WorkspaceDashboards:
 
         # map results
         self.dashboards = None
-        self._generator = (Dashboard.from_dict(d) for d in response)
-
+        self._generator = (Dashboard.build(organization_id=self.workspace.organization_id, workspace_id=self.workspace.info.workspace_id,
+                         dashboard_id=d['id'], credentials=self.workspace.credentials) for d in response)
+        
     def fetch(self, dashboard_id: str = None, name: str = None, force_reload: bool = False) -> Optional[Dashboard]:
         """Search for a dashboard in the workspace.
 
@@ -365,7 +300,7 @@ class WorkspaceDashboards:
                 :obj:`deepint.core.workspace.WorkspaceDashboards.load` method.
         
         Returns:
-            retrieved dashboard if found, and in other case None.
+            Retrieved dashboard if found, and in other case None.
         """
 
         # if set to true reload
@@ -395,7 +330,7 @@ class WorkspaceDashboards:
         The first time is invoked, builds a generator to retrieve dashboards directly from deepint.net API. However, 
         if there is stored dashboards and the force_reload option is not specified, only iterates in local 
         dashboards. In other case, it request the dashboards to deepint.net API and iterates over it.
-
+        
         Args:
             force_reload: if set to True, dashboards are reloaded before the search with the
                 :obj:`deepint.core.workspace.WorkspaceDashboard.load` method.
@@ -541,10 +476,10 @@ class WorkspaceSources:
         
         The source is created with the :obj:`deepint.core.worksapce.WorkspaceSources.create_and_initialize`, so it's 
         reccomended to read the documentation of that method to learn more about the possible arguments of creation  (that can be 
-        providen in the **kwargs). Before creation, the source is loaded and stored locally in the internal list of sources in the 
+        providen in kwargs). Before creation, the source is loaded and stored locally in the internal list of sources in the 
         current instance. Also it's remmarkable that the source instance's are updated with the :obj:`deepint.core.source.SourceInstances.update`
         method, so it's reccomended to read the documentation of that method to learn more about the possible arguments of update (that 
-        can be providen in the **kwargs).
+        can be providen in the kwargs).
 
         Note: if features change, then the source instances are deleted
 
@@ -1125,7 +1060,7 @@ class Workspace:
         tasks: :obj:`deepint.core.workspace.WorkspaceTasks` to operate with workspace's tasks.
         models: :obj:`deepint.core.workspace.WorkspaceModels` to operate with workspace's models.
         alerts: :obj:`deepint.core.workspace.WorkspaceAlerts` to operate with workspace's alerts.
-        sources: :obj:`deepint.core.workspace.WorkspaceDashboards` to operate with workspace's sources.
+        sources: :obj:`deepint.core.workspace.WorkspaceSources` to operate with workspace's sources.
         dashboards: :obj:`deepint.core.workspace.WorkspaceDashboards` to operate with workspace's dashboards.
         visualizations: :obj:`deepint.core.workspace.WorkspaceVisualizations` to operate with workspace's visualizations.
         credentials: credentials to authenticate with Deep Intelligence API and be allowed to perform operations over the workspace. If

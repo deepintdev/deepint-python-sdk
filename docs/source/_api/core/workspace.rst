@@ -4,15 +4,7 @@ Workspace
 .. autoclass:: deepint.core.Workspace
    :exclude-members:
    :members:
-
-.. autoclass:: deepint.core.Visualization
-   :exclude-members:
-   :members:
-
-.. autoclass:: deepint.core.Dashboard
-   :exclude-members:
-   :members:
-
+   
 .. autoclass:: deepint.core.workspace.WorkspaceSources
    :exclude-members:
    :members:
