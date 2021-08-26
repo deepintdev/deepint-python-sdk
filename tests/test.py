@@ -104,6 +104,18 @@ def test_workspace_CRUD():
     except DeepintHTTPError:
         assert True
 
+    # export
+    ws_name = serve_name(TEST_WS_NAME)
+    ws = org.workspaces.create(name=ws_name, description=TEST_WS_DESC)
+    zip_path = ws.export(wait_for_download=True)
+    assert (os.path.isfile(zip_path) == True)
+    os.unlink(zip_path)
+
+    task = ws.export(wait_for_download=False)
+    zip_path = ws.export(task=task)
+    assert (os.path.isfile(zip_path) == True)
+    os.unlink(zip_path)
+
     # create if not exists
     ws_name = serve_name(TEST_WS_NAME)
     ws = org.workspaces.create_if_not_exists(ws_name)

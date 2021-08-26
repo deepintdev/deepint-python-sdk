@@ -3,9 +3,11 @@
 # Copyright 2021 Deep Intelligence
 # See LICENSE for details.
 
+import os
+import requests
 import pandas as pd
 from datetime import datetime
-from typing import Any, List, Dict, Optional, Generator
+from typing import Any, List, Dict, Optional, Generator, Union
 
 from .dashboard import Dashboard
 from .task import Task, TaskStatus
@@ -1199,6 +1201,55 @@ class Workspace:
         url = f'https://app.deepint.net/api/v1/workspace/{self.info.workspace_id}'
         headers = {'x-deepint-organization': self.organization_id}
         handle_request(method='DELETE', url=url, headers=headers, credentials=self.credentials)
+
+    def export(self, path: str=".", wait_for_download: bool = True, task: Task = None) -> Union[str, Task]:
+        """Exports a workspace to ZIP into the selected path.
+        
+        Args:
+            path: the path where the zip should be located. This parameter must contain the name of the file. By default is the
+                current folder.
+            wait_for_download: if set to true the file is located automatically into the selected path. In other case, the method
+                returns a :obj:`deepint.core.task.Task`, that can be used later to get the ZIP with this metod, providing it into
+                the task parameter.
+            task: :obj:`deepint.core.task.Task` used to obtain the URL to download the ZIP in a delayed download (when the wait_for_download parameter is set to false).
+        
+        Returns:
+            The path to downloaded ZIP in the case of wait_for_download is set to True. In other case the task generated to build the ZIP.
+        """
+
+        if task is None:
+
+            # build request
+            url = f'https://app.deepint.net/api/v1/workspace/{self.info.workspace_id}/export'
+            headers = {'x-deepint-organization': self.organization_id}
+            response = handle_request(method='POST', url=url, headers=headers,credentials=self.credentials)
+
+            # create task to fetch the ZIP file
+            task = Task.build(task_id=response['task_id'], workspace_id=self.info.workspace_id,
+                              organization_id=self.organization_id, credentials=self.credentials)
+
+            if not wait_for_download:
+                return task
+
+        # wait for task resolution to obtain reslult
+        task.resolve()
+        result = task.fetch_result()
+
+        if 'file' not in result:
+            raise DeepintBaseError(code='DOWNLOAD_FAILED', message="The task generated to build the ZIP file failed, please try again in a few seconds")
+
+        file_url = result['file']
+
+        # download and store ZIP file
+        try:            
+            file_path = os.path.join(path, f'{self.info.workspace_id}.zip')
+            file_path = os.path.abspath(file_path)
+            r = requests.get(file_url)
+            open(file_path, 'wb').write(r.content)
+            return file_path
+        except Exception as e:
+            raise e
+            raise DeepintBaseError(code='DOWNLOAD_FAILED', message="Unable to write the file's content. Check the path and permisions.")
 
     def to_dict(self) -> Dict[str, Any]:
         """Builds a dictionary containing the information stored in current object.
