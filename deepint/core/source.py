@@ -394,7 +394,7 @@ class SourceInstances:
         headers = {'x-deepint-organization': self.source.organization_id}
         files = [('file', ('file', streaming_values_data))]
         parameters = {
-            'replace': 'yes' if replace == True else 'no',
+            'replace': replace,
             'pk': pk if not replace else None,
             'separator': ',',
             'quotes': '"',

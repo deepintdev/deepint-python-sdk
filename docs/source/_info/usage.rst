@@ -122,6 +122,34 @@ Create source from dataframe
     source = ws.sources.create_and_initialize(name='exampe', description='exampe', data=data)
 
 
+Use workspaces
+--------------
+
+.. code-block:: python3
+
+    from deepint import Organization, Credentials
+
+    # load organization
+    credentials = Credentials.build(token='3e6913ad-49f4-4fed-a50d-1ab703716a75')
+    org = Organization.build(organization_id='dfdb7d08-18ce-4b5a-b082-0afa0f557d31', credentials=credentials)
+        
+    # create workspace
+    ws = org.workspaces.create(name='example', description='example')
+
+    # update workspace
+    ws.update(name='example2', description='example2')
+
+    # export workspace ZIP file
+    zip_path = ws.export()
+
+    # delayed export of workspace
+    task = ws.export(path='./example_ws.zip', wait_for_download=False)
+    ws.export(path='./example_ws_delayed.zip', task=task)
+
+    # delete workspace
+    ws.delete()
+
+
 Use sources
 -----------
 
