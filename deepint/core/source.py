@@ -381,10 +381,9 @@ class SourceInstances:
 
         # convert content to CSV
         try:
+            dict_to_list = lambda x, order: [x[c] for c in order]
             column_order = [f.name for f in self.source.features.fetch_all() if not f.computed]
-            streaming_values_data = data.to_csv(sep=',',
-                                                index=send_with_index,
-                                                columns=column_order)
+            json_data = [dict_to_list(x, column_order) for x in data.to_dict(orient='records')]
         except:
             raise DeepintBaseError(code='CONVERSION_ERROR',
                                    message='Unable to convert DataFrame to CSV. Please, check the index, columns and the capability of serialization for the DataFrame fields.')
@@ -392,18 +391,16 @@ class SourceInstances:
         # request
         url = f'https://app.deepint.net/api/v1/workspace/{self.source.workspace_id}/source/{self.source.info.source_id}/instances'
         headers = {'x-deepint-organization': self.source.organization_id}
-        files = [('file', ('file', streaming_values_data))]
         parameters = {
             'replace': replace,
             'pk': pk if not replace else None,
             'separator': ',',
             'quotes': '"',
             'csv_header': 'yes',
-            'json_fields': '',
-            'date_format': date_format
+            'date_format': date_format,
+            'data': json_data
         }
-        response = handle_request(method='POST', url=url, headers=headers, credentials=self.source.credentials, parameters=parameters,
-                                  files=files)
+        response = handle_request(method='POST', url=url, headers=headers, credentials=self.source.credentials, parameters=parameters)
 
         # map response
         task = Task.build(task_id=response['task_id'], workspace_id=self.source.workspace_id,
