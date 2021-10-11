@@ -43,13 +43,18 @@ def handle_request(credentials: Credentials = None, method: str = None, url: str
         parameters = {k: parameters[k] for k in parameters if parameters[k] is not None}
 
     # prepare request parts
-    data = parameters if method != 'GET' else None
     params = parameters if method == 'GET' else None
+    data = parameters if method != 'GET' and files is not None else None
+    json_data = parameters if method != 'GET' and files is None else None
 
     # perform request
-    response = requests.request(method=method, url=url, headers=header, params=params, json=data, files=files)
+    response = requests.request(method=method, url=url, headers=header, params=params, json=json_data, data=data, files=files)
 
-    if response.status_code == 504:
+    if response.status_code == 500:
+        raise DeepintHTTPError(code='UNKOWN_ERROR',
+                               message='System errored. Please, wait a few seconds and try again.',
+                               method=method, url=url)
+    elif response.status_code == 504:
         raise DeepintHTTPError(code='TIMEOUT_ERROR',
                                message='System reached maximum timeout in the request processing. Please, wait a few seconds and try again.',
                                method=method, url=url)
@@ -59,7 +64,10 @@ def handle_request(credentials: Credentials = None, method: str = None, url: str
                                method=method, url=url)
 
     # retrieve information
-    response_json = response.json()
+    try:
+        response_json = response.json()
+    except:
+        raise DeepintHTTPError(code=response.status_code, message='The API returned a no JSON-deserializable response.', method=method, url=url)
 
     if response.status_code != 200:
         raise DeepintHTTPError(code=response_json['code'], message=response_json['message'], method=method, url=url)

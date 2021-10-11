@@ -157,6 +157,9 @@ class Task:
         self.workspace_id = workspace_id
         self.organization_id = organization_id
 
+    def __str__(self):
+        return f'<Task organization_id={self.organization_id} workspace={self.workspace_id} {self.info}>'
+
     @classmethod
     def build(cls, organization_id: str, workspace_id: str, task_id: str, credentials: Credentials = None) -> 'Task':
         """Builds a task.

@@ -468,7 +468,7 @@ class Model:
         self.predictions = ModelPredictions(self)
 
     def __str__(self):
-        return f'<Model workspace={self.workspace_id} {self.info}>'
+        return f'<Model organization_id={self.organization_id} workspace={self.workspace_id} {self.info}>'
 
     def __eq__(self, other):
         if not isinstance(other, Model):
