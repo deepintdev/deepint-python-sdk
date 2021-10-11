@@ -5,8 +5,10 @@
 
 from typing import Any, List, Dict, Optional, Generator
 
-from .workspace import Workspace
 from ..auth import Credentials
+from .workspace import Workspace
+from .task import Task, TaskStatus
+from ..error import DeepintBaseError
 from ..util import handle_request, parse_date, parse_url
 
 
@@ -92,6 +94,54 @@ class OrganizationWorkspaces:
 
         # if not exists, create
         return self.create(name, '')
+
+    def import_ws(self, name:str, description:str, path: str, wait_for_creation: bool = True) -> Workspace:
+        """Imports a workspace to ZIP into the selected path.
+        
+        Args:
+            name: new workspace's name.
+            description: new workspace's description.
+            path: the path where the zip must be located. This parameter must contain the name of the file.
+
+        Returns:
+            The created workspace in the case of wait_for_creation is set to True, or a task that on resolve will contain the
+                workspace's id.
+        """
+
+        # read the file
+
+        try:
+            file_content = open(path,'rb').read()
+        except:
+            raise DeepintBaseError(code='FILE_NOT_FOUND', message=f'The providen ZIP file {path} was not found.')
+
+        # build request
+        url = f'https://app.deepint.net/api/v1/workspaces/import'
+        headers = {'x-deepint-organization': self.organization.organization_id}
+        parameters = {'name': name, 'description': description}
+        files = {'file': file_content}
+        response = handle_request(method='POST', url=url, headers=headers, parameters=parameters, files=files, credentials=self.organization.credentials)
+
+        # create task to fetch the workspace
+        task = Task.build(task_id=response['task_id'], workspace_id=response['workspace_id'],
+                          organization_id=self.organization.organization_id, credentials=self.organization.credentials)
+
+        if not wait_for_creation:
+            return task
+        else:
+            # wait for task resolution to obtain workspace
+            task.resolve()
+            _ = task.fetch_result()
+
+            # map results
+            new_workspace = Workspace.build(organization_id=self.organization.organization_id, workspace_id=response['workspace_id'],
+                                            credentials=self.organization.credentials)
+
+            # update local state
+            self._workspaces = self._workspaces if self._workspaces is not None else []
+            self._workspaces.append(new_workspace)
+
+            return new_workspace
 
     def fetch(self, workspace_id: str = None, name: str = None, force_reload: bool = False) -> Optional[Workspace]:
         """Search for a workspace in the organization.
@@ -190,7 +240,7 @@ class Organization:
         self.workspaces = OrganizationWorkspaces(self, workspaces)
 
     def __str__(self):
-        return f'<Organization account={self.account}>'
+        return f'<Organization organization_id={self.organization_id} account={self.account}>'
 
     def __eq__(self, other):
         if not isinstance(other, Organization):

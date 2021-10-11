@@ -7,6 +7,7 @@
 import datetime
 from typing import Any, Dict
 
+from .task import Task
 from ..auth import Credentials
 from ..util import handle_request, parse_url
 
@@ -87,7 +88,7 @@ class DashboardInfo:
 
         return {"id": self.dashboard_id, "created": self.created, "last_modified": self.last_modified,
                 "last_access": self.last_access, "name": self.name, "description": self.description, "privacy": self.privacy,
-                "share_opt": self.share_opt, "gaId": self.gaId, "restricted": self.restricted, "configuration": self.configuration }
+                "share_opt": self.share_opt, "gaId": self.ga_id, "restricted": self.restricted, "configuration": self.configuration }
 
 class Dashboard:
     """"A Deep Intelligence Dashboard.
@@ -112,7 +113,7 @@ class Dashboard:
         self.credentials = credentials
 
     def __str__(self) -> str:
-        return f'<Dashboard workspace={self.organization_id} {self.workspace_id} {self.info}>'
+        return f'<Dashboard organization={self.organization_id} workspace={self.workspace_id} {self.info}>'
     
     def __eq__(self, other):
         if not isinstance(other,Dashboard):
@@ -131,7 +132,7 @@ class Dashboard:
             workspace_id: workspace where the dashboard is located
             dashboard_id: dashboard's id
             credentials: credentials to authenticate with Deep Intelligence API and be allowed to perform operations
-            over the visualization. If not provided, the credentials are generated with the :obj:'deepint.auth.credentials.Credentials.build'.
+            over the dashboard. If not provided, the credentials are generated with the :obj:'deepint.auth.credentials.Credentials.build'.
             
         Returns :
             The dashboard with the given parameters and credentials
@@ -230,7 +231,31 @@ class Dashboard:
         self.info.ga_id = ga_id
         self.info.restricted = restricted
         self.info.configuration = configuration
-    
+
+    def clone(self, name:str = None) -> 'Dashboard':
+        """Clones a dashboard.
+        
+        Args:
+            name: name for the new dashboard. If not providen the name will be `Copy of <current dashboard's name>`
+
+        Returns:
+            the cloned dashboard instance.
+        """
+
+        # generate name fi not present
+        if name is None:
+            name = f'Copy of {self.info.name}'
+
+        # request dashboard clone
+        url = f'https://app.deepint.net/api/v1/workspace/{self.workspace_id}/dashboard/{self.info.dashboard_id}/clone'
+        parameters = {'name': name}
+        headers = {'x-deepint-organization': self.organization_id}
+        response = handle_request(method='POST', url=url, headers=headers,credentials=self.credentials)
+
+        new_dashboard = Dashboard.build(organization_id=self.organization_id, workspace_id=self.workspace_id,
+                                         dashboard_id=response['dashboard_id'],credentials=self.credentials)
+        return new_dashboard
+            
     def delete(self):
         """Deletes a dashboard.
         """

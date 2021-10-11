@@ -10,6 +10,7 @@ from datetime import datetime, date
 from typing import Any, List, Dict, Type, Optional
 from dateutil.parser import parse as python_date_parser
 
+from .task import Task
 from ..auth import Credentials
 from ..error import DeepintBaseError
 from ..util import handle_request, parse_date, parse_url
@@ -117,7 +118,7 @@ class Visualization:
         self.workspace_id = workspace_id
         
     def __str__(self) -> str:
-        return f'<Visualization workspace={self.workspace_id} {self.info} {self.organization_id}>'
+        return f'<Visualization organization={self.organization_id} workspace={self.workspace_id} {self.info}>'
 
     def __eq__(self, other):
         if not isinstance(other, Visualization):
@@ -231,6 +232,30 @@ class Visualization:
         self.info.source_id = source
         self.info.configuration = configuration
 
+    def clone(self, name:str = None) -> 'Visualization':
+        """Clones a visualization.
+        
+        Args:
+            name: name for the new visualization. If not providen the name will be `Copy of <current visualization's name>`
+        
+        Returns:
+            the cloned visualization instance.
+        """
+
+        # generate name fi not present
+        if name is None:
+            name = f'Copy of {self.info.name}'
+
+        # request visualization clone
+        url = f'https://app.deepint.net/api/v1/workspace/{self.workspace_id}/visualization/{self.info.visualization_id}/clone'
+        parameters = {'name': name}
+        headers = {'x-deepint-organization': self.organization_id}
+        response = handle_request(method='POST', url=url, headers=headers,credentials=self.credentials)
+
+        new_visualization = Visualization.build(organization_id=self.organization_id, workspace_id=self.workspace_id,
+                                         visualization_id=response['visualization_id'],credentials=self.credentials)
+        return new_visualization
+        
     def delete(self) -> None:
         """Deletes a visualization.
         """

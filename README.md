@@ -167,6 +167,12 @@ ws.update(name='example2', description='example2')
 # export workspace ZIP file
 zip_path = ws.export()
 
+# import workspace ZIP file
+new_workspace = org.workspaces.import_ws(new_workspace = org.workspaces.import(name='example2', description='example2', path=zip_path)
+
+# clone workspace
+other_workspace = ws.clone()
+
 # delayed export of workspace
 task = ws.export(path='./example_ws.zip', wait_for_download=False)
 ws.export(path='./example_ws_delayed.zip', task=task)
@@ -228,7 +234,10 @@ source = ws.sources.create_else_update(('test', data)
 source1 = ws.sources.create_else_update('test', data)
 if source == source1:
     print('source is equal to source1 because the method works!')
-source.delete()
+source1.delete()
+
+# clone source
+new_source = source.clone()
 
 # delete source
 source.delete()
@@ -324,6 +333,9 @@ vis = ws.visualizations.create(name='example', description='example', privacy='p
 # update visualization
 vis.update(name='example2', description='example2', source='source_id')
 
+# clone visualization
+new_vis = vis.clone()
+
 # delete visualization
 vis.delete()
 ```
@@ -343,6 +355,9 @@ dash = ws.dashboards.create(name='example', description='example', privacy='publ
 # update dashboard
 dash.update(name='example2', description='example2')
 
+
+# clone dashboard
+new_dash = dash.clone()
 # delete dashboard
 dash.delete()
 ```

@@ -302,6 +302,7 @@ class SourceInstances:
               select: str = None,
               where: str = None,
               order_by: str = None,
+              order_type: str = None,
               offset: int = None,
               limit: int = None) -> pd.DataFrame:
         """Retrieves a source's instances.
@@ -310,12 +311,16 @@ class SourceInstances:
             select: features to retrieve. Note: all features must belon to the source.
             where: query in Deepint Query Language.
             order_by: feature by which to sort instances during retrieval.
+            order_type: must be asc or desc.
             offset: number of instances to ignore during the retrieval.
             limit: maximum number of instances to retrieve.
 
         Returns:
             :obj:`pd.DataFrame`: containing the retrieved data.
         """
+
+        order_type = 'asc' if order_type is None else order_type
+        order_by = f'{order_by},{order_type}' if order_by is not None else None
 
         url = f'https://app.deepint.net/api/v1/workspace/{self.source.workspace_id}/source/{self.source.info.source_id}/instances'
         headers = {'x-deepint-organization': self.source.organization_id}
@@ -333,6 +338,7 @@ class SourceInstances:
             feature['name']: instance[feature['index']]
             for feature in response['features']
         } for instance in response['instances']]
+
         df = pd.DataFrame(data=result)
 
         return df
@@ -381,9 +387,10 @@ class SourceInstances:
 
         # convert content to CSV
         try:
-            dict_to_list = lambda x, order: [x[c] for c in order]
             column_order = [f.name for f in self.source.features.fetch_all() if not f.computed]
-            json_data = [dict_to_list(x, column_order) for x in data.to_dict(orient='records')]
+            streaming_values_data = data.to_csv(sep=',',
+                                                index=send_with_index,
+                                                columns=column_order)
         except:
             raise DeepintBaseError(code='CONVERSION_ERROR',
                                    message='Unable to convert DataFrame to CSV. Please, check the index, columns and the capability of serialization for the DataFrame fields.')
@@ -391,16 +398,17 @@ class SourceInstances:
         # request
         url = f'https://app.deepint.net/api/v1/workspace/{self.source.workspace_id}/source/{self.source.info.source_id}/instances'
         headers = {'x-deepint-organization': self.source.organization_id}
+        files = [('file', ('file', streaming_values_data))]
         parameters = {
             'replace': replace,
             'pk': pk if not replace else None,
             'separator': ',',
             'quotes': '"',
             'csv_header': 'yes',
-            'date_format': date_format,
-            'data': json_data
+            'json_fields': '',
+            'date_format': date_format
         }
-        response = handle_request(method='POST', url=url, headers=headers, credentials=self.source.credentials, parameters=parameters)
+        response = handle_request(method='POST', url=url, headers=headers, parameters=parameters, files=files, credentials=self.source.credentials)
 
         # map response
         task = Task.build(task_id=response['task_id'], workspace_id=self.source.workspace_id,
@@ -574,7 +582,7 @@ class Source:
         self.features = SourceFeatures(self, features)
 
     def __str__(self):
-        return f'<Source workspace={self.workspace_id} {self.info} features={self.features.fetch_all()}>'
+        return f'<Source organization_id={self.organization_id} workspace={self.workspace_id} {self.info} features={self.features.fetch_all()}>'
 
     def __eq__(self, other):
         if not isinstance(other, Source):

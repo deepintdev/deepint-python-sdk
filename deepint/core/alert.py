@@ -176,7 +176,7 @@ class Alert:
         self.instances = AlertInstances(self)
 
     def __str__(self):
-        return f'<Alert workspace={self.workspace_id} {self.info}>'
+        return f'<Alert organization_id={self.organization_id} workspace={self.workspace_id} {self.info}>'
 
     def __eq__(self, other):
         if not isinstance(other, Alert):

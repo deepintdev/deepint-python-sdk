@@ -1082,6 +1082,9 @@ class Workspace:
         self.dashboards = WorkspaceDashboards(self, dashboards)
         self.visualizations = WorkspaceVisualizations(self, visualizations)
 
+    def __str__(self):
+        return f'<Workspace organization_id={self.organization_id} workspace={self.info.workspace_id} {self.info}>'
+
     def __eq__(self, other):
         if not isinstance(other, Workspace):
             return False
@@ -1247,9 +1250,40 @@ class Workspace:
             r = requests.get(file_url)
             open(file_path, 'wb').write(r.content)
             return file_path
-        except Exception as e:
-            raise e
+        except:
             raise DeepintBaseError(code='DOWNLOAD_FAILED', message="Unable to write the file's content. Check the path and permisions.")
+
+    def clone(self, name:str = None) -> 'Workspace':
+        """Clones a workspace.
+        
+        Args:
+            name: name for the new workspace. If not providen the name will be `Copy of <current workspace's name>`
+
+        Returns:
+            the cloned workspace instance.
+        """
+
+        # generate name fi not present
+        if name is None:
+            name = f'Copy of {self.info.name}'
+
+        # request workspace clone
+        url = f'https://app.deepint.net/api/v1/workspace/{self.info.workspace_id}/clone'
+        parameters = {'name': name}
+        headers = {'x-deepint-organization': self.organization_id}
+        response = handle_request(method='POST', url=url, headers=headers, parameters=parameters, credentials=self.credentials)
+
+        # retrieve task
+        task = Task.build(task_id=response['task_id'], workspace_id=response['workspace_id'], organization_id=self.organization_id, credentials=self.credentials)
+
+        # resolve task and build workspace
+        task.resolve()
+        _ = task.fetch_result()
+
+        new_workspace = Workspace.build(organization_id=self.organization_id, workspace_id=response['workspace_id'],
+                                        credentials=self.credentials)
+        return new_workspace
+        
 
     def to_dict(self) -> Dict[str, Any]:
         """Builds a dictionary containing the information stored in current object.
