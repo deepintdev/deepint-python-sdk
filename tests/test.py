@@ -14,11 +14,8 @@ from deepint import *
 
 TEST_CSV = 'https://people.sc.fsu.edu/~jburkardt/data/csv/letter_frequency.csv'
 TEST_CSV2 = 'https://people.sc.fsu.edu/~jburkardt/data/csv/letter_frequency.csv'
-#DEEPINT_TOKEN = os.environ.get('DEEPINT_TOKEN')
-#DEEPINT_ORGANIZATION = os.environ.get('DEEPINT_ORGANIZATION')
-DEEPINT_TOKEN = '9CGcK2E3kItQD48eZNC09nkvj671hzVQFz-266zo2xub1kLHMEd1_5fQCRFrrimlR2izinLVv2r5peOWmHw6tg'
-DEEPINT_ORGANIZATION = '0000017729441860-c00e07b1-9decdc46-d0b91467'
-
+DEEPINT_TOKEN = os.environ.get('DEEPINT_TOKEN')
+DEEPINT_ORGANIZATION = os.environ.get('DEEPINT_ORGANIZATION')
 
 # objects names
 PYTHON_VERSION_NAME = platform.python_version()
