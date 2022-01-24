@@ -153,9 +153,9 @@ class Dashboard:
         """
 
         # request
-        url = f'https://app.deepint.net/api/v1/workspace/{self.workspace_id}/dashboard/{self.info.dashboard_id}'
+        path = f'/api/v1/workspace/{self.workspace_id}/dashboard/{self.info.dashboard_id}'
         headers = {'x-deepint-organization': self.organization_id}
-        response = handle_request(method='GET', url=url, headers=headers, credentials=self.credentials)
+        response = handle_request(method='GET', path=path, headers=headers, credentials=self.credentials)
 
         # map results
         self.info = DashboardInfo.from_dict(response)
@@ -182,7 +182,7 @@ class Dashboard:
             The dashboard with the URL and credentials
         """
 
-        url_info = parse_url(url)
+        url_info, hostname = parse_url(url)
 
         if 'organization_id' not in url_info and organization_id is None:
             raise ValueError('Field organization_id must be in url to build the object. Or providen as an optional parameter')
@@ -191,8 +191,11 @@ class Dashboard:
         
         organization_id = url_info['organization_id'] if 'organization_id' in url_info else organization_id
 
+        # create new credentials
+        new_credentials = Credentials(token=credentials.token, instance=hostname)
+
         return cls.build(organization_id=organization_id, workspace_id=url_info['workspace_id'], dashboard_id=url_info['dashboard_id'],
-                            credentials=credentials)
+                            credentials=new_credentials)
     
     def update(self, name: str = None, description: str = None, privacy: str = 'public', share_opt: str = "", ga_id: str = None, restricted: bool = None, configuration: Dict[str, Any] = {}):
         """Updates a dashboard's information.
@@ -217,11 +220,11 @@ class Dashboard:
         configuration = configuration if configuration is not None else self.info.configuration
 
         # request
-        url = f'https://app.deepint.net/api/v1/workspace/{self.workspace_id}/dashboard/{self.info.dashboard_id}'
+        path = f'/api/v1/workspace/{self.workspace_id}/dashboard/{self.info.dashboard_id}'
         parameters = {'name': name, 'description': description, 'privacy': privacy, 'share_opt': share_opt,
                         'gaId': ga_id, 'restricted': restricted, 'configuration': configuration}
         headers = {'x-deepint-organization': self.organization_id}
-        response = handle_request(method='POST', url=url, headers=headers, parameters=parameters, credentials=self.credentials)
+        response = handle_request(method='POST', path=path, headers=headers, parameters=parameters, credentials=self.credentials)
 
         # update local state
         self.info.name = name
@@ -247,10 +250,10 @@ class Dashboard:
             name = f'Copy of {self.info.name}'
 
         # request dashboard clone
-        url = f'https://app.deepint.net/api/v1/workspace/{self.workspace_id}/dashboard/{self.info.dashboard_id}/clone'
+        path = f'/api/v1/workspace/{self.workspace_id}/dashboard/{self.info.dashboard_id}/clone'
         parameters = {'name': name}
         headers = {'x-deepint-organization': self.organization_id}
-        response = handle_request(method='POST', url=url, headers=headers,credentials=self.credentials)
+        response = handle_request(method='POST', path=path, headers=headers,credentials=self.credentials)
 
         new_dashboard = Dashboard.build(organization_id=self.organization_id, workspace_id=self.workspace_id,
                                          dashboard_id=response['dashboard_id'],credentials=self.credentials)
@@ -261,9 +264,9 @@ class Dashboard:
         """
 
         # request
-        url = f'https://app.deepint.net/api/v1/workspace/{self.workspace_id}/dashboard/{self.info.dashboard_id}'
+        path = f'/api/v1/workspace/{self.workspace_id}/dashboard/{self.info.dashboard_id}'
         headers = {'x-deepint-organization': self.organization_id}
-        handle_request(method='DELETE', url=url, headers=headers, credentials=self.credentials)
+        handle_request(method='DELETE', path=path, headers=headers, credentials=self.credentials)
     
     def to_dict(self) -> Dict[str, Any]:
         """Builds a dictionary containing the information stored in the current object.

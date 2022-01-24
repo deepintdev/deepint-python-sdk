@@ -30,6 +30,7 @@ def parse_url(url):
     # parse url and create main result
     ids = {}
     pieces = urlparse(url)
+    hostname = pieces.netloc
 
     if '/api/v1' in url:
 
@@ -78,4 +79,4 @@ def parse_url(url):
         if 's' in query_pieces and 'i' in query_pieces:
             ids[f'{query_pieces["s"]}_id'] = query_pieces['i']
 
-    return ids
+    return ids, hostname
