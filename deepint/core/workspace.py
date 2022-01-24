@@ -473,7 +473,7 @@ class WorkspaceSources:
         # if not exists, create
         return self.create(name, '', [])
 
-    def create_else_update(self, name:str, data: pd.DataFrame, delete_instances_on_feature_update: bool = True, **kwargs) -> Source:
+    def create_else_update(self, name:str, data: pd.DataFrame, description:str = '', delete_instances_on_feature_update: bool = True, **kwargs) -> Source:
         """Creates a source and initializes it, if it doesn't exist any source with same name. Else updates the source's instances. 
         
         The source is created with the :obj:`deepint.core.worksapce.WorkspaceSources.create_and_initialize`, so it's 
@@ -526,7 +526,7 @@ class WorkspaceSources:
             selected_source.instances.update(data=data,**kwargs)
 
         else:
-            selected_source = self.create_and_initialize(name, '', data, **kwargs)
+            selected_source = self.create_and_initialize(name=name, description=description, data=data, **kwargs)
 
         return selected_source
 
