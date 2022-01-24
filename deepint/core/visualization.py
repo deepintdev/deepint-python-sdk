@@ -227,7 +227,7 @@ class Visualization:
         path = f'/api/v1/workspace/{self.workspace_id}/visualization/{self.info.visualization_id}'
         parameters = {'name': name, 'description': description, 'privacy': privacy, 'source': source, 'configuration': configuration}
         headers = {'x-deepint-organization': self.organization_id}
-        response = handle_request(method='POST', url= url, headers=headers, parameters=parameters, credentials=self.credentials)
+        response = handle_request(method='POST', path=path, headers=headers, parameters=parameters, credentials=self.credentials)
         
         #update local state
         self.info.name = name
