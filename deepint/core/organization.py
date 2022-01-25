@@ -95,13 +95,13 @@ class OrganizationWorkspaces:
         # if not exists, create
         return self.create(name, '')
 
-    def import_ws(self, name:str, description:str, path: str, wait_for_creation: bool = True) -> Workspace:
+    def import_ws(self, name:str, description:str, file_path: str, wait_for_creation: bool = True) -> Workspace:
         """Imports a workspace to ZIP into the selected path.
         
         Args:
             name: new workspace's name.
             description: new workspace's description.
-            path: the path where the zip must be located. This parameter must contain the name of the file.
+            file_path: the path where the zip must be located. This parameter must contain the name of the file.
 
         Returns:
             The created workspace in the case of wait_for_creation is set to True, or a task that on resolve will contain the
@@ -111,7 +111,7 @@ class OrganizationWorkspaces:
         # read the file
 
         try:
-            file_content = open(path,'rb').read()
+            file_content = open(file_path,'rb').read()
         except:
             raise DeepintBaseError(code='FILE_NOT_FOUND', message=f'The providen ZIP file {path} was not found.')
 

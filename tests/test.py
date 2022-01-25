@@ -121,7 +121,7 @@ def test_workspace_CRUD():
     ws = org.workspaces.create(name=ws_name, description=TEST_WS_DESC)
     zip_path = ws.export(wait_for_download=True)
     assert (os.path.isfile(zip_path) == True)
-    workspace = org.workspaces.import_ws(name=ws_name, description=TEST_WS_DESC, path=zip_path, wait_for_creation=True)
+    workspace = org.workspaces.import_ws(name=ws_name, description=TEST_WS_DESC, file_path=zip_path, wait_for_creation=True)
     assert (workspace.info.workspace_id != ws.info.workspace_id)
     os.unlink(zip_path)
 

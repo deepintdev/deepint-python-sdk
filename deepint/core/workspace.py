@@ -1208,11 +1208,11 @@ class Workspace:
         headers = {'x-deepint-organization': self.organization_id}
         handle_request(method='DELETE', path=path, headers=headers, credentials=self.credentials)
 
-    def export(self, path: str=".", wait_for_download: bool = True, task: Task = None) -> Union[str, Task]:
+    def export(self, folder_path: str=".", wait_for_download: bool = True, task: Task = None) -> Union[str, Task]:
         """Exports a workspace to ZIP into the selected path.
         
         Args:
-            path: the path where the zip should be located. This parameter must contain the name of the file. By default is the
+            folder_path: the path where the zip should be located. This parameter must contain the name of the file. By default is the
                 current folder.
             wait_for_download: if set to true the file is located automatically into the selected path. In other case, the method
                 returns a :obj:`deepint.core.task.Task`, that can be used later to get the ZIP with this metod, providing it into
@@ -1248,7 +1248,7 @@ class Workspace:
 
         # download and store ZIP file
         try:            
-            file_path = os.path.join(path, f'{self.info.workspace_id}.zip')
+            file_path = os.path.join(folder_path, f'{self.info.workspace_id}.zip')
             file_path = os.path.abspath(file_path)
             r = requests.get(file_url)
             open(file_path, 'wb').write(r.content)

@@ -10,16 +10,18 @@ How to setup credentials
 ------------------------
 
 Credentials can be set up with one of the following methods (the token is loaded in the priority defined in the order of the following items):
- - instance credentials object with the token optional parameter `c = Credentials(token='a token')`
- - create a environment variable called `DEEPINT_TOKEN` with the token value.
- - create a .ini file in your home directory called `.deepint` coninting in the `DEFAULT` section the keys called `token` like in following example
+ - instance credentials object with the token and instance optional parameters `c = Credentials(token='a token', instance='app.deepint.net')`
+ - create a environment variable called `DEEPINT_TOKEN` with the token value and another one called `DEEPINT_INSTANCE`.
+ - create a .ini file in your home directory called `.deepint` coninting in the `DEFAULT` section the key `token` and the key `instance` like in following example
 
 .. code-block::
    :caption: ~/.deepint.ini
 
 	[DEFAULT]
 	token=a token
+   instance=host to connect with (if not providen app.deepint.net will be taken by default)
 
+Note: If instance is not providen, the default value will be the SaaS instance `app.deepint.net`.
 
 
 How to obtain a token
@@ -41,3 +43,12 @@ Finally, by pressing the key button as shown in the image below, the token is ob
    :width: 600
 
 It is important to highlight that the token is associated to the user and not to the organization, which means that the same token can be used to access multiple organizations.
+
+
+How to set a on-premise instance
+--------------------------------
+
+If you are using a on-premise instance of Deep Intelligence, it's neccesary to setup the instance parameter in one of the following ways
+ - provide the host or IP of the on-premise instance when instancing the credentials or using the `Credentials.build` method `c = Credentials(token='a token', instance='app.deepint.net')`
+ - create a environment variable called `DEEPINT_INSTANCE` with the host or IP of the on-premise instance.
+ - create a .ini file in your home directory called `.deepint` coninting in the `DEFAULT` section the key `instance` with the host or IP of the on-premise instance.

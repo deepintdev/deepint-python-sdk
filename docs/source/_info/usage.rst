@@ -143,14 +143,14 @@ Use workspaces
     zip_path = ws.export()
 
     # import workspace ZIP file
-    new_workspace = org.workspaces.import_ws(new_workspace = org.workspaces.import(name='example2', description='example2', path=zip_path)
+    new_workspace = org.workspaces.import_ws(new_workspace = org.workspaces.import(name='example2', description='example2', file_path=zip_path)
 
     # clone workspace
     other_workspace = ws.clone()
 
     # delayed export of workspace
-    task = ws.export(path='./example_ws.zip', wait_for_download=False)
-    ws.export(path='./example_ws_delayed.zip', task=task)
+    task = ws.export(folder_path='./example_ws.zip', wait_for_download=False)
+    ws.export(folder_path='./example_ws_delayed.zip', task=task)
 
     # delete workspace
     ws.delete()

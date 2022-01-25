@@ -22,21 +22,24 @@ Visit the DeepIntelligence on it's <a href="https://deepint.net/" target="_blank
 ## Installation
 
 - **install**: `python3 -m pip install deepint`
-- **run tests**: install test dependencies with `python3 -m pip install deepint-sdk[tests]`, then define the enviroment variables `DEEPINT_TOKEN`, `DEEPINT_ORGANIZATION` and `TEST_CSV` (the last one is a CSV file to test the features of the SKD). Finally, go to the tests foleder and run `pytest -vv test.py`
-- **generate doc**: install documentation dependencies with `python3 -m pip install -e deepint-sdk[docs]`, then go to the docs foleder and run `make html`
+- **run tests**: install test dependencies with `python3 -m pip install deepint[tests]`, then define the enviroment variables `DEEPINT_TOKEN` and `DEEPINT_ORGANIZATION`. Finally, go to the tests foleder and run `pytest -vv test.py`
+- **generate doc**: install documentation dependencies with `python3 -m pip install -e deepint[docs]`, then go to the docs foleder and run `make html`
 
 ## Documentation
 Visit the documentation page at <a href="https://pypi.org/project/deepint/" target="_blanck">Pypi</a> or <a href="https://deepint-python-sdk.readthedocs.io/en/latest/index.html" target="_blanck">readthedocs</a> 
 
 ## Setup credentials
-Credentials can be set up with one of the following methods (the token is loaded in the priority defined in the order of the following items):
- - instance credentials object with the token and organization optional parameters `c = Credentials(token='a token')`
- - create a environment variable called `DEEPINT_TOKEN` with the token value.
- - create a .ini file in your home directory called `.deepint` coninting in the `DEFAULT` section the key `token` like in following example
+Credentials can be set up with one of the following methods (the token and instance is loaded in the priority defined in the order of the following items):
+ - instance credentials object with the token and instance optional parameters `c = Credentials(token='a token', instance='app.deepint.net')`
+ - create a environment variable called `DEEPINT_TOKEN` with the token value and another one called `DEEPINT_INSTANCE`.
+ - create a .ini file in your home directory called `.deepint` coninting in the `DEFAULT` section the key `token` and the key `instance` like in following example
      ```
      [DEFAULT]
-     token=a token
+        token=a token
+        instance=host to connect with (if not providen app.deepint.net will be taken by default)
      ```
+Note: If instance is not providen, the default value will be the SaaS instance `app.deepint.net`.
+
 To learn more about credentials setup, please visit the <a href="https://deepint-python-sdk.readthedocs.io/en/latest/_info/authentication.html" target="_blank" >official documentation<a>.
 
 ## Usage of main components
@@ -168,14 +171,14 @@ ws.update(name='example2', description='example2')
 zip_path = ws.export()
 
 # import workspace ZIP file
-new_workspace = org.workspaces.import_ws(new_workspace = org.workspaces.import(name='example2', description='example2', path=zip_path)
+new_workspace = org.workspaces.import_ws(new_workspace = org.workspaces.import(name='example2', description='example2', file_path=zip_path)
 
 # clone workspace
 other_workspace = ws.clone()
 
 # delayed export of workspace
-task = ws.export(path='./example_ws.zip', wait_for_download=False)
-ws.export(path='./example_ws_delayed.zip', task=task)
+task = ws.export(folder_path='./example_ws.zip', wait_for_download=False)
+ws.export(folder_path='./example_ws_delayed.zip', task=task)
 
 # delete workspace
 ws.delete()
