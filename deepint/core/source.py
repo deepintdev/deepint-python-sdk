@@ -322,7 +322,7 @@ class SourceInstances:
         order_type = 'asc' if order_type is None else order_type
         order_by = f'{order_by},{order_type}' if order_by is not None else None
 
-        url = f'https://app.deepint.net/api/v1/workspace/{self.source.workspace_id}/source/{self.source.info.source_id}/instances'
+        path = f'/api/v1/workspace/{self.source.workspace_id}/source/{self.source.info.source_id}/instances'
         headers = {'x-deepint-organization': self.source.organization_id}
         parameters = {
             'select': select,
@@ -331,7 +331,7 @@ class SourceInstances:
             'offset': offset,
             'limit': limit
         }
-        response = handle_request(method='GET', url=url, headers=headers, credentials=self.source.credentials, parameters=parameters)
+        response = handle_request(method='GET', path=path, headers=headers, credentials=self.source.credentials, parameters=parameters)
 
         # format response
         result = [{
@@ -396,7 +396,7 @@ class SourceInstances:
                                    message='Unable to convert DataFrame to CSV. Please, check the index, columns and the capability of serialization for the DataFrame fields.')
 
         # request
-        url = f'https://app.deepint.net/api/v1/workspace/{self.source.workspace_id}/source/{self.source.info.source_id}/instances'
+        path = f'/api/v1/workspace/{self.source.workspace_id}/source/{self.source.info.source_id}/instances'
         headers = {'x-deepint-organization': self.source.organization_id}
         files = [('file', ('file', streaming_values_data))]
         parameters = {
@@ -408,7 +408,7 @@ class SourceInstances:
             'json_fields': '',
             'date_format': date_format
         }
-        response = handle_request(method='POST', url=url, headers=headers, parameters=parameters, files=files, credentials=self.source.credentials)
+        response = handle_request(method='POST', path=path, headers=headers, parameters=parameters, files=files, credentials=self.source.credentials)
 
         # map response
         task = Task.build(task_id=response['task_id'], workspace_id=self.source.workspace_id,
@@ -426,12 +426,12 @@ class SourceInstances:
             reference to task created to perform the source instances deletion operation.
         """
 
-        url = f'https://app.deepint.net/api/v1/workspace/{self.source.workspace_id}/source/{self.source.info.source_id}/instances'
+        path = f'/api/v1/workspace/{self.source.workspace_id}/source/{self.source.info.source_id}/instances'
         headers = {'x-deepint-organization': self.source.organization_id}
         parameters = {
             'where': where
         }
-        response = handle_request(method='DELETE', url=url, headers=headers, credentials=self.source.credentials, parameters=parameters)
+        response = handle_request(method='DELETE', path=path, headers=headers, credentials=self.source.credentials, parameters=parameters)
 
         # map response
         task = Task.build(task_id=response['task_id'], workspace_id=self.source.workspace_id,
@@ -472,9 +472,9 @@ class SourceFeatures:
         """
 
         # request
-        url = f'https://app.deepint.net/api/v1/workspace/{self.source.workspace_id}/source/{self.source.info.source_id}'
+        path = f'/api/v1/workspace/{self.source.workspace_id}/source/{self.source.info.source_id}'
         headers = {'x-deepint-organization': self.source.organization_id}
-        response = handle_request(method='GET', url=url, headers=headers, credentials=self.source.credentials)
+        response = handle_request(method='GET', path=path, headers=headers, credentials=self.source.credentials)
 
         # map results
         self._features = [SourceFeature.from_dict(f) for f in response['features']]
@@ -495,10 +495,10 @@ class SourceFeatures:
         features = features if features is not None else self._features
 
         # request
-        url = f'https://app.deepint.net/api/v1/workspace/{self.source.workspace_id}/source/{self.source.info.source_id}/features'
+        path = f'/api/v1/workspace/{self.source.workspace_id}/source/{self.source.info.source_id}/features'
         headers = {'x-deepint-organization': self.source.organization_id}
         parameters = {'features': [f.to_dict_minimized() for f in features]}
-        response = handle_request(method='POST', url=url, headers=headers, parameters=parameters, credentials=self.source.credentials)
+        response = handle_request(method='POST', path=path, headers=headers, parameters=parameters, credentials=self.source.credentials)
 
         # update local state
         self._features = features
@@ -639,7 +639,7 @@ class Source:
             the source build with the URL and credentials.
         """
 
-        url_info = parse_url(url)
+        url_info, hostname = parse_url(url)
 
         if 'organization_id' not in url_info and organization_id is None:
             raise ValueError('Fields organization_id must be in url to build the object. Or providen as optional parameter.')
@@ -648,8 +648,12 @@ class Source:
             raise ValueError('Fields workspace_id and source_id must be in url to build the object.')
 
         organization_id = url_info['organization_id'] if 'organization_id' in url_info else organization_id
+
+        # create new credentials
+        new_credentials = Credentials(token=credentials.token, instance=hostname)
+        
         return cls.build(organization_id=organization_id, workspace_id=url_info['workspace_id'], source_id=url_info['source_id'],
-                         credentials=credentials)
+                         credentials=new_credentials)
 
     def load(self):
         """Loads the source's information.
@@ -658,9 +662,9 @@ class Source:
         """
 
         # request
-        url = f'https://app.deepint.net/api/v1/workspace/{self.workspace_id}/source/{self.info.source_id}'
+        path = f'/api/v1/workspace/{self.workspace_id}/source/{self.info.source_id}'
         headers = {'x-deepint-organization': self.organization_id}
-        response = handle_request(method='GET', url=url, headers=headers, credentials=self.credentials)
+        response = handle_request(method='GET', path=path, headers=headers, credentials=self.credentials)
 
         # map results
         self.info = SourceInfo.from_dict(response)
@@ -678,10 +682,10 @@ class Source:
         description = description if description is not None else self.info.description
 
         # request
-        url = f'https://app.deepint.net/api/v1/workspace/{self.workspace_id}/source/{self.info.source_id}'
+        path = f'/api/v1/workspace/{self.workspace_id}/source/{self.info.source_id}'
         headers = {'x-deepint-organization': self.organization_id}
         parameters = {'name': name, 'description': description}
-        response = handle_request(method='POST', url=url, headers=headers, parameters=parameters, credentials=self.credentials)
+        response = handle_request(method='POST', path=path, headers=headers, parameters=parameters, credentials=self.credentials)
 
         # update local state
         self.info.name = name
@@ -692,9 +696,9 @@ class Source:
         """
 
         # request
-        url = f'https://app.deepint.net/api/v1/workspace/{self.workspace_id}/source/{self.info.source_id}'
+        path = f'/api/v1/workspace/{self.workspace_id}/source/{self.info.source_id}'
         headers = {'x-deepint-organization': self.organization_id}
-        handle_request(method='DELETE', url=url, headers=headers, credentials=self.credentials)
+        handle_request(method='DELETE', path=path, headers=headers, credentials=self.credentials)
 
     def to_dict(self) -> Dict[str, Any]:
         """Builds a dictionary containing the information stored in current object.

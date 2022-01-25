@@ -30,7 +30,7 @@ def retry_on(codes=('LIMIT', 'TIMEOUT_ERROR', 'BAD_GATEWAY'), times=3, time_betw
 
 
 @retry_on(codes=('LIMIT', 'TIMEOUT_ERROR', 'BAD_GATEWAY'), times=3)
-def handle_request(credentials: Credentials = None, method: str = None, url: str = None, parameters: dict = None,
+def handle_request(credentials: Credentials = None, method: str = None, path: str = None, parameters: dict = None,
                    headers: dict = None, files: tuple = None):
     # build request parameters
     auth_header = {'x-auth-token': credentials.token}
@@ -43,6 +43,7 @@ def handle_request(credentials: Credentials = None, method: str = None, url: str
         parameters = {k: parameters[k] for k in parameters if parameters[k] is not None}
 
     # prepare request parts
+    url = f'https://{credentials.instance}{path}'
     params = parameters if method == 'GET' else None
     data = parameters if method != 'GET' and files is not None else None
     json_data = parameters if method != 'GET' and files is None else None
@@ -75,10 +76,10 @@ def handle_request(credentials: Credentials = None, method: str = None, url: str
     return response_json
 
 
-def handle_paginated_request(credentials: Credentials = None, method: str = None, url: str = None,
+def handle_paginated_request(credentials: Credentials = None, method: str = None, path: str = None,
                              headers: dict = None, parameters: dict = None, files: tuple = None):
     # first response
-    response = handle_request(credentials=credentials, method=method, url=url, parameters=parameters, headers=headers, files=files)
+    response = handle_request(credentials=credentials, method=method, path=path, parameters=parameters, headers=headers, files=files)
 
     # update state and return items
     yield from response['items']
@@ -92,7 +93,7 @@ def handle_paginated_request(credentials: Credentials = None, method: str = None
     while next_page < total_pages:
         # update parameters and perform request
         parameters['page'] = next_page
-        response = handle_request(credentials=credentials, method=method, url=url, headers=headers, parameters=parameters, files=files)
+        response = handle_request(credentials=credentials, method=method, path=path, headers=headers, parameters=parameters, files=files)
 
         # update state and return items
         yield from response['items']

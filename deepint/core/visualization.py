@@ -173,7 +173,7 @@ class Visualization:
             The visualization with the url and credentials
         """
 
-        url_info = parse_url(url)
+        url_info, hostname = parse_url(url)
 
         if 'organization_id' not in url_info and organization_id is None:
             raise ValueError('Field organization_id must be in url to build the object. Or providen as an optional parameter')
@@ -182,8 +182,12 @@ class Visualization:
             raise ValueError('Fields workspace_id, visualization_id and organization_id must be in url to build the object')
 
         organization_id = url_info['organization_id'] if 'organization_id' in url_info else organization_id
+
+        # create new credentials
+        new_credentials = Credentials(token=credentials.token, instance=hostname)
+
         return cls.build(organization_id=organization_id, workspace_id=url_info['workspace_id'], visualization_id=url_info['visualization_id'],
-                            credentials=credentials)
+                            credentials=new_credentials)
 
     def load(self) -> None:
         """Load th visualization's information.
@@ -192,9 +196,9 @@ class Visualization:
         """
 
         #request
-        url = f'https://app.deepint.net/api/v1/workspace/{self.workspace_id}/visualization/{self.info.visualization_id}'
+        path = f'/api/v1/workspace/{self.workspace_id}/visualization/{self.info.visualization_id}'
         headers = {'x-deepint-organization': self.organization_id}
-        response = handle_request(method='GET', url=url, credentials=self.credentials, headers=headers)
+        response = handle_request(method='GET', path=path, credentials=self.credentials, headers=headers)
 
         #map results
         self.info = VisualizationInfo.from_dict(response)
@@ -220,10 +224,10 @@ class Visualization:
         configuration = configuration if configuration is not None else self.info.configuration
         
         #request
-        url = f'https://app.deepint.net/api/v1/workspace/{self.workspace_id}/visualization/{self.info.visualization_id}'
+        path = f'/api/v1/workspace/{self.workspace_id}/visualization/{self.info.visualization_id}'
         parameters = {'name': name, 'description': description, 'privacy': privacy, 'source': source, 'configuration': configuration}
         headers = {'x-deepint-organization': self.organization_id}
-        response = handle_request(method='POST', url= url, headers=headers, parameters=parameters, credentials=self.credentials)
+        response = handle_request(method='POST', path=path, headers=headers, parameters=parameters, credentials=self.credentials)
         
         #update local state
         self.info.name = name
@@ -247,10 +251,10 @@ class Visualization:
             name = f'Copy of {self.info.name}'
 
         # request visualization clone
-        url = f'https://app.deepint.net/api/v1/workspace/{self.workspace_id}/visualization/{self.info.visualization_id}/clone'
+        path = f'/api/v1/workspace/{self.workspace_id}/visualization/{self.info.visualization_id}/clone'
         parameters = {'name': name}
         headers = {'x-deepint-organization': self.organization_id}
-        response = handle_request(method='POST', url=url, headers=headers,credentials=self.credentials)
+        response = handle_request(method='POST', path=path, headers=headers,credentials=self.credentials)
 
         new_visualization = Visualization.build(organization_id=self.organization_id, workspace_id=self.workspace_id,
                                          visualization_id=response['visualization_id'],credentials=self.credentials)
@@ -261,9 +265,9 @@ class Visualization:
         """
 
         #request
-        url = f'https://app.deepint.net/api/v1/workspace/{self.workspace_id}/visualization/{self.info.visualization_id}'
+        path = f'/api/v1/workspace/{self.workspace_id}/visualization/{self.info.visualization_id}'
         headers = {'x-deepint-organization': self.organization_id}
-        handle_request(method='DELETE', url=url, headers=headers, credentials=self.credentials)
+        handle_request(method='DELETE', path=path, headers=headers, credentials=self.credentials)
 
     def to_dict(self) -> Dict[str, Any]:
         """Builds a dictionary containing the information stored in the current object.

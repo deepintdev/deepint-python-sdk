@@ -210,7 +210,7 @@ class Task:
             the task build with the URL and credentials.
         """
 
-        url_info = parse_url(url)
+        url_info, hostname = parse_url(url)
 
         if 'organization_id' not in url_info and organization_id is None:
             raise ValueError('Fields organization_id must be in url to build the object. Or providen as optional parameter.')
@@ -219,8 +219,12 @@ class Task:
             raise ValueError('Fields workspace_id and task_id must be in url to build the object.')
 
         organization_id = url_info['organization_id'] if 'organization_id' in url_info else organization_id
+
+        # create new credentials
+        new_credentials = Credentials(token=credentials.token, instance=hostname)
+        
         return cls.build(organization_id=organization_id, workspace_id=url_info['workspace_id'], task_id=url_info['task_id'], 
-                credentials=credentials)
+                credentials=new_credentials)
 
     def load(self):
         """Loads the task's information.
@@ -229,9 +233,9 @@ class Task:
         """
 
         # request
-        url = f'https://app.deepint.net/api/v1/workspace/{self.workspace_id}/task/{self.info.task_id}'
+        path = f'/api/v1/workspace/{self.workspace_id}/task/{self.info.task_id}'
         headers = {'x-deepint-organization': self.organization_id}
-        response = handle_request(method='GET', url=url, headers=headers, credentials=self.credentials)
+        response = handle_request(method='GET', path=path, headers=headers, credentials=self.credentials)
 
         # map results
         self.info = TaskInfo.from_dict(response)
@@ -241,9 +245,9 @@ class Task:
         """
 
         # request
-        url = f'https://app.deepint.net/api/v1/workspace/{self.workspace_id}/task/{self.info.task_id}'
+        path = f'/api/v1/workspace/{self.workspace_id}/task/{self.info.task_id}'
         headers = {'x-deepint-organization': self.organization_id}
-        response = handle_request(method='DELETE', url=url, headers=headers, credentials=self.credentials)
+        response = handle_request(method='DELETE', path=path, headers=headers, credentials=self.credentials)
 
     def resolve(self, raise_on_error=True, poll_interval: int = 3):
         """Waits for the task to be finished

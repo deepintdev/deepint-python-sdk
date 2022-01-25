@@ -126,10 +126,10 @@ class WorkspaceVisualizations:
         Returns:
             The created visualization
         """
-        url = f'https://app.deepint.net/api/v1/workspace/{self.workspace.info.workspace_id}/visualizations'
+        path = f'/api/v1/workspace/{self.workspace.info.workspace_id}/visualizations'
         parameters = {'name': name, 'description': description, 'privacy': privacy, 'source': source, 'configuration': configuration}
         headers = {'x-deepint-organization': self.workspace.organization_id}
-        response = handle_request(method='POST', url=url, headers=headers, parameters=parameters, credentials=self.workspace.credentials)
+        response = handle_request(method='POST', path=path, headers=headers, parameters=parameters, credentials=self.workspace.credentials)
 
         #map results
         new_visualization = Visualization.build(workspace_id=self.workspace.info.workspace_id, visualization_id=response['visualization_id'],
@@ -148,9 +148,9 @@ class WorkspaceVisualizations:
         """
 
         # request
-        url = f'https://app.deepint.net/api/v1/workspace/{self.workspace.info.workspace_id}/visualizations'
+        path = f'/api/v1/workspace/{self.workspace.info.workspace_id}/visualizations'
         headers = {'x-deepint-organization': self.workspace.organization_id}
-        response = handle_paginated_request(method='GET', url=url, headers=headers, credentials=self.workspace.credentials)
+        response = handle_paginated_request(method='GET', path=path, headers=headers, credentials=self.workspace.credentials)
 
         # map results
         self._visualizations = None
@@ -255,10 +255,10 @@ class WorkspaceDashboards:
             The created dashboard
         """
 
-        url = f'https://app.deepint.net/api/v1/workspace/{self.workspace.info.workspace_id}/dashboards'
+        path = f'/api/v1/workspace/{self.workspace.info.workspace_id}/dashboards'
         parameters = {'name': name, 'description': description, 'privacy': privacy, 'shareOpt': share_opt, 'gaId': ga_id, 'restricted': restricted, 'configuration': configuration}
         headers = {'x-deepint-organization': self.workspace.organization_id}
-        response = handle_request(method='POST', url=url, parameters=parameters, headers=headers, credentials=self.workspace.credentials)
+        response = handle_request(method='POST', path=path, parameters=parameters, headers=headers, credentials=self.workspace.credentials)
         
         # map result
         new_dashboard = Dashboard.build(workspace_id=self.workspace.info.workspace_id, organization_id=self.workspace.organization_id,
@@ -277,9 +277,9 @@ class WorkspaceDashboards:
         """
 
         # request
-        url = f'https://app.deepint.net/api/v1/workspace/{self.workspace.info.workspace_id}/dashboards'
+        path = f'/api/v1/workspace/{self.workspace.info.workspace_id}/dashboards'
         headers = {'x-deepint-organization': self.workspace.organization_id}
-        response = handle_paginated_request(method='GET', url=url, headers=headers, credentials=self.workspace.credentials)
+        response = handle_paginated_request(method='GET', path=path, headers=headers, credentials=self.workspace.credentials)
 
         # map results
         self.dashboards = None
@@ -375,9 +375,9 @@ class WorkspaceSources:
         """
 
         # request
-        url = f'https://app.deepint.net/api/v1/workspace/{self.workspace.info.workspace_id}/sources'
+        path = f'/api/v1/workspace/{self.workspace.info.workspace_id}/sources'
         headers = {'x-deepint-organization': self.workspace.organization_id}
-        response = handle_paginated_request(method='GET', url=url, headers=headers, credentials=self.workspace.credentials)
+        response = handle_paginated_request(method='GET', path=path, headers=headers, credentials=self.workspace.credentials)
 
         # map results
         self._sources = None
@@ -400,10 +400,10 @@ class WorkspaceSources:
         """
 
         # request
-        url = f'https://app.deepint.net/api/v1/workspace/{self.workspace.info.workspace_id}/sources'
+        path = f'/api/v1/workspace/{self.workspace.info.workspace_id}/sources'
         headers = {'x-deepint-organization': self.workspace.organization_id}
         parameters = {'name': name, 'description': description, 'features': [f.to_dict_minimized() for f in features]}
-        response = handle_request(method='POST', url=url, headers=headers, credentials=self.workspace.credentials, parameters=parameters)
+        response = handle_request(method='POST', path=path, headers=headers, credentials=self.workspace.credentials, parameters=parameters)
 
         # map results
         new_source = Source.build(source_id=response['source_id'], workspace_id=self.workspace.info.workspace_id,
@@ -620,9 +620,9 @@ class WorkspaceTasks:
         """
 
         # request
-        url = f'https://app.deepint.net/api/v1/workspace/{self.workspace.info.workspace_id}/tasks'
+        path = f'/api/v1/workspace/{self.workspace.info.workspace_id}/tasks'
         headers = {'x-deepint-organization': self.workspace.organization_id}
-        response = handle_paginated_request(method='GET', url=url, headers=headers, credentials=self.workspace.credentials)
+        response = handle_paginated_request(method='GET', path=path, headers=headers, credentials=self.workspace.credentials)
 
         # map results
         self._tasks = None
@@ -742,9 +742,9 @@ class WorkspaceAlerts:
         """
 
         # request
-        url = f'https://app.deepint.net/api/v1/workspace/{self.workspace.info.workspace_id}/alerts'
+        path = f'/api/v1/workspace/{self.workspace.info.workspace_id}/alerts'
         headers = {'x-deepint-organization': self.workspace.organization_id}
-        response = handle_paginated_request(method='GET', url=url, headers=headers, credentials=self.workspace.credentials)
+        response = handle_paginated_request(method='GET', path=path, headers=headers, credentials=self.workspace.credentials)
 
         # map results
         self._alerts = None
@@ -778,7 +778,7 @@ class WorkspaceAlerts:
             raise DeepintBaseError(code='ALERT_CREATION_VALUES', message='Minimum alert time stall is 60 seconds.')
 
         # request
-        url = f'https://app.deepint.net/api/v1/workspace/{self.workspace.info.workspace_id}/alerts'
+        path = f'/api/v1/workspace/{self.workspace.info.workspace_id}/alerts'
         headers = {'x-deepint-organization': self.workspace.organization_id}
         parameters = {
             'name': name,
@@ -790,7 +790,7 @@ class WorkspaceAlerts:
             'condition': condition,
             'time_stall': time_stall
         }
-        response = handle_request(method='POST', url=url, headers=headers, credentials=self.workspace.credentials, parameters=parameters)
+        response = handle_request(method='POST', path=path, headers=headers, credentials=self.workspace.credentials, parameters=parameters)
 
         # map results
         new_alert = Alert.build(organization_id=self.workspace.organization_id, workspace_id=self.workspace.info.workspace_id, 
@@ -891,9 +891,9 @@ class WorkspaceModels:
         """
 
         # request
-        url = f'https://app.deepint.net/api/v1/workspace/{self.workspace.info.workspace_id}/models'
+        path = f'/api/v1/workspace/{self.workspace.info.workspace_id}/models'
         headers = {'x-deepint-organization': self.workspace.organization_id}
-        response = handle_paginated_request(method='GET', url=url, headers=headers, credentials=self.workspace.credentials)
+        response = handle_paginated_request(method='GET', path=path, headers=headers, credentials=self.workspace.credentials)
 
         # map results
         self._models = None
@@ -944,7 +944,7 @@ class WorkspaceModels:
                                    message=f'Provided source for model creation was not found or provided target feature is not configured in the source.')
 
         # request
-        url = f'https://app.deepint.net/api/v1/workspace/{self.workspace.info.workspace_id}/models'
+        path = f'/api/v1/workspace/{self.workspace.info.workspace_id}/models'
         headers = {'x-deepint-organization': self.workspace.organization_id}
         parameters = {
             'name': name,
@@ -961,7 +961,7 @@ class WorkspaceModels:
             },
             'hyper_search_configuration': hyper_parameters
         }
-        response = handle_request(method='POST', url=url, headers=headers, credentials=self.workspace.credentials, parameters=parameters)
+        response = handle_request(method='POST', path=path, headers=headers, credentials=self.workspace.credentials, parameters=parameters)
 
         # map response
         task = Task.build(task_id=response['task_id'], workspace_id=self.workspace.info.workspace_id,
@@ -1149,7 +1149,7 @@ class Workspace:
             the workspace build with the URL and credentials.
         """
 
-        url_info = parse_url(url)
+        url_info, hostname = parse_url(url)
 
         if 'organization_id' not in url_info and organization_id is None:
             raise ValueError('Fields organization_id must be in url to build the object. Or providen as optional parameter.')
@@ -1158,7 +1158,10 @@ class Workspace:
             raise ValueError('Fields workspace_id must be in url to build the object.')
 
         organization_id = url_info['organization_id'] if 'organization_id' in url_info else organization_id
-        return cls.build(organization_id=organization_id, workspace_id=url_info['workspace_id'], credentials=credentials)
+
+        new_credentials = Credentials(token=credentials.token, instance=hostname)
+        
+        return cls.build(organization_id=organization_id, workspace_id=url_info['workspace_id'], credentials=new_credentials)
 
     def load(self):
         """Loads the workspace's information.
@@ -1167,9 +1170,9 @@ class Workspace:
         """
 
         # request
-        url = f'https://app.deepint.net/api/v1/workspace/{self.info.workspace_id}'
+        path = f'/api/v1/workspace/{self.info.workspace_id}'
         headers = {'x-deepint-organization': self.organization_id}
-        response = handle_request(method='GET', url=url, headers=headers, credentials=self.credentials)
+        response = handle_request(method='GET', path=path, headers=headers, credentials=self.credentials)
 
         # map results
         self.info = WorkspaceInfo.from_dict(response)
@@ -1187,10 +1190,10 @@ class Workspace:
         description = description if description is not None else self.info.description
 
         # request
-        url = f'https://app.deepint.net/api/v1/workspace/{self.info.workspace_id}'
+        path = f'/api/v1/workspace/{self.info.workspace_id}'
         parameters = {'name': name, 'description': description}
         headers = {'x-deepint-organization': self.organization_id}
-        response = handle_request(method='POST', url=url, headers=headers, parameters=parameters, credentials=self.credentials)
+        response = handle_request(method='POST', path=path, headers=headers, parameters=parameters, credentials=self.credentials)
 
         # update local state
         self.info.name = name
@@ -1201,15 +1204,15 @@ class Workspace:
         """
 
         # request
-        url = f'https://app.deepint.net/api/v1/workspace/{self.info.workspace_id}'
+        path = f'/api/v1/workspace/{self.info.workspace_id}'
         headers = {'x-deepint-organization': self.organization_id}
-        handle_request(method='DELETE', url=url, headers=headers, credentials=self.credentials)
+        handle_request(method='DELETE', path=path, headers=headers, credentials=self.credentials)
 
-    def export(self, path: str=".", wait_for_download: bool = True, task: Task = None) -> Union[str, Task]:
+    def export(self, folder_path: str=".", wait_for_download: bool = True, task: Task = None) -> Union[str, Task]:
         """Exports a workspace to ZIP into the selected path.
         
         Args:
-            path: the path where the zip should be located. This parameter must contain the name of the file. By default is the
+            folder_path: the path where the zip should be located. This parameter must contain the name of the file. By default is the
                 current folder.
             wait_for_download: if set to true the file is located automatically into the selected path. In other case, the method
                 returns a :obj:`deepint.core.task.Task`, that can be used later to get the ZIP with this metod, providing it into
@@ -1223,9 +1226,9 @@ class Workspace:
         if task is None:
 
             # build request
-            url = f'https://app.deepint.net/api/v1/workspace/{self.info.workspace_id}/export'
+            path = f'/api/v1/workspace/{self.info.workspace_id}/export'
             headers = {'x-deepint-organization': self.organization_id}
-            response = handle_request(method='POST', url=url, headers=headers,credentials=self.credentials)
+            response = handle_request(method='POST', path=path, headers=headers,credentials=self.credentials)
 
             # create task to fetch the ZIP file
             task = Task.build(task_id=response['task_id'], workspace_id=self.info.workspace_id,
@@ -1245,7 +1248,7 @@ class Workspace:
 
         # download and store ZIP file
         try:            
-            file_path = os.path.join(path, f'{self.info.workspace_id}.zip')
+            file_path = os.path.join(folder_path, f'{self.info.workspace_id}.zip')
             file_path = os.path.abspath(file_path)
             r = requests.get(file_url)
             open(file_path, 'wb').write(r.content)
@@ -1268,10 +1271,10 @@ class Workspace:
             name = f'Copy of {self.info.name}'
 
         # request workspace clone
-        url = f'https://app.deepint.net/api/v1/workspace/{self.info.workspace_id}/clone'
+        path = f'/api/v1/workspace/{self.info.workspace_id}/clone'
         parameters = {'name': name}
         headers = {'x-deepint-organization': self.organization_id}
-        response = handle_request(method='POST', url=url, headers=headers, parameters=parameters, credentials=self.credentials)
+        response = handle_request(method='POST', path=path, headers=headers, parameters=parameters, credentials=self.credentials)
 
         # retrieve task
         task = Task.build(task_id=response['task_id'], workspace_id=response['workspace_id'], organization_id=self.organization_id, credentials=self.credentials)

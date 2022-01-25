@@ -33,9 +33,9 @@ class OrganizationWorkspaces:
         """
 
         # request
-        url = f'https://app.deepint.net/api/v1/workspaces'
+        path = f'/api/v1/workspaces'
         headers = {'x-deepint-organization': self.organization.organization_id}
-        response = handle_request(method='GET', url=url, headers=headers, credentials=self.organization.credentials)
+        response = handle_request(method='GET', path=path, headers=headers, credentials=self.organization.credentials)
 
         # map results
         self._generator = (Workspace.build(organization_id=self.organization.organization_id, workspace_id=w['id'],
@@ -55,10 +55,10 @@ class OrganizationWorkspaces:
         """
 
         # request
-        url = f'https://app.deepint.net/api/v1/workspaces/'
+        path = f'/api/v1/workspaces/'
         headers = {'x-deepint-organization': self.organization.organization_id}
         parameters = {'name': name, 'description': description}
-        response = handle_request(method='POST', url=url, credentials=self.organization.credentials,
+        response = handle_request(method='POST', path=path, credentials=self.organization.credentials,
                                   parameters=parameters, headers=headers)
 
         # map results
@@ -95,13 +95,13 @@ class OrganizationWorkspaces:
         # if not exists, create
         return self.create(name, '')
 
-    def import_ws(self, name:str, description:str, path: str, wait_for_creation: bool = True) -> Workspace:
+    def import_ws(self, name:str, description:str, file_path: str, wait_for_creation: bool = True) -> Workspace:
         """Imports a workspace to ZIP into the selected path.
         
         Args:
             name: new workspace's name.
             description: new workspace's description.
-            path: the path where the zip must be located. This parameter must contain the name of the file.
+            file_path: the path where the zip must be located. This parameter must contain the name of the file.
 
         Returns:
             The created workspace in the case of wait_for_creation is set to True, or a task that on resolve will contain the
@@ -111,16 +111,16 @@ class OrganizationWorkspaces:
         # read the file
 
         try:
-            file_content = open(path,'rb').read()
+            file_content = open(file_path,'rb').read()
         except:
             raise DeepintBaseError(code='FILE_NOT_FOUND', message=f'The providen ZIP file {path} was not found.')
 
         # build request
-        url = f'https://app.deepint.net/api/v1/workspaces/import'
+        path = f'/api/v1/workspaces/import'
         headers = {'x-deepint-organization': self.organization.organization_id}
         parameters = {'name': name, 'description': description}
         files = {'file': file_content}
-        response = handle_request(method='POST', url=url, headers=headers, parameters=parameters, files=files, credentials=self.organization.credentials)
+        response = handle_request(method='POST', path=path, headers=headers, parameters=parameters, files=files, credentials=self.organization.credentials)
 
         # create task to fetch the workspace
         task = Task.build(task_id=response['task_id'], workspace_id=response['workspace_id'],
@@ -293,13 +293,17 @@ class Organization:
             the workspace build with the URL and credentials.
         """
 
-        url_info = parse_url(url)
+        url_info, hostname = parse_url(url)
 
         if 'organization_id' not in url_info and organization_id is None:
             raise ValueError('Fields organization_id must be in url to build the object. Or providen as optional parameter.')
 
         organization_id = url_info['organization_id'] if 'organization_id' in url_info else organization_id
-        return cls.build(organization_id=organization_id, credentials=credentials)
+
+        # create new credentials
+        new_credentials = Credentials(token=credentials.token, instance=hostname)
+        
+        return cls.build(organization_id=organization_id, credentials=new_credentials)
 
     def load(self):
         """Loads the organization's information and account.
@@ -308,13 +312,13 @@ class Organization:
         """
 
         # request
-        url = f'https://app.deepint.net/api/v1/who'
+        path = f'/api/v1/who'
         headers = {'x-deepint-organization': self.organization_id}
-        response_who = handle_request(method='GET', url=url, headers=headers, credentials=self.credentials)
+        response_who = handle_request(method='GET', path=path, headers=headers, credentials=self.credentials)
 
-        url = f'https://app.deepint.net/api/v1/profile'
+        path = f'/api/v1/profile'
         headers = {'x-deepint-organization': self.organization_id}
-        response_profile = handle_request(method='GET', url=url, headers=headers, credentials=self.credentials)
+        response_profile = handle_request(method='GET', path=path, headers=headers, credentials=self.credentials)
 
         # map results
         response = {**response_who, **response_profile}

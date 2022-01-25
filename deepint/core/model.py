@@ -255,9 +255,9 @@ class ModelPredictions:
         """
 
         # request
-        url = f'https://app.deepint.net/api/v1/workspace/{self.model.workspace_id}/models/{self.model.info.model_id}/evaluation'
+        path = f'/api/v1/workspace/{self.model.workspace_id}/models/{self.model.info.model_id}/evaluation'
         headers = {'x-deepint-organization': self.model.organization_id}
-        response = handle_request(method='GET', url=url, headers=headers, credentials=self.model.credentials)
+        response = handle_request(method='GET', path=path, headers=headers, credentials=self.model.credentials)
 
         return response
 
@@ -300,10 +300,10 @@ class ModelPredictions:
                                    message='Unable to convert DataFrame to inputs array. Please, check the index, columns and the capability of serialization for the DataFrame fields.')
 
         # request
-        url = f'https://app.deepint.net/api/v1/workspace/{self.model.workspace_id}/models/{self.model.info.model_id}/predict'
+        path = f'/api/v1/workspace/{self.model.workspace_id}/models/{self.model.info.model_id}/predict'
         parameters = {'inputs': inputs}
         headers = {'x-deepint-organization': self.model.organization_id}
-        response = handle_request(method='GET', url=url, headers=headers, parameters=parameters, credentials=self.model.credentials)
+        response = handle_request(method='GET', path=path, headers=headers, parameters=parameters, credentials=self.model.credentials)
 
         # map response
         try:
@@ -353,10 +353,10 @@ class ModelPredictions:
                                    message='Unable to convert DataFrame to inputs array. Please, check the index, columns and the capability of serialization for the DataFrame fields.')
 
         # request
-        url = f'https://app.deepint.net/api/v1/workspace/{self.model.workspace_id}/models/{self.model.info.model_id}/batch-predict'
+        path = f'/api/v1/workspace/{self.model.workspace_id}/models/{self.model.info.model_id}/batch-predict'
         parameters = {'data': inputs}
         headers = {'x-deepint-organization': self.model.organization_id}
-        response = handle_request(method='POST', url=url, headers=headers, parameters=parameters, credentials=self.model.credentials)
+        response = handle_request(method='POST', path=path, headers=headers, parameters=parameters, credentials=self.model.credentials)
 
         # map response
         try:
@@ -420,10 +420,10 @@ class ModelPredictions:
                                    message='Unable to convert DataFrame to inputs array. Please, check the index, columns and the capability of serialization for the DataFrame fields.')
 
         # request
-        url = f'https://app.deepint.net/api/v1/workspace/{self.model.workspace_id}/models/{self.model.info.model_id}/predict-1d'
+        path = f'/api/v1/workspace/{self.model.workspace_id}/models/{self.model.info.model_id}/predict-1d'
         headers = {'x-deepint-organization': self.model.organization_id}
         parameters = {'inputs': inputs, 'vary': variations_feature_index, 'values': variations}
-        response = handle_request(method='POST', url=url, headers=headers, parameters=parameters, credentials=self.model.credentials)
+        response = handle_request(method='POST', path=path, headers=headers, parameters=parameters, credentials=self.model.credentials)
 
         # map response
         try:
@@ -526,7 +526,7 @@ class Model:
             the model build with the URL and credentials.
         """
 
-        url_info = parse_url(url)
+        url_info, hostname = parse_url(url)
 
         if 'organization_id' not in url_info and organization_id is None:
             raise ValueError('Fields organization_id must be in url to build the object. Or providen as optional parameter.')
@@ -535,8 +535,12 @@ class Model:
             raise ValueError('Fields workspace_id and model_id must be in url to build the object.')
 
         organization_id = url_info['organization_id'] if 'organization_id' in url_info else organization_id
+
+        # create new credentials
+        new_credentials = Credentials(token=credentials.token, instance=hostname)
+        
         return cls.build(organization_id=organization_id, workspace_id=url_info['workspace_id'], model_id=url_info['model_id'], 
-                credentials=credentials)
+                credentials=new_credentials)
 
     def load(self):
         """Loads the model's information.
@@ -545,9 +549,9 @@ class Model:
         """
 
         # request
-        url = f'https://app.deepint.net/api/v1/workspace/{self.workspace_id}/models/{self.info.model_id}'
+        path = f'/api/v1/workspace/{self.workspace_id}/models/{self.info.model_id}'
         headers = {'x-deepint-organization': self.organization_id}
-        response = handle_request(method='GET', url=url, headers=headers, credentials=self.credentials)
+        response = handle_request(method='GET', path=path, headers=headers, credentials=self.credentials)
 
         # map results
         self.info = ModelInfo.from_dict(response)
@@ -567,10 +571,10 @@ class Model:
         description = description if description is not None else self.info.description
 
         # request
-        url = f'https://app.deepint.net/api/v1/workspace/{self.workspace_id}/models/{self.info.model_id}'
+        path = f'/api/v1/workspace/{self.workspace_id}/models/{self.info.model_id}'
         headers = {'x-deepint-organization': self.organization_id}
         parameters = {'name': name, 'description': description}
-        response = handle_request(method='POST', url=url, headers=headers, parameters=parameters, credentials=self.credentials)
+        response = handle_request(method='POST', path=path, headers=headers, parameters=parameters, credentials=self.credentials)
 
         # update local state
         self.info.name = name
@@ -581,9 +585,9 @@ class Model:
         """
 
         # request
-        url = f'https://app.deepint.net/api/v1/workspace/{self.workspace_id}/models/{self.info.model_id}'
+        path = f'/api/v1/workspace/{self.workspace_id}/models/{self.info.model_id}'
         headers = {'x-deepint-organization': self.organization_id}
-        handle_request(method='DELETE', url=url, headers=headers, credentials=self.credentials)
+        handle_request(method='DELETE', path=path, headers=headers, credentials=self.credentials)
 
     def to_dict(self) -> Dict[str, Any]:
         """Builds a dictionary containing the information stored in current object.
