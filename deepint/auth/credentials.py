@@ -20,7 +20,7 @@ class Credentials:
         instance : Host to connect with. By default is the hostname of the SaaS instance, however if you are working with an on-premise instance, this must be specified.
     """
 
-    def __init__(self, token: str, instance:str) -> None:
+    def __init__(self, token: str, instance:str = 'app.deepint.net') -> None:
         self.token = token
         self.instance = instance
 
