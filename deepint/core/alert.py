@@ -64,6 +64,44 @@ class AlertInfo:
     def __init__(self, alert_id: str, name: str, description: str, created: datetime, last_modified: datetime,
                  subscriptions: List[str], color: str, alert_type: AlertType, source_id: str, condition: Dict[str, Any],
                  time_stall: int) -> None:
+
+        if not isinstance(alert_id, str):
+            raise ValueError('alert_id must be str')
+
+        if not isinstance(name, str):
+            raise ValueError('name must be str')
+            
+        if not isinstance(description, str):
+            raise ValueError('description must be str')
+            
+        if not isinstance(created, datetime):
+            raise ValueError('created must be datetime.datetime')
+            
+        if not isinstance(last_modified, datetime):
+            raise ValueError('last_modified must be datetime.datetime')
+            
+        if not isinstance(subscriptions, list):
+            raise ValueError('subscriptions must be a list of str')
+
+        for s in subscriptions:
+            if not isinstance(s, list):
+                raise ValueError('subscriptions must be a list of str')
+            
+        if not isinstance(color, str):
+            raise ValueError('sources_count must be str')
+
+        if not isinstance(alert_type, AlertType) or not not isinstance(alert_type, int):
+            raise ValueError('alert_type must be AlertType')
+
+        if not isinstance(source_id, str):
+            raise ValueError('source_id must be str')
+
+        if not isinstance(condition, dict):
+            raise ValueError('condition must be dict')
+
+        if not isinstance(time_stall, int):
+            raise ValueError('time_stall must be int')
+
         self.alert_id = alert_id
         self.name = name
         self.description = description
@@ -141,6 +179,10 @@ class AlertInstances:
     """
 
     def __init__(self, alert: 'Alert'):
+
+        if not isinstance(alert, Alert):
+            raise ValueError('alert must be Alert')
+
         self.alert = alert
 
     def fetch(self) -> List[Dict]:
@@ -169,6 +211,19 @@ class Alert:
     """
 
     def __init__(self, organization_id: str, workspace_id: str, credentials: Credentials, info: AlertInfo) -> None:
+
+        if not isinstance(organization_id, str):
+            raise ValueError('organization_id must be str')
+
+        if not isinstance(workspace_id, str):
+            raise ValueError('workspace_id must be str')
+            
+        if not isinstance(credentials, Credentials):
+            raise ValueError(f'credentials must be {Credentials.__class__}')
+            
+        if not isinstance(info, AlertInfo):
+            raise ValueError(f'info must be {AlertInfo.__class__}')
+
         self.info = info
         self.credentials = credentials
         self.workspace_id = workspace_id

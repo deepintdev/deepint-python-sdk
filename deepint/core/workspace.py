@@ -41,6 +41,40 @@ class WorkspaceInfo:
     def __init__(self, workspace_id: str, name: str, description: str, created: datetime, last_modified: datetime,
                  last_access: datetime, sources_count: int, dashboards_count: int, visualizations_count: int,
                  models_count: int, size_bytes: int) -> None:
+
+        if not isinstance(workspace_id, str):
+            raise ValueError('workspace_id must be str')
+
+        if not isinstance(name, str):
+            raise ValueError('name must be str')
+            
+        if not isinstance(description, str):
+            raise ValueError('description must be str')
+            
+        if not isinstance(created, datetime):
+            raise ValueError('created must be datetime.datetime')
+            
+        if not isinstance(last_modified, datetime):
+            raise ValueError('last_modified must be datetime.datetime')
+            
+        if not isinstance(last_access, datetime):
+            raise ValueError('last_access must be datetime.datetime')
+            
+        if not isinstance(sources_count, int):
+            raise ValueError('sources_count must be int')
+
+        if not isinstance(dashboards_count, int):
+            raise ValueError('dashboards_count must be int')
+
+        if not isinstance(visualizations_count, int):
+            raise ValueError('visualizations_count must be int')
+            
+        if not isinstance(models_count, int):
+            raise ValueError('models_count must be int')
+            
+        if not isinstance(size_bytes, int):
+            raise ValueError('size_bytes must be int')
+
         self.workspace_id = workspace_id
         self.name = name
         self.description = description
@@ -84,6 +118,7 @@ class WorkspaceInfo:
         visualizations_count = int(obj.get("visualizations_count"))
         models_count = int(obj.get("models_count"))
         size_bytes = int(obj.get("size_bytes"))
+
         return WorkspaceInfo(workspace_id, name, description, created, last_modified, last_access, sources_count,
                              dashboards_count, visualizations_count, models_count, size_bytes)
 
@@ -112,6 +147,17 @@ class WorkspaceVisualizations:
     """
 
     def __init__(self, workspace: 'Workspace', visualizations: List[Visualization]):
+
+        if not isinstance(workspace, Workspace):
+            raise ValueError(f'workspace must be {Workspace.__class__}')
+
+        if not isinstance(visualizations, list):
+            raise ValueError(f'visualizations must be a list of {Visualization.__class__}')
+
+        for v in visualizations:
+            if not isinstance(v, Visualization):
+                raise ValueError(f'visualizations must be a list of {Visualization.__class__}')
+
         self.workspace = workspace
         self._generator = None
         self._visualizations = visualizations
@@ -235,6 +281,17 @@ class WorkspaceDashboards:
     """
 
     def __init__(self, workspace: 'Workspace', dashboards: List[Dashboard]):
+
+        if not isinstance(workspace, Workspace):
+            raise ValueError(f'workspace must be {Workspace.__class__}')
+
+        if not isinstance(dashboards, list):
+            raise ValueError(f'dashboards must be a list of {Dashboard.__class__}')
+
+        for d in dashboards:
+            if not isinstance(d, Dashboard):
+                raise ValueError(f'dashboards must be a list of {Dashboard.__class__}')
+
         self.workspace = workspace
         self._generator = None
         self._dashboards = dashboards
@@ -364,6 +421,17 @@ class WorkspaceSources:
     """
 
     def __init__(self, workspace: 'Workspace', sources: List[Source]):
+
+        if not isinstance(workspace, Workspace):
+            raise ValueError(f'workspace must be {Workspace.__class__}')
+
+        if not isinstance(sources, list):
+            raise ValueError(f'dashboards must be a list of {Source.__class__}')
+
+        for s in sources:
+            if not isinstance(s, Source):
+                raise ValueError(f'dashboards must be a list of {Source.__class__}')
+
         self.workspace = workspace
         self._generator = None
         self._sources = sources
@@ -609,6 +677,17 @@ class WorkspaceTasks:
     """
 
     def __init__(self, workspace: 'Workspace', tasks: List[Task]):
+
+        if not isinstance(workspace, Workspace):
+            raise ValueError(f'workspace must be {Workspace.__class__}')
+
+        if not isinstance(tasks, list):
+            raise ValueError(f'tasks must be a list of {Source.__class__}')
+
+        for t in tasks:
+            if not isinstance(t, Task):
+                raise ValueError(f'tasks must be a list of {Task.__class__}')
+
         self.workspace = workspace
         self._generator = None
         self._tasks = tasks
@@ -731,6 +810,17 @@ class WorkspaceAlerts:
     """
 
     def __init__(self, workspace: 'Workspace', alerts: List[Alert]):
+
+        if not isinstance(workspace, Workspace):
+            raise ValueError(f'workspace must be {Workspace.__class__}')
+
+        if not isinstance(alerts, list):
+            raise ValueError(f'alerts must be a list of {Alert.__class__}')
+
+        for a in alerts:
+            if not isinstance(a, Alert):
+                raise ValueError(f'alerts must be a list of {Alert.__class__}')
+
         self.workspace = workspace
         self._generator = None
         self._alerts = alerts
@@ -880,6 +970,17 @@ class WorkspaceModels:
     """
 
     def __init__(self, workspace: 'Workspace', models: List[Model]):
+
+        if not isinstance(workspace, Workspace):
+            raise ValueError(f'workspace must be {Workspace.__class__}')
+
+        if not isinstance(models, list):
+            raise ValueError(f'models must be a list of {Model.__class__}')
+
+        for m in models:
+            if not isinstance(m, Model):
+                raise ValueError(f'models must be a list of {Model.__class__}')
+
         self.workspace = workspace
         self._generator = None
         self._models = models
@@ -1072,6 +1173,58 @@ class Workspace:
     def __init__(self, organization_id: str, credentials: Credentials, info: WorkspaceInfo, sources: List[Source], models: List[Model],
                  tasks: List[Task], alerts: List[Alert], visualizations: List[Visualization],
                  dashboards: List[Dashboard]) -> None:
+
+        if not isinstance(organization_id, str):
+            raise ValueError(f'organization_id must be str')
+
+        if not isinstance(credentials, Credentials):
+            raise ValueError(f'credentials must be a list of {Credentials.__class__}')
+
+        if not isinstance(info, WorkspaceInfo):
+            raise ValueError(f'info must be a list of {WorkspaceInfo.__class__}')
+
+        if not isinstance(sources, list):
+            raise ValueError(f'sources must be a list of {Source.__class__}')
+
+        for s in sources:
+            if not isinstance(s, Source):
+                raise ValueError(f'sources must be a list of {Source.__class__}')
+
+        if not isinstance(models, list):
+            raise ValueError(f'models must be a list of {Source.__class__}')
+
+        for m in models:
+            if not isinstance(m, Model):
+                raise ValueError(f'models must be a list of {Model.__class__}')
+
+        if not isinstance(tasks, list):
+            raise ValueError(f'tasks must be a list of {Task.__class__}')
+
+        for t in tasks:
+            if not isinstance(t, Task):
+                raise ValueError(f'tasks must be a list of {Task.__class__}')
+
+        if not isinstance(alerts, list):
+            raise ValueError(f'alerts must be a list of {Alert.__class__}')
+
+        for a in alerts:
+            if not isinstance(a, Alert):
+                raise ValueError(f'alerts must be a list of {Alert.__class__}')
+
+        if not isinstance(visualizations, list):
+            raise ValueError(f'visualizations must be a list of {Visualization.__class__}')
+
+        for v in visualizations:
+            if not isinstance(v, Visualization):
+                raise ValueError(f'visualizations must be a list of {Visualization.__class__}')
+
+        if not isinstance(dashboards, list):
+            raise ValueError(f'sources must be a list of {Dashboard.__class__}')
+
+        for d in dashboards:
+            if not isinstance(d, Dashboard):
+                raise ValueError(f'dashboards must be a list of {Dashboard.__class__}')
+
         self.organization_id = organization_id
         self.info = info
         self.credentials = credentials
