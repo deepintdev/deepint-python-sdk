@@ -499,6 +499,26 @@ class WorkspaceSources:
 
         return new_source
 
+    def create_derived(self):
+        """Future implementation of /api/v1/workspace/<workspaceid>/sources/derived
+        """
+        raise Exception('Not implemented Error')
+
+    def create_external(self):
+        """Future implementation of /api/v1/workspace/<workspaceid>/sources/external
+        """
+        raise Exception('Not implemented Error')
+
+    def create_real_time(self):
+        """Future implementation of /api/v1/workspace/<workspaceid>/sources/real_time
+        """
+        raise Exception('Not implemented Error')
+
+    def create_other_type(self):
+        """Future implementation of /api/v1/workspace/<workspaceid>/sources/other
+        """
+        raise Exception('Not implemented Error')
+
     def create_and_initialize(self, name: str, description: str, data: pd.DataFrame,
                               date_formats: Dict[str, str] = None, wait_for_initialization: bool = True) -> Source:
         """Creates a source in current workspace, then initializes it.
@@ -1484,6 +1504,11 @@ class Workspace:
         new_workspace = Workspace.build(organization_id=self.organization_id, workspace_id=response['workspace_id'],
                                         credentials=self.credentials)
         return new_workspace
+
+    def fetch_iframe_token(self):
+        """Future implementation of /api/v1/workspace/workspaceid/iframe
+        """
+        raise Exception('Not implemented Error')
 
     def to_dict(self) -> Dict[str, Any]:
         """Builds a dictionary containing the information stored in current object.
