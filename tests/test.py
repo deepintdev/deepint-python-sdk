@@ -254,7 +254,7 @@ def test_source_CRUD():
     assert (source.features == source1.features)
 
     # clone
-    cloned_source = source.clone()
+    cloned_source = source.clone('cloned source')
     assert(cloned_source == source)
 
     source.delete()
