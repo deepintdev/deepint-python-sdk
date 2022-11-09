@@ -70,46 +70,46 @@ class TaskInfo:
                  name: str, description: str, progress: int, subtask: str, result: str, result_type: str,
                  error_code: str, error_description: str) -> None:
 
-        if not isinstance(task_id, str):
+        if task_id is not None and not isinstance(task_id, str):
             raise ValueError('task_id must be str')
 
-        if not isinstance(user_id, str):
+        if user_id is not None and not isinstance(user_id, str):
             raise ValueError('user_id must be str')
 
-        if not isinstance(user_name, str):
+        if user_name is not None and not isinstance(user_name, str):
             raise ValueError('user_name must be str')
 
-        if not isinstance(created, datetime):
+        if created is not None and not isinstance(created, datetime):
             raise ValueError('created must be datetime.datetime')
 
-        if not isinstance(status, int) or isinstance(status, TaskStatus):
+        if status is not None and (not isinstance(status, int) and not isinstance(status, TaskStatus)):
             raise ValueError('status must be str')
 
-        if not isinstance(duration, int):
+        if duration is not None and not isinstance(duration, int):
             raise ValueError('duration must be int')
 
-        if not isinstance(name, str):
+        if name is not None and not isinstance(name, str):
             raise ValueError('name must be str')
 
-        if not isinstance(description, str):
+        if description is not None and not isinstance(description, str):
             raise ValueError('description must be str')
 
-        if not isinstance(progress, int):
+        if progress is not None and not isinstance(progress, int):
             raise ValueError('progress must be int')
 
-        if not isinstance(subtask, str):
+        if subtask is not None and not isinstance(subtask, str):
             raise ValueError('subtask must be str')
 
-        if not isinstance(result, str):
+        if result is not None and not isinstance(result, str):
             raise ValueError('result must be str')
 
-        if not isinstance(result_type, str):
+        if result_type is not None and not isinstance(result_type, str):
             raise ValueError('result_type must be str')
 
-        if not isinstance(error_code, str):
+        if error_code is not None and not isinstance(error_code, str):
             raise ValueError('error_code must be str')
 
-        if not isinstance(error_description, str):
+        if error_description is not None and not isinstance(error_description, str):
             raise ValueError('error_description must be str')
 
         self.task_id = task_id
@@ -128,7 +128,7 @@ class TaskInfo:
         self.error_description = error_description
 
     def __eq__(self, other):
-        if not isinstance(other, TaskInfo):
+        if other is not None and not isinstance(other, TaskInfo):
             return False
         else:
             return self.task_id == other.task_id
@@ -195,16 +195,16 @@ class Task:
 
     def __init__(self, organization_id: str, workspace_id: str, credentials: Credentials, info: TaskInfo) -> None:
 
-        if not isinstance(organization_id, str):
+        if organization_id is not None and not isinstance(organization_id, str):
             raise ValueError('organization_id must be str')
 
-        if not isinstance(workspace_id, str):
+        if workspace_id is not None and not isinstance(workspace_id, str):
             raise ValueError('workspace_id must be str')
 
-        if not isinstance(credentials, Credentials):
+        if credentials is not None and not isinstance(credentials, Credentials):
             raise ValueError(f'credentials must be {Credentials.__class__}')
 
-        if not isinstance(info, TaskInfo):
+        if info is not None and not isinstance(info, TaskInfo):
             raise ValueError(f'info must be {TaskInfo.__class__}')
 
         self.credentials = credentials

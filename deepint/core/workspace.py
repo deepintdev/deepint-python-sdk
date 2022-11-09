@@ -43,37 +43,37 @@ class WorkspaceInfo:
                  last_access: datetime, sources_count: int, dashboards_count: int, visualizations_count: int,
                  models_count: int, size_bytes: int) -> None:
 
-        if not isinstance(workspace_id, str):
+        if workspace_id is not None and not isinstance(workspace_id, str):
             raise ValueError('workspace_id must be str')
 
-        if not isinstance(name, str):
+        if name is not None and not isinstance(name, str):
             raise ValueError('name must be str')
 
-        if not isinstance(description, str):
+        if description is not None and not isinstance(description, str):
             raise ValueError('description must be str')
 
-        if not isinstance(created, datetime):
+        if created is not None and not isinstance(created, datetime):
             raise ValueError('created must be datetime.datetime')
 
-        if not isinstance(last_modified, datetime):
+        if last_modified is not None and not isinstance(last_modified, datetime):
             raise ValueError('last_modified must be datetime.datetime')
 
-        if not isinstance(last_access, datetime):
+        if last_access is not None and not isinstance(last_access, datetime):
             raise ValueError('last_access must be datetime.datetime')
 
-        if not isinstance(sources_count, int):
+        if sources_count is not None and not isinstance(sources_count, int):
             raise ValueError('sources_count must be int')
 
-        if not isinstance(dashboards_count, int):
+        if dashboards_count is not None and not isinstance(dashboards_count, int):
             raise ValueError('dashboards_count must be int')
 
-        if not isinstance(visualizations_count, int):
+        if visualizations_count is not None and not isinstance(visualizations_count, int):
             raise ValueError('visualizations_count must be int')
 
-        if not isinstance(models_count, int):
+        if models_count is not None and not isinstance(models_count, int):
             raise ValueError('models_count must be int')
 
-        if not isinstance(size_bytes, int):
+        if size_bytes is not None and not isinstance(size_bytes, int):
             raise ValueError('size_bytes must be int')
 
         self.workspace_id = workspace_id
@@ -89,7 +89,7 @@ class WorkspaceInfo:
         self.size_bytes = size_bytes
 
     def __eq__(self, other) -> bool:
-        if not isinstance(other, WorkspaceInfo):
+        if other is not None and not isinstance(other, WorkspaceInfo):
             return False
         else:
             return self.workspace_id == other.workspace_id
@@ -149,17 +149,18 @@ class WorkspaceVisualizations:
 
     def __init__(self, workspace: 'Workspace', visualizations: List[Visualization]):
 
-        if not isinstance(workspace, Workspace):
+        if workspace is not None and not isinstance(workspace, Workspace):
             raise ValueError(f'workspace must be {Workspace.__class__}')
 
-        if not isinstance(visualizations, list):
+        if visualizations is not None and not isinstance(visualizations, list):
             raise ValueError(
                 f'visualizations must be a list of {Visualization.__class__}')
 
-        for v in visualizations:
-            if not isinstance(v, Visualization):
-                raise ValueError(
-                    f'visualizations must be a list of {Visualization.__class__}')
+        if visualizations is not None:
+            for v in visualizations:
+                if v is not None and not isinstance(v, Visualization):
+                    raise ValueError(
+                        f'visualizations must be a list of {Visualization.__class__}')
 
         self.workspace = workspace
         self._generator = None
@@ -288,17 +289,18 @@ class WorkspaceDashboards:
 
     def __init__(self, workspace: 'Workspace', dashboards: List[Dashboard]):
 
-        if not isinstance(workspace, Workspace):
+        if workspace is not None and not isinstance(workspace, Workspace):
             raise ValueError(f'workspace must be {Workspace.__class__}')
 
-        if not isinstance(dashboards, list):
+        if dashboards is not None and not isinstance(dashboards, list):
             raise ValueError(
                 f'dashboards must be a list of {Dashboard.__class__}')
 
-        for d in dashboards:
-            if not isinstance(d, Dashboard):
-                raise ValueError(
-                    f'dashboards must be a list of {Dashboard.__class__}')
+        if dashboards is not None:
+            for d in dashboards:
+                if d is not None and not isinstance(d, Dashboard):
+                    raise ValueError(
+                        f'dashboards must be a list of {Dashboard.__class__}')
 
         self.workspace = workspace
         self._generator = None
@@ -433,17 +435,18 @@ class WorkspaceSources:
 
     def __init__(self, workspace: 'Workspace', sources: List[Source]):
 
-        if not isinstance(workspace, Workspace):
+        if workspace is not None and not isinstance(workspace, Workspace):
             raise ValueError(f'workspace must be {Workspace.__class__}')
 
-        if not isinstance(sources, list):
+        if sources is not None and not isinstance(sources, list):
             raise ValueError(
-                f'dashboards must be a list of {Source.__class__}')
+                f'sources must be a list of {Source.__class__}')
 
-        for s in sources:
-            if not isinstance(s, Source):
-                raise ValueError(
-                    f'dashboards must be a list of {Source.__class__}')
+        if sources is not None:
+            for s in sources:
+                if s is not None and not isinstance(s, Source):
+                    raise ValueError(
+                        f'sources must be a list of {Source.__class__}')
 
         self.workspace = workspace
         self._generator = None
@@ -716,15 +719,16 @@ class WorkspaceTasks:
 
     def __init__(self, workspace: 'Workspace', tasks: List[Task]):
 
-        if not isinstance(workspace, Workspace):
+        if workspace is not None and not isinstance(workspace, Workspace):
             raise ValueError(f'workspace must be {Workspace.__class__}')
 
-        if not isinstance(tasks, list):
+        if tasks is not None and not isinstance(tasks, list):
             raise ValueError(f'tasks must be a list of {Source.__class__}')
 
-        for t in tasks:
-            if not isinstance(t, Task):
-                raise ValueError(f'tasks must be a list of {Task.__class__}')
+        if tasks is not None:
+            for t in tasks:
+                if t is not None and not isinstance(t, Task):
+                    raise ValueError(f'tasks must be a list of {Task.__class__}')
 
         self.workspace = workspace
         self._generator = None
@@ -851,15 +855,16 @@ class WorkspaceAlerts:
 
     def __init__(self, workspace: 'Workspace', alerts: List[Alert]):
 
-        if not isinstance(workspace, Workspace):
+        if workspace is not None and not isinstance(workspace, Workspace):
             raise ValueError(f'workspace must be {Workspace.__class__}')
 
-        if not isinstance(alerts, list):
+        if alerts is not None and not isinstance(alerts, list):
             raise ValueError(f'alerts must be a list of {Alert.__class__}')
 
-        for a in alerts:
-            if not isinstance(a, Alert):
-                raise ValueError(f'alerts must be a list of {Alert.__class__}')
+        if alerts is not None:
+            for a in alerts:
+                if a is not None and not isinstance(a, Alert):
+                    raise ValueError(f'alerts must be a list of {Alert.__class__}')
 
         self.workspace = workspace
         self._generator = None
@@ -1014,15 +1019,16 @@ class WorkspaceModels:
 
     def __init__(self, workspace: 'Workspace', models: List[Model]):
 
-        if not isinstance(workspace, Workspace):
+        if workspace is not None and not isinstance(workspace, Workspace):
             raise ValueError(f'workspace must be {Workspace.__class__}')
 
-        if not isinstance(models, list):
+        if models is not None and not isinstance(models, list):
             raise ValueError(f'models must be a list of {Model.__class__}')
 
-        for m in models:
-            if not isinstance(m, Model):
-                raise ValueError(f'models must be a list of {Model.__class__}')
+        if models is not None:
+            for m in models:
+                if m is not None and not isinstance(m, Model):
+                    raise ValueError(f'models must be a list of {Model.__class__}')
 
         self.workspace = workspace
         self._generator = None
@@ -1220,63 +1226,69 @@ class Workspace:
                  tasks: List[Task], alerts: List[Alert], visualizations: List[Visualization],
                  dashboards: List[Dashboard]) -> None:
 
-        if not isinstance(organization_id, str):
+        if organization_id is not None and not isinstance(organization_id, str):
             raise ValueError('organization_id must be str')
 
-        if not isinstance(credentials, Credentials):
+        if credentials is not None and not isinstance(credentials, Credentials):
             raise ValueError(
                 f'credentials must be a list of {Credentials.__class__}')
 
-        if not isinstance(info, WorkspaceInfo):
+        if info is not None and not isinstance(info, WorkspaceInfo):
             raise ValueError(
                 f'info must be a list of {WorkspaceInfo.__class__}')
 
-        if not isinstance(sources, list):
+        if sources is not None and not isinstance(sources, list):
             raise ValueError(f'sources must be a list of {Source.__class__}')
 
-        for s in sources:
-            if not isinstance(s, Source):
-                raise ValueError(
-                    f'sources must be a list of {Source.__class__}')
+        if sources is not None:
+            for s in sources:
+                if s is not None and not isinstance(s, Source):
+                    raise ValueError(
+                        f'sources must be a list of {Source.__class__}')
 
-        if not isinstance(models, list):
+        if models is not None and not isinstance(models, list):
             raise ValueError(f'models must be a list of {Source.__class__}')
 
-        for m in models:
-            if not isinstance(m, Model):
-                raise ValueError(f'models must be a list of {Model.__class__}')
+        if models is not None:
+            for m in models:
+                if m is not None and not isinstance(m, Model):
+                    raise ValueError(f'models must be a list of {Model.__class__}')
 
-        if not isinstance(tasks, list):
+        if tasks is not None and not isinstance(tasks, list):
             raise ValueError(f'tasks must be a list of {Task.__class__}')
 
-        for t in tasks:
-            if not isinstance(t, Task):
-                raise ValueError(f'tasks must be a list of {Task.__class__}')
+        if tasks is not None:
+            for t in tasks:
+                if t is not None and not isinstance(t, Task):
+                    raise ValueError(f'tasks must be a list of {Task.__class__}')
 
-        if not isinstance(alerts, list):
+        if alerts is not None and not isinstance(alerts, list):
             raise ValueError(f'alerts must be a list of {Alert.__class__}')
 
-        for a in alerts:
-            if not isinstance(a, Alert):
-                raise ValueError(f'alerts must be a list of {Alert.__class__}')
+        if alerts is not None:
+            for a in alerts:
+                if a is not None and not isinstance(a, Alert):
+                    raise ValueError(f'alerts must be a list of {Alert.__class__}')
 
-        if not isinstance(visualizations, list):
+        if visualizations is not None and not isinstance(visualizations, list):
             raise ValueError(
                 f'visualizations must be a list of {Visualization.__class__}')
 
-        for v in visualizations:
-            if not isinstance(v, Visualization):
-                raise ValueError(
-                    f'visualizations must be a list of {Visualization.__class__}')
+        if visualizations is not None:
+            for v in visualizations:
+                if v is not None and not isinstance(v, Visualization):
+                    raise ValueError(
+                        f'visualizations must be a list of {Visualization.__class__}')
 
-        if not isinstance(dashboards, list):
+        if dashboards is not None and not isinstance(dashboards, list):
             raise ValueError(
                 f'sources must be a list of {Dashboard.__class__}')
 
-        for d in dashboards:
-            if not isinstance(d, Dashboard):
-                raise ValueError(
-                    f'dashboards must be a list of {Dashboard.__class__}')
+        if dashboards is not None:
+            for d in dashboards:
+                if d is not None and not isinstance(d, Dashboard):
+                    raise ValueError(
+                        f'dashboards must be a list of {Dashboard.__class__}')
 
         self.organization_id = organization_id
         self.info = info
@@ -1292,7 +1304,7 @@ class Workspace:
         return f'<Workspace organization_id={self.organization_id} workspace={self.info.workspace_id} {self.info}>'
 
     def __eq__(self, other):
-        if not isinstance(other, Workspace):
+        if other is not None and not isinstance(other, Workspace):
             return False
         else:
             return self.info == other.info

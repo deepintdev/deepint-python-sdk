@@ -149,43 +149,43 @@ class SourceFeature:
     """
 
     def __init__(self, index: int, name: str, feature_type: FeatureType, indexed: bool,
-                 date_format: str, computed: bool, null_count: int, min_value: int,
-                 max_value: int, mean_value: int, deviation: int, mapped_to: int) -> None:
+                 date_format: str, computed: bool, null_count: int, min_value: float,
+                 max_value: float, mean_value: float, deviation: float, mapped_to: int) -> None:
 
-        if not isinstance(index, int):
+        if index is not None and not isinstance(index, int):
             raise ValueError('index must be int')
 
-        if not isinstance(name, str):
+        if name is not None and not isinstance(name, str):
             raise ValueError('name must be str')
 
-        if not isinstance(feature_type, FeatureType) or isinstance(feature_type, int):
+        if feature_type is not None and (not isinstance(feature_type, FeatureType) and not isinstance(feature_type, int)):
             raise ValueError('feature_type must be FeatureType')
 
-        if not isinstance(indexed, bool):
+        if indexed is not None and not isinstance(indexed, bool):
             raise ValueError('indexed must be bool')
 
-        if not isinstance(date_format, str):
+        if date_format is not None and not isinstance(date_format, str):
             raise ValueError('date_format must be str')
 
-        if not isinstance(computed, bool):
+        if computed is not None and not isinstance(computed, bool):
             raise ValueError('computed must be bool')
 
-        if not isinstance(null_count, int):
+        if null_count is not None and not isinstance(null_count, int):
             raise ValueError('null_count must be int')
 
-        if not isinstance(min_value, int):
-            raise ValueError('min_value must be int')
+        if min_value is not None and (not isinstance(min_value, int) and not isinstance(min_value, float)):
+            raise ValueError('min_value must be int or float')
 
-        if not isinstance(max_value, int):
-            raise ValueError('max_value must be int')
+        if max_value is not None and (not isinstance(max_value, int) and not isinstance(max_value, float)):
+            raise ValueError('max_value must be int or float')
 
-        if not isinstance(mean_value, int):
-            raise ValueError('mean_value must be int')
+        if mean_value is not None and (not isinstance(mean_value, int) and not isinstance(mean_value, float)):
+            raise ValueError('mean_value must be int or float')
 
-        if not isinstance(deviation, int):
-            raise ValueError('deviation must be int')
+        if deviation is not None and (not isinstance(deviation, int) and not isinstance(deviation, float)):
+            raise ValueError('deviation must be int or float')
 
-        if not isinstance(mapped_to, int):
+        if mapped_to is not None and not isinstance(mapped_to, int):
             raise ValueError('mapped_to must be int')
 
         self.index = index
@@ -203,7 +203,7 @@ class SourceFeature:
         self.mapped_to = mapped_to if mapped_to is not None else index
 
     def __eq__(self, other):
-        if not isinstance(other, SourceFeature):
+        if other is not None and not isinstance(other, SourceFeature):
             return False
         else:
             return self.name == other.name and (self.feature_type == other.feature_type or self.feature_type == FeatureType.unknown or other.feature_type == FeatureType.unknown)
@@ -317,31 +317,31 @@ class SourceInfo:
                  description: str, source_type: SourceType, instances: int,
                  size_bytes: int) -> None:
 
-        if not isinstance(source_id, str):
+        if source_id is not None and not isinstance(source_id, str):
             raise ValueError('source_id must be str')
 
-        if not isinstance(created, datetime):
+        if created is not None and not isinstance(created, datetime):
             raise ValueError('created must be datetime.datetime')
 
-        if not isinstance(last_modified, datetime):
+        if last_modified is not None and not isinstance(last_modified, datetime):
             raise ValueError('last_modified must be datetime.datetime')
 
-        if not isinstance(last_access, datetime):
+        if last_access is not None and not isinstance(last_access, datetime):
             raise ValueError('last_access must be datetime.datetime')
 
-        if not isinstance(name, str):
+        if name is not None and not isinstance(name, str):
             raise ValueError('name must be str')
 
-        if not isinstance(description, str):
+        if description is not None and not isinstance(description, str):
             raise ValueError('description must be str')
 
-        if not isinstance(source_type, str) or isinstance(source_type, SourceType):
+        if source_type is not None and (not isinstance(source_type, str) and not isinstance(source_type, SourceType)):
             raise ValueError('source_type must be SourceType')
 
-        if not isinstance(instances, int):
+        if instances is not None and not isinstance(instances, int):
             raise ValueError('instances must be int')
 
-        if not isinstance(size_bytes, int):
+        if size_bytes is not None and not isinstance(size_bytes, int):
             raise ValueError('size_bytes must be int')
 
         self.source_id = source_id
@@ -355,7 +355,7 @@ class SourceInfo:
         self.size_bytes = size_bytes
 
     def __eq__(self, other):
-        if not isinstance(other, SourceInfo):
+        if other is not None and not isinstance(other, SourceInfo):
             return False
         else:
             return self.source_id == other.source_id
@@ -380,7 +380,7 @@ class SourceInfo:
         last_access = parse_date(obj.get("last_access"))
         name = obj.get("name")
         description = obj.get("description")
-        source_type = FeatureType.from_string(obj.get("type"))
+        source_type = SourceType.from_string(obj.get("type"))
         instances = int(obj.get("instances"))
         size_bytes = int(obj.get("size_bytes"))
         return SourceInfo(source_id, created, last_modified, last_access, name,
@@ -480,7 +480,7 @@ class SourceInstances:
         """
 
         # check arguments
-        if not isinstance(data, pd.DataFrame):
+        if data is not None and not isinstance(data, pd.DataFrame):
             raise DeepintBaseError(
                 code='TYPE_MISMATCH', message='The provided input is not a DataFrame.')
         elif data.empty or data is None:
@@ -571,12 +571,13 @@ class SourceFeatures:
 
     def __init__(self, source: 'Source', features: List[SourceFeature]) -> None:
 
-        if not isinstance(features, list):
+        if features is not None and not isinstance(features, list):
             raise ValueError('features must be list')
 
-        for f in features:
-            if not isinstance(f, SourceFeature):
-                raise ValueError(f'features must be a list of {SourceFeature.__class__}')
+        if features is not None:
+            for f in features:
+                if f is not None and not isinstance(f, SourceFeature):
+                    raise ValueError(f'features must be a list of {SourceFeature.__class__}')
 
         self.source = source
         self._features = features
@@ -584,7 +585,7 @@ class SourceFeatures:
             self._features.sort(key=lambda x: x.index)
 
     def __eq__(self, other) -> bool:
-        if not isinstance(other, SourceFeatures):
+        if other is not None and not isinstance(other, SourceFeatures):
             return False
         else:
             for f in self._features:
@@ -706,24 +707,25 @@ class Source:
     def __init__(self, organization_id: str, workspace_id: str, credentials: Credentials,
                  info: SourceInfo, features: List[SourceFeature]) -> None:
 
-        if not isinstance(organization_id, str):
+        if organization_id is not None and not isinstance(organization_id, str):
             raise ValueError('organization_id must be str')
 
-        if not isinstance(workspace_id, str):
+        if workspace_id is not None and not isinstance(workspace_id, str):
             raise ValueError('workspace_id must be str')
 
-        if not isinstance(credentials, Credentials):
+        if credentials is not None and not isinstance(credentials, Credentials):
             raise ValueError(f'credentials must be {Credentials.__class__}')
 
-        if not isinstance(info, SourceInfo):
+        if info is not None and not isinstance(info, SourceInfo):
             raise ValueError(f'info must be {SourceInfo.__class__}')
 
-        if not isinstance(features, list):
+        if features is not None and not isinstance(features, list):
             raise ValueError('features must be list')
 
-        for f in features:
-            if not isinstance(f, SourceFeature):
-                raise ValueError(f'features must be a list of {SourceFeature.__class__}')
+        if features is not None:
+            for f in features:
+                if f is not None and not isinstance(f, SourceFeature):
+                    raise ValueError(f'features must be a list of {SourceFeature.__class__}')
 
         self.info = info
         self.credentials = credentials
@@ -736,7 +738,7 @@ class Source:
         return f'<Source organization_id={self.organization_id} workspace={self.workspace_id} {self.info} features={self.features.fetch_all()}>'
 
     def __eq__(self, other):
-        if not isinstance(other, Source):
+        if other is not None and not isinstance(other, Source):
             return False
         else:
             return self.info == other.info

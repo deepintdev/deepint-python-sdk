@@ -4,11 +4,11 @@
 # See LICENSE for details.
 
 
-import datetime
+from datetime import datetime
 from typing import Any, Dict
 
 from ..auth import Credentials
-from ..util import handle_request, parse_url
+from ..util import handle_request, parse_date, parse_url
 
 
 class DashboardInfo:
@@ -28,41 +28,41 @@ class DashboardInfo:
         configuration: see documentation for advanced options.
     """
 
-    def __init__(self, dashboard_id: str, created: datetime.datetime, last_modified: datetime.datetime, last_access: datetime.datetime,
+    def __init__(self, dashboard_id: str, created: datetime, last_modified: datetime, last_access: datetime,
                  name: str, description: str, privacy: str, share_opt: str, ga_id: str, restricted: bool,
                  configuration: Dict[str, Any] = {}) -> None:
 
-        if not isinstance(dashboard_id, str):
+        if dashboard_id is not None and not isinstance(dashboard_id, str):
             raise ValueError('dashboard_id must be str')
 
-        if not isinstance(created, datetime):
+        if created is not None and not isinstance(created, datetime):
             raise ValueError('created must be datetime.datetime')
 
-        if not isinstance(last_modified, datetime):
+        if last_modified is not None and not isinstance(last_modified, datetime):
             raise ValueError('last_modified must be datetime.datetime')
 
-        if not isinstance(last_access, datetime):
+        if last_access is not None and not isinstance(last_access, datetime):
             raise ValueError('last_access must be datetime.datetime')
 
-        if not isinstance(name, str):
+        if name is not None and not isinstance(name, str):
             raise ValueError('name must be str')
 
-        if not isinstance(description, str):
+        if description is not None and not isinstance(description, str):
             raise ValueError('description must be str')
 
-        if not isinstance(privacy, str):
+        if privacy is not None and not isinstance(privacy, str):
             raise ValueError('privacy must be str')
 
-        if not isinstance(share_opt, str):
+        if share_opt is not None and not isinstance(share_opt, str):
             raise ValueError('share_opt must be str')
 
-        if not isinstance(ga_id, str):
+        if ga_id is not None and not isinstance(ga_id, str):
             raise ValueError('ga_id must be str')
 
-        if not isinstance(restricted, bool):
+        if restricted is not None and not isinstance(restricted, bool):
             raise ValueError('restricted must be bool')
 
-        if not isinstance(configuration, str):
+        if configuration is not None and not isinstance(configuration, dict):
             raise ValueError('configuration must be dict')
 
         self.dashboard_id = dashboard_id
@@ -78,7 +78,7 @@ class DashboardInfo:
         self.configuration = configuration
 
     def __eq__(self, other):
-        if not isinstance(other, DashboardInfo):
+        if other is not None and not isinstance(other, DashboardInfo):
             return False
         else:
             return self.dashboard_id == other.dashboard_id
@@ -98,9 +98,9 @@ class DashboardInfo:
         """
 
         dashboard_id = obj.get("id")
-        created = obj.get("created")
-        last_modified = obj.get("last_modified")
-        last_access = obj.get("last_access")
+        created = parse_date(obj.get("created"))
+        last_modified = parse_date(obj.get("last_modified"))
+        last_access = parse_date(obj.get("last_access"))
         name = obj.get("name")
         description = obj.get("description")
         privacy = obj.get("privacy")
@@ -142,16 +142,16 @@ class Dashboard:
     def __init__(self, organization_id: str, workspace_id: str, info: DashboardInfo,
                  credentials: Credentials) -> None:
 
-        if not isinstance(organization_id, str):
+        if organization_id is not None and not isinstance(organization_id, str):
             raise ValueError('organization_id must be str')
 
-        if not isinstance(workspace_id, str):
+        if workspace_id is not None and not isinstance(workspace_id, str):
             raise ValueError('workspace_id must be str')
 
-        if not isinstance(credentials, Credentials):
+        if credentials is not None and not isinstance(credentials, Credentials):
             raise ValueError(f'credentials must be {Credentials.__class__}')
 
-        if not isinstance(info, DashboardInfo):
+        if info is not None and not isinstance(info, DashboardInfo):
             raise ValueError(f'info must be {DashboardInfo.__class__}')
 
         self.organization_id = organization_id
@@ -163,7 +163,7 @@ class Dashboard:
         return f'<Dashboard organization={self.organization_id} workspace={self.workspace_id} {self.info}>'
 
     def __eq__(self, other):
-        if not isinstance(other, Dashboard):
+        if other is not None and not isinstance(other, Dashboard):
             return False
         else:
             return self.info == other.info

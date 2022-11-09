@@ -65,41 +65,42 @@ class AlertInfo:
                  subscriptions: List[str], color: str, alert_type: AlertType, source_id: str, condition: Dict[str, Any],
                  time_stall: int) -> None:
 
-        if not isinstance(alert_id, str):
+        if alert_id is not None and not isinstance(alert_id, str):
             raise ValueError('alert_id must be str')
 
-        if not isinstance(name, str):
+        if name is not None and not isinstance(name, str):
             raise ValueError('name must be str')
 
-        if not isinstance(description, str):
+        if description is not None and not isinstance(description, str):
             raise ValueError('description must be str')
 
-        if not isinstance(created, datetime):
+        if created is not None and not isinstance(created, datetime):
             raise ValueError('created must be datetime.datetime')
 
-        if not isinstance(last_modified, datetime):
+        if last_modified is not None and not isinstance(last_modified, datetime):
             raise ValueError('last_modified must be datetime.datetime')
 
-        if not isinstance(subscriptions, list):
+        if subscriptions is not None and not isinstance(subscriptions, list):
             raise ValueError('subscriptions must be a list of str')
 
-        for s in subscriptions:
-            if not isinstance(s, list):
-                raise ValueError('subscriptions must be a list of str')
+        if subscriptions is not None:
+            for s in subscriptions:
+                if s is not None and not isinstance(s, list):
+                    raise ValueError('subscriptions must be a list of str')
 
-        if not isinstance(color, str):
+        if color is not None and not isinstance(color, str):
             raise ValueError('sources_count must be str')
 
-        if not isinstance(alert_type, AlertType) or not not isinstance(alert_type, int):
+        if alert_type is not None and (not isinstance(alert_type, AlertType) and not isinstance(alert_type, int)):
             raise ValueError('alert_type must be AlertType')
 
-        if not isinstance(source_id, str):
+        if source_id is not None and not isinstance(source_id, str):
             raise ValueError('source_id must be str')
 
-        if not isinstance(condition, dict):
+        if condition is not None and not isinstance(condition, dict):
             raise ValueError('condition must be dict')
 
-        if not isinstance(time_stall, int):
+        if time_stall is not None and not isinstance(time_stall, int):
             raise ValueError('time_stall must be int')
 
         self.alert_id = alert_id
@@ -115,7 +116,7 @@ class AlertInfo:
         self.time_stall = time_stall
 
     def __eq__(self, other) -> None:
-        if not isinstance(other, AlertInfo):
+        if other is not None and not isinstance(other, AlertInfo):
             return False
         else:
             return self.alert_id == other.alert_id
@@ -181,7 +182,7 @@ class AlertInstances:
 
     def __init__(self, alert: 'Alert'):
 
-        if not isinstance(alert, Alert):
+        if alert is not None and not isinstance(alert, Alert):
             raise ValueError('alert must be Alert')
 
         self.alert = alert
@@ -213,16 +214,16 @@ class Alert:
 
     def __init__(self, organization_id: str, workspace_id: str, credentials: Credentials, info: AlertInfo) -> None:
 
-        if not isinstance(organization_id, str):
+        if organization_id is not None and not isinstance(organization_id, str):
             raise ValueError('organization_id must be str')
 
-        if not isinstance(workspace_id, str):
+        if workspace_id is not None and not isinstance(workspace_id, str):
             raise ValueError('workspace_id must be str')
 
-        if not isinstance(credentials, Credentials):
+        if credentials is not None and not isinstance(credentials, Credentials):
             raise ValueError(f'credentials must be {Credentials.__class__}')
 
-        if not isinstance(info, AlertInfo):
+        if info is not None and not isinstance(info, AlertInfo):
             raise ValueError(f'info must be {AlertInfo.__class__}')
 
         self.info = info
@@ -235,7 +236,7 @@ class Alert:
         return f'<Alert organization_id={self.organization_id} workspace={self.workspace_id} {self.info}>'
 
     def __eq__(self, other):
-        if not isinstance(other, Alert):
+        if other is not None and not isinstance(other, Alert):
             return False
         else:
             return self.info == other.info

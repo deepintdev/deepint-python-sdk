@@ -111,13 +111,13 @@ class ModelFeature:
 
     def __init__(self, name: str, input_type: FeatureType, index: int = None) -> None:
 
-        if not isinstance(name, str):
+        if name is not None and not isinstance(name, str):
             raise ValueError('name must be str')
 
-        if not isinstance(input_type, FeatureType) or isinstance(input_type, int):
+        if input_type is not None and (not isinstance(input_type, FeatureType) and not isinstance(input_type, int)):
             raise ValueError('input_type must be FeatureType')
 
-        if not isinstance(index, int):
+        if index is not None and not isinstance(index, int):
             raise ValueError('index must be int')
 
         self.name = name
@@ -125,7 +125,7 @@ class ModelFeature:
         self.input_type = input_type
 
     def __eq__(self, other):
-        if not isinstance(other, SourceFeature):
+        if other is not None and not isinstance(other, SourceFeature):
             return False
         else:
             d1, d2, = self.to_dict(), other.to_dict()
@@ -187,37 +187,37 @@ class ModelInfo:
                  created: datetime, last_modified: datetime, last_access: datetime, source_train: str,
                  configuration: dict, size_bytes: int) -> None:
 
-        if not isinstance(model_id, str):
+        if model_id is not None and not isinstance(model_id, str):
             raise ValueError('model_id must be str')
 
-        if not isinstance(name, str):
+        if name is not None and not isinstance(name, str):
             raise ValueError('name must be str')
 
-        if not isinstance(description, str):
+        if description is not None and not isinstance(description, str):
             raise ValueError('description must be str')
 
-        if not isinstance(model_type, ModelType) or isinstance(model_type, int):
+        if model_type is not None and (not isinstance(model_type, ModelType) and not isinstance(model_type, int)):
             raise ValueError('model_type must be ModelType')
 
-        if not isinstance(method, ModelMethod) or isinstance(method, int):
+        if method is not None and (not isinstance(method, ModelMethod) and not isinstance(method, int)):
             raise ValueError('method must be ModelMethod')
 
-        if not isinstance(created, datetime):
+        if created is not None and not isinstance(created, datetime):
             raise ValueError('created must be datetime.datetime')
 
-        if not isinstance(last_modified, datetime):
+        if last_modified is not None and not isinstance(last_modified, datetime):
             raise ValueError('last_modified must be datetime.datetime')
 
-        if not isinstance(last_access, datetime):
+        if last_access is not None and not isinstance(last_access, datetime):
             raise ValueError('last_access must be datetime.datetime')
 
-        if not isinstance(source_train, str):
+        if source_train is not None and not isinstance(source_train, str):
             raise ValueError('source_train must be str')
 
-        if not isinstance(configuration, str):
+        if configuration is not None and not isinstance(configuration, str):
             raise ValueError('configuration must be dict')
 
-        if not isinstance(size_bytes, int):
+        if size_bytes is not None and not isinstance(size_bytes, int):
             raise ValueError('size_bytes must be int')
 
         self.model_id = model_id
@@ -233,7 +233,7 @@ class ModelInfo:
         self.size_bytes = size_bytes
 
     def __eq__(self, other):
-        if not isinstance(other, ModelInfo):
+        if other is not None and not isinstance(other, ModelInfo):
             return False
         else:
             return self.model_id == other.model_id
@@ -322,7 +322,7 @@ class ModelPredictions:
         """
 
         # check
-        if not isinstance(data, pd.DataFrame):
+        if data is not None and not isinstance(data, pd.DataFrame):
             raise DeepintBaseError(
                 code='TYPE_MISMATCH', message='The provided input is not a DataFrame.')
         elif data.empty or data is None:
@@ -380,7 +380,7 @@ class ModelPredictions:
         """
 
         # check
-        if not isinstance(data, pd.DataFrame):
+        if data is not None and not isinstance(data, pd.DataFrame):
             raise DeepintBaseError(
                 code='TYPE_MISMATCH', message='The provided input is not a DataFrame.')
         elif data.empty or data is None:
@@ -444,7 +444,7 @@ class ModelPredictions:
         """
 
         # check
-        if not isinstance(data, pd.DataFrame):
+        if data is not None and not isinstance(data, pd.DataFrame):
             raise DeepintBaseError(
                 code='TYPE_MISMATCH', message='The provided input is not a DataFrame.')
         elif data.empty or data is None:
@@ -520,31 +520,33 @@ class Model:
     def __init__(self, organization_id: str, workspace_id: str, credentials: Credentials, info: ModelInfo,
                  input_features: List[ModelFeature], output_features: ModelFeature) -> None:
 
-        if not isinstance(organization_id, str):
+        if organization_id is not None and not isinstance(organization_id, str):
             raise ValueError('organization_id must be str')
 
-        if not isinstance(workspace_id, str):
+        if workspace_id is not None and not isinstance(workspace_id, str):
             raise ValueError('workspace_id must be str')
 
-        if not isinstance(credentials, Credentials):
+        if credentials is not None and not isinstance(credentials, Credentials):
             raise ValueError(f'credentials must be {Credentials.__class__}')
 
-        if not isinstance(info, ModelInfo):
+        if info is not None and not isinstance(info, ModelInfo):
             raise ValueError(f'info must be {ModelInfo.__class__}')
 
-        if not isinstance(input_features, list):
+        if input_features is not None and not isinstance(input_features, list):
             raise ValueError('input_features must be list')
 
-        for f in input_features:
-            if not isinstance(f, ModelFeature):
-                raise ValueError(f'input_features must be a list of {ModelFeature.__class__}')
+        if input_features is not None:
+            for f in input_features:
+                if f is not None and not isinstance(f, ModelFeature):
+                    raise ValueError(f'input_features must be a list of {ModelFeature.__class__}')
 
-        if not isinstance(output_features, list):
+        if output_features is not None and not isinstance(output_features, list):
             raise ValueError('output_features must be list')
 
-        for f in output_features:
-            if not isinstance(f, ModelFeature):
-                raise ValueError(f'output_features must be a list of {ModelFeature.__class__}')
+        if output_features is not None:
+            for f in output_features:
+                if f is not None and not isinstance(f, ModelFeature):
+                    raise ValueError(f'output_features must be a list of {ModelFeature.__class__}')
 
         self.organization_id = organization_id
         self.info = info
@@ -560,7 +562,7 @@ class Model:
         return f'<Model organization_id={self.organization_id} workspace={self.workspace_id} {self.info}>'
 
     def __eq__(self, other):
-        if not isinstance(other, Model):
+        if other is not None and not isinstance(other, Model):
             return False
         else:
             return self.info == other.info

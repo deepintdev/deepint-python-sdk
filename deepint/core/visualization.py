@@ -34,34 +34,34 @@ class VisualizationInfo:
                  last_access: datetime, name: str, description: str,
                  visualization_type: str, public: bool, source_id: str, configuration: str) -> None:
 
-        if not isinstance(visualization_id, str):
+        if visualization_id is not None and not isinstance(visualization_id, str):
             raise ValueError('visualization_id must be str')
 
-        if not isinstance(created, datetime):
+        if created is not None and not isinstance(created, datetime):
             raise ValueError('created must be datetime.datetime')
 
-        if not isinstance(last_modified, datetime):
+        if last_modified is not None and not isinstance(last_modified, datetime):
             raise ValueError('last_modified must be datetime.datetime')
 
-        if not isinstance(last_access, datetime):
+        if last_access is not None and not isinstance(last_access, datetime):
             raise ValueError('last_access must be datetime.datetime')
 
-        if not isinstance(name, str):
+        if name is not None and not isinstance(name, str):
             raise ValueError('name must be str')
 
-        if not isinstance(description, str):
+        if description is not None and not isinstance(description, str):
             raise ValueError('description must be str')
 
-        if not isinstance(visualization_type, str):
+        if visualization_type is not None and not isinstance(visualization_type, str):
             raise ValueError('visualization_type must be str')
 
-        if not isinstance(public, bool):
+        if public is not None and not isinstance(public, bool):
             raise ValueError('public must be bool')
 
-        if not isinstance(source_id, str):
+        if source_id is not None and not isinstance(source_id, str):
             raise ValueError('source_id must be str')
 
-        if not isinstance(configuration, str):
+        if configuration is not None and not isinstance(configuration, dict):
             raise ValueError('configuration must be dict')
 
         self.visualization_id = visualization_id
@@ -76,7 +76,7 @@ class VisualizationInfo:
         self.configuration = configuration
 
     def __eq__(self, other):
-        if not isinstance(other, VisualizationInfo):
+        if other is not None and not isinstance(other, VisualizationInfo):
             return False
         else:
             return self.visualization_id == other.visualization_id
@@ -138,16 +138,16 @@ class Visualization:
     def __init__(self, workspace_id: str, organization_id: str,
                  info: VisualizationInfo, credentials: Credentials) -> None:
 
-        if not isinstance(organization_id, str):
+        if organization_id is not None and not isinstance(organization_id, str):
             raise ValueError('organization_id must be str')
 
-        if not isinstance(workspace_id, str):
+        if workspace_id is not None and not isinstance(workspace_id, str):
             raise ValueError('workspace_id must be str')
 
-        if not isinstance(credentials, Credentials):
+        if credentials is not None and not isinstance(credentials, Credentials):
             raise ValueError(f'credentials must be {Credentials.__class__}')
 
-        if not isinstance(info, VisualizationInfo):
+        if info is not None and not isinstance(info, VisualizationInfo):
             raise ValueError(f'info must be {VisualizationInfo.__class__}')
 
         self.info = info
@@ -159,7 +159,7 @@ class Visualization:
         return f'<Visualization organization={self.organization_id} workspace={self.workspace_id} {self.info}>'
 
     def __eq__(self, other):
-        if not isinstance(other, Visualization):
+        if other is not None and not isinstance(other, Visualization):
             return False
         else:
             return self.info == other.info

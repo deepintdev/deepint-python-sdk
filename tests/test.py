@@ -3,18 +3,42 @@
 # Copyright 2021 Deep Intelligence
 # See LICENSE for details.
 
+import json
 import os
 import platform
 import uuid
 from time import sleep
 
 import pandas as pd
+import pytest
 from deepint import *
 
-TEST_CSV = 'https://people.sc.fsu.edu/~jburkardt/data/csv/letter_frequency.csv'
-TEST_CSV2 = 'https://people.sc.fsu.edu/~jburkardt/data/csv/letter_frequency.csv'
-DEEPINT_TOKEN = os.environ.get('DEEPINT_TOKEN')
-DEEPINT_ORGANIZATION = os.environ.get('DEEPINT_ORGANIZATION')
+# create test credentials
+
+TEST_CREDENTIALS_FILE = 'test_config.json'
+
+try:
+    with open(TEST_CREDENTIALS_FILE, 'r') as f:
+        raw_content = f.read()
+        content = json.loads(raw_content)
+    TEST_CSV = content.get("TEST_CSV")
+    TEST_CSV2 = content.get("TEST_CSV2")
+    DEEPINT_TOKEN = content.get("DEEPINT_TOKEN")
+    DEEPINT_ORGANIZATION = content.get("DEEPINT_ORGANIZATION")
+except:
+    print(f'If you are in a local enviroment, you can load your test credentials from the \'{TEST_CREDENTIALS_FILE}\' file.')
+
+if TEST_CSV is None:
+    TEST_CSV = 'https://people.sc.fsu.edu/~jburkardt/data/csv/letter_frequency.csv'
+
+if TEST_CSV2 is None:
+    TEST_CSV2 = 'https://people.sc.fsu.edu/~jburkardt/data/csv/letter_frequency.csv'
+
+if DEEPINT_TOKEN is None:
+    DEEPINT_TOKEN = os.environ.get('DEEPINT_TOKEN')
+
+if DEEPINT_ORGANIZATION is None:
+    DEEPINT_ORGANIZATION = os.environ.get('DEEPINT_ORGANIZATION')
 
 # objects names
 PYTHON_VERSION_NAME = platform.python_version()
@@ -31,6 +55,10 @@ TEST_VISUALIZATION_NAME = f'{PYTHON_VERSION_NAME}_automated_python_sdk_test_visu
 TEST_VISUALIZATION_DESC = f'{PYTHON_VERSION_NAME}_Automated python SDK test visualization'
 TEST_DASHBOARD_NAME = f'{PYTHON_VERSION_NAME}_automated_python_sdk_test_dashboard'
 TEST_DASHBOARD_DESC = f'{PYTHON_VERSION_NAME}_Automated python SDK test dashboard'
+
+# credentials load
+os.environ["DEEPINT_TOKEN"] = DEEPINT_TOKEN
+os.environ["DEEPINT_ORGANIZATION"] = DEEPINT_ORGANIZATION
 
 
 def serve_name(object_type):
@@ -69,7 +97,6 @@ def test_organization_CRUD():
 
     assert (org.account is not None)
     assert (not list(org.workspaces.fetch_all()))
-    # pass
 
 
 def test_workspace_CRUD():
@@ -342,22 +369,21 @@ def test_alert_CRUD():
 
 
 def test_model_CRUD():
-    return
+
     # load organization, create workspace and source (with initialization)
     org = Organization.build(organization_id=DEEPINT_ORGANIZATION)
     ws_name = serve_name(TEST_WS_NAME)
     ws = org.workspaces.create(name=ws_name, description=TEST_WS_DESC)
     data = pd.read_csv(TEST_CSV)
     src_name = serve_name(TEST_SRC_NAME)
-    source = ws.sources.create_and_initialize(
-        name=src_name, description=TEST_SRC_DESC, data=data)
+    source = ws.sources.create_and_initialize(name=src_name, description=TEST_SRC_DESC, data=data, wait_for_initialization=True)
 
     # create model
     target_feature = [f for f in source.features.fetch_all(
     ) if f.feature_type == FeatureType.numeric][0]
     model_name = serve_name(TEST_MODEL_NAME)
-    model = ws.models.create(name=model_name, description=TEST_MODEL_DESC, model_type=ModelType.regressor,
-                             method=ModelMethod.tree, source=source, target_feature_name=target_feature.name)
+
+    model = ws.models.create(name=model_name, description=TEST_MODEL_DESC, model_type=ModelType.regressor, method=ModelMethod.tree, source=source, target_feature_name=target_feature.name, wait_for_model_creation=True)
 
     # retrieve
     retrieved_model = Model.build(organization_id=DEEPINT_ORGANIZATION, model_id=model.info.model_id, workspace_id=ws.info.workspace_id,
@@ -402,7 +428,7 @@ def test_model_CRUD():
     model.delete()
     try:
         _ = Model.build(organization_id=DEEPINT_ORGANIZATION, model_id=model.info.model_id,
-                        workspace_id=ws.info.workspace_id, credentials=org.credentials)
+                        workspace_id=ws.info.workspace_id, credentials=org.credentials, wait_for_model_creation=True)
         assert False
     except DeepintHTTPError:
         assert True
@@ -511,14 +537,10 @@ def test_url_parser():
     source = workspace.sources.create_and_initialize(
         name=serve_name(TEST_SRC_NAME), description=TEST_SRC_DESC, data=data)
 
-    target_feature = None
-    for f in source.features.fetch_all():
-        if f.feature_type == FeatureType.numeric:
-            target_feature = f
-            break
-    model = workspace.models.create(name=serve_name(TEST_MODEL_NAME), description=TEST_MODEL_DESC, model_type=ModelType.regressor,
-                                    method=ModelMethod.tree,
-                                    source=source, target_feature_name=target_feature.name)
+    target_feature = [f for f in source.features.fetch_all() if f.feature_type == FeatureType.numeric][0]
+    model_name = serve_name(TEST_MODEL_NAME)
+    model = workspace.models.create(name=model_name, description=TEST_MODEL_DESC, model_type=ModelType.regressor,
+                                    method=ModelMethod.tree, source=source, target_feature_name=target_feature.name, wait_for_model_creation=True)
 
     alert = workspace.alerts.create(name=serve_name(TEST_ALERT_NAME), description=TEST_ALERT_DESC,
                                     subscriptions=TEST_ALERT_SUBSCRIPTIONS,
@@ -603,16 +625,24 @@ def test_url_parser():
     ws.delete()
 
 
+@pytest.fixture(scope="session", autouse=True)
+def cleanup(request):
+    def clean_organization():
+        org = Organization.build(organization_id=DEEPINT_ORGANIZATION)
+        org.clean()
+    request.addfinalizer(clean_organization)
+
+
 if __name__ == '__main__':
     test_credentials_load()
-    test_organization_CRUD()
-    test_workspace_CRUD()
-    test_source_CRUD()
-    test_real_time_source_CRUD()
-    test_external_source_CRUD()
-    test_task_CRUD()
-    test_alert_CRUD()
+    # test_organization_CRUD()
+    # test_workspace_CRUD()
+    # test_source_CRUD()
+    # test_real_time_source_CRUD()
+    # test_external_source_CRUD()
+    # test_task_CRUD()
+    # test_alert_CRUD()
     test_model_CRUD()
-    test_visualization_CRUD()
+    # test_visualization_CRUD()
     test_dashboard_CRUD()
     test_url_parser()
