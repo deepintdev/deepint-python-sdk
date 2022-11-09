@@ -20,6 +20,54 @@ from .task import Task
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
 
+class SourceType(enum.Enum):
+    """Available source types in the system.
+    """
+
+    mysql = 0
+    ms_sql = 1
+    oracle = 2
+    pg = 3
+    url_json = 4
+    url_sql = 5
+    url_sqlite = 6
+    file_csv = 7
+    file_json = 8
+    file_sql = 9
+    file_sqlite = 10
+    url_csv = 11
+    ckan = 12
+    s3 = 13
+    mqtt = 14
+    mongo = 15
+    influx = 16
+    empty = 17
+    derived = 18
+    external = 19
+    rt = 20
+
+    @classmethod
+    def from_string(cls, _str: str) -> 'SourceType':
+        """Builds the :obj:`deepint.core.source.SourceType` from a :obj:`str`.
+
+        Args:
+            _str: name of the source type.
+
+        Returns:
+            the model type converted to :obj:`deepint.core.source.SourceType`.
+        """
+        return cls.unknown if _str not in [e.name for e in cls] else cls[_str]
+
+    @classmethod
+    def all(cls) -> List[str]:
+        """ Returns all available model types serialized to :obj:`str`.
+
+        Returns:
+            all available source types.
+        """
+        return [e.name for e in cls]
+
+
 class FeatureType(enum.Enum):
     """Available feature types in the system.
     """
@@ -266,7 +314,7 @@ class SourceInfo:
 
     def __init__(self, source_id: str, created: datetime,
                  last_modified: datetime, last_access: datetime, name: str,
-                 description: str, source_type: str, instances: int,
+                 description: str, source_type: SourceType, instances: int,
                  size_bytes: int) -> None:
 
         if not isinstance(source_id, str):
@@ -287,8 +335,8 @@ class SourceInfo:
         if not isinstance(description, str):
             raise ValueError('description must be str')
 
-        if not isinstance(source_type, str):
-            raise ValueError('source_type must be str')
+        if not isinstance(source_type, str) or isinstance(source_type, SourceType):
+            raise ValueError('source_type must be SourceType')
 
         if not isinstance(instances, int):
             raise ValueError('instances must be int')
@@ -332,7 +380,7 @@ class SourceInfo:
         last_access = parse_date(obj.get("last_access"))
         name = obj.get("name")
         description = obj.get("description")
-        source_type = obj.get("type")
+        source_type = FeatureType.from_string(obj.get("type"))
         instances = int(obj.get("instances"))
         size_bytes = int(obj.get("size_bytes"))
         return SourceInfo(source_id, created, last_modified, last_access, name,
@@ -348,7 +396,7 @@ class SourceInfo:
 
         return {"id": self.source_id, "created": self.created.isoformat(),
                 "last_modified": self.last_modified.isoformat(), "last_access": self.last_access.isoformat(),
-                "name": self.name, "description": self.description, "source_type": self.source_type,
+                "name": self.name, "description": self.description, "source_type": self.source_type.name,
                 "instances": int(self.instances), "size_bytes": int(self.size_bytes)}
 
 
@@ -717,6 +765,13 @@ class Source:
                   credentials=credentials, info=src_info, features=None)
         src.load()
         src.features.load()
+
+        # build the other source types classes if neccesary
+        if src.info.source_type == SourceType.external:
+            src = ExternalSource.build(src)
+        elif src.info.source_type == SourceType.rt:
+            src = RealTimeSource.build(src)
+
         return src
 
     @classmethod
@@ -810,6 +865,21 @@ class Source:
         handle_request(method='DELETE', path=path,
                        headers=headers, credentials=self.credentials)
 
+    def clone(self):
+        """Future implementation of /api/v1/workspace/<workspaceid>/sources/<sourceid>/clone
+        """
+        raise Exception('Not implemented Error')
+
+    def fetch_actualization_config(self):
+        """Future implementation of /api/v1/workspace/<workspaceid>/sources/<sourceid>/autoupdate
+        """
+        raise Exception('Not implemented Error')
+
+    def update_actualization_config(self):
+        """Future implementation of /api/v1/workspace/<workspaceid>/sources/<sourceid>/autoupdate
+        """
+        raise Exception('Not implemented Error')
+
     def to_dict(self) -> Dict[str, Any]:
         """Builds a dictionary containing the information stored in current object.
 
@@ -818,3 +888,66 @@ class Source:
         """
 
         return {"info": self.info.to_dict(), "features": [x.to_dict() for x in self.features.fetch_all()]}
+
+
+class RealTimeSource(Source):
+
+    @classmethod
+    def build(cls, source: Source):
+        """Builds RT source from a source
+        """
+        raise Exception('Not implemented Error')
+
+    def fetch_connection(self):
+        """Future implementation of /api/v1/workspace/<workspaceid>/sources/<sourceid>/real_time
+        """
+        raise Exception('Not implemented Error')
+
+    def update_connection(self):
+        """Future implementation of /api/v1/workspace/<workspaceid>/sources/<sourceid>/real_time
+        """
+        raise Exception('Not implemented Error')
+
+    def push(self):
+        """Future implementation of /api/v1/workspace/<workspaceid>/sources/<sourceid>/real_time_psh
+        """
+        raise Exception('Not implemented Error')
+
+    def clear(self):
+        """Future implementation of /api/v1/workspace/<workspaceid>/sources/<sourceid>/real_time_clear
+        """
+        raise Exception('Not implemented Error')
+
+
+class ExternalSource(Source):
+
+    @classmethod
+    def build(cls, source: Source):
+        """Builds external source from a source
+        """
+        raise Exception('Not implemented Error')
+
+    def force_update(self):
+        """Future implementation of /api/v1/external/source/update
+        """
+        raise Exception('Not implemented Error')
+
+    def fetch_connection(self):
+        """Future implementation of /api/v1/workspace/<workspaceid>/sources/<sourceid>/connection
+        """
+        raise Exception('Not implemented Error')
+
+    def update_connection(self):
+        """Future implementation of /api/v1/workspace/<workspaceid>/sources/<sourceid>/connection
+        """
+        raise Exception('Not implemented Error')
+
+    def fetch_actualization_config(self):
+        """Future overwritting to not be able to /api/v1/workspace/<workspaceid>/sources/<sourceid>/autoupdate
+        """
+        raise Exception('Not implemented Error')
+
+    def update_actualization_config(self):
+        """Future overwritting to not be able to /api/v1/workspace/<workspaceid>/sources/<sourceid>/autoupdate
+        """
+        raise Exception('Not implemented Error')
