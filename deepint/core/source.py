@@ -869,10 +869,29 @@ class Source:
         handle_request(method='DELETE', path=path,
                        headers=headers, credentials=self.credentials)
 
-    def clone(self):
-        """Future implementation of /api/v1/workspace/<workspaceid>/sources/<sourceid>/clone
+    def clone(self, name: str = None) -> 'Source':
+        """Clones a source.
+
+        Args:
+            name: name for the new source. If not providen the name will be `Copy of <current visualization's name>`
+
+        Returns:
+            the cloned source instance.
         """
-        raise Exception('Not implemented Error')
+
+        # generate name if not present
+        if name is None:
+            name = f'Copy of {self.info.name}'
+
+        # request visualization clone
+        path = f'/api/v1/workspace/{self.workspace_id}/source/{self.info.source_id}/clone'
+        headers = {'x-deepint-organization': self.organization_id}
+        response = handle_request(
+            method='POST', path=path, headers=headers, credentials=self.credentials)
+
+        new_source = Source.build(organization_id=self.organization_id, workspace_id=self.workspace_id,
+                                                source_id=response['source_id'], credentials=self.credentials)
+        return new_source
 
     def fetch_actualization_config(self):
         """Future implementation of /api/v1/workspace/<workspaceid>/sources/<sourceid>/autoupdate

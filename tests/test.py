@@ -253,11 +253,15 @@ def test_source_CRUD():
     assert (source == source1)
     assert (source.features == source1.features)
 
+    # clone
+    cloned_source = source.clone()
+    assert(cloned_source == source)
+
     source.delete()
+    cloned_source.delete()
 
     # TODO: create_derived
     # TODO: create_other_type
-    # TODO: clone
     # TODO: fetch_actualization_config
     # TODO: update_actualization_config
 
@@ -664,7 +668,7 @@ if __name__ == '__main__':
     # test_credentials_load()
     # test_organization_CRUD()
     # test_workspace_CRUD()
-    # test_source_CRUD()
+    test_source_CRUD()
     test_real_time_source_CRUD()
     test_external_source_CRUD()
     test_task_CRUD()
