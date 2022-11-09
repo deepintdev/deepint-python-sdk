@@ -3,11 +3,10 @@
 # Copyright 2021 Deep Intelligence
 # See LICENSE for details.
 
-import time
 import enum
-import asyncio
+import time
 from datetime import datetime
-from typing import Any, List, Dict
+from typing import Any, Dict, List
 
 from ..auth import Credentials
 from ..error import DeepintTaskError
@@ -49,7 +48,7 @@ class TaskStatus(enum.Enum):
 
 class TaskInfo:
     """Stores the information of a Deep Intelligence task.
-    
+
     Attributes:
         task_id: task's id in format uuid4.
         name: task's name.
@@ -139,10 +138,10 @@ class TaskInfo:
 
 class Task:
     """A Deep Intelligence task.
-    
+
     Note: This class should not be instanced directly, and it's recommended to use the :obj:`deepint.core.task.Task.build`
-    or :obj:`deepint.core.task.Task.from_url` methods. 
-    
+    or :obj:`deepint.core.task.Task.from_url` methods.
+
     Attributes:
         organization_id: the organziation where task is located.
         workspace_id: workspace where task is located.
@@ -163,7 +162,7 @@ class Task:
     @classmethod
     def build(cls, organization_id: str, workspace_id: str, task_id: str, credentials: Credentials = None) -> 'Task':
         """Builds a task.
-        
+
         Note: when task is created, the task's information is retrieved from API.
 
         Args:
@@ -182,7 +181,8 @@ class Task:
                         name=None,
                         description=None, progress=None, subtask=None, result=None, result_type=None, error_code=None,
                         error_description=None)
-        task = cls(organization_id=organization_id, workspace_id=workspace_id, credentials=credentials, info=info)
+        task = cls(organization_id=organization_id,
+                   workspace_id=workspace_id, credentials=credentials, info=info)
         task.load()
         return task
 
@@ -195,7 +195,7 @@ class Task:
         Example:
             - https://app.deepint.net/o/3a874c05-26d1-4b8c-894d-caf90e40078b/workspace?ws=f0e2095f-fe2b-479e-be4b-bbc77207f42d&s=task&i=db98f976-f4bb-43d5-830e-bc18a3a89641
             - https://app.deepint.net/api/v1/workspace/f0e2095f-fe2b-479e-be4b-bbc77207f42/task/db98f976-f4bb-43d5-830e-bc18a3a89641
-        
+
         Note: when task is created, the task's information and features are retrieved from API.
             Also it is remmarkable that if the API URL is providen, the organization_id must be provided in the optional parameter, otherwise
             this ID won't be found on the URL and the Organization will not be created, raising a value error.
@@ -213,18 +213,21 @@ class Task:
         url_info, hostname = parse_url(url)
 
         if 'organization_id' not in url_info and organization_id is None:
-            raise ValueError('Fields organization_id must be in url to build the object. Or providen as optional parameter.')
+            raise ValueError(
+                'Fields organization_id must be in url to build the object. Or providen as optional parameter.')
 
         if 'workspace_id' not in url_info or 'task_id' not in url_info:
-            raise ValueError('Fields workspace_id and task_id must be in url to build the object.')
+            raise ValueError(
+                'Fields workspace_id and task_id must be in url to build the object.')
 
         organization_id = url_info['organization_id'] if 'organization_id' in url_info else organization_id
 
         # create new credentials
-        new_credentials = Credentials(token=credentials.token, instance=hostname)
-        
-        return cls.build(organization_id=organization_id, workspace_id=url_info['workspace_id'], task_id=url_info['task_id'], 
-                credentials=new_credentials)
+        new_credentials = Credentials(
+            token=credentials.token, instance=hostname)
+
+        return cls.build(organization_id=organization_id, workspace_id=url_info['workspace_id'], task_id=url_info['task_id'],
+                         credentials=new_credentials)
 
     def load(self):
         """Loads the task's information.
@@ -235,7 +238,8 @@ class Task:
         # request
         path = f'/api/v1/workspace/{self.workspace_id}/task/{self.info.task_id}'
         headers = {'x-deepint-organization': self.organization_id}
-        response = handle_request(method='GET', path=path, headers=headers, credentials=self.credentials)
+        response = handle_request(
+            method='GET', path=path, headers=headers, credentials=self.credentials)
 
         # map results
         self.info = TaskInfo.from_dict(response)
@@ -247,14 +251,15 @@ class Task:
         # request
         path = f'/api/v1/workspace/{self.workspace_id}/task/{self.info.task_id}'
         headers = {'x-deepint-organization': self.organization_id}
-        response = handle_request(method='DELETE', path=path, headers=headers, credentials=self.credentials)
+        _ = handle_request(
+            method='DELETE', path=path, headers=headers, credentials=self.credentials)
 
     def resolve(self, raise_on_error=True, poll_interval: int = 3):
         """Waits for the task to be finished
-        
+
         Args:
             raise_on_error: if set to True and the task enters in an errored status, a :obj:`deepint.error.errors.DeepintTaskError` is raised.
-                In other case, if the task enters in an errored state, the wait for task process will stop and the error will not be raised. 
+                In other case, if the task enters in an errored state, the wait for task process will stop and the error will not be raised.
             poll_interval: Number of seconds between task status checks (it consists in a query to API). If not provided the default value is 3.
         """
 
@@ -269,14 +274,14 @@ class Task:
 
     def fetch_result(self, force_reload=False) -> Dict[str, str]:
         """Retrieves the result of the task.
-        
+
         Args:
             force_reload: if set to True the task information is reloaded, then the result is fetched.
 
         Returns:
             the result generated by the task in deepint.net
         """
-        
+
         if force_reload:
             self.load()
 
@@ -284,7 +289,7 @@ class Task:
 
     def is_errored(self, force_reload=False) -> bool:
         """Checks if the task has failed.
-        
+
         Args:
             force_reload: if set to True the task information is reloaded, then the status is checked.
 

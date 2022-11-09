@@ -3,20 +3,20 @@
 # Copyright 2021 Deep Intelligence
 # See LICENSE for details.
 
-from typing import Any, List, Dict, Optional, Generator
+from typing import Any, Dict, Generator, List, Optional
 
 from ..auth import Credentials
-from .workspace import Workspace
-from .task import Task, TaskStatus
 from ..error import DeepintBaseError
-from ..util import handle_request, parse_date, parse_url
+from ..util import handle_request, parse_url
+from .task import Task
+from .workspace import Workspace
 
 
 class OrganizationWorkspaces:
     """Operates over the worksapces of a concrete organization.
 
     Note: This class should not be instanced, and only be used within an :obj:`deepint.core.organization.Organization`
-    
+
     Attributes:
         organization: the organization with which to operate with its worksapces
     """
@@ -33,9 +33,10 @@ class OrganizationWorkspaces:
         """
 
         # request
-        path = f'/api/v1/workspaces'
+        path = '/api/v1/workspaces'
         headers = {'x-deepint-organization': self.organization.organization_id}
-        response = handle_request(method='GET', path=path, headers=headers, credentials=self.organization.credentials)
+        response = handle_request(
+            method='GET', path=path, headers=headers, credentials=self.organization.credentials)
 
         # map results
         self._generator = (Workspace.build(organization_id=self.organization.organization_id, workspace_id=w['id'],
@@ -49,13 +50,13 @@ class OrganizationWorkspaces:
         Args:
             name: new workspace's name.
             descrpition: new workspace's description.
-        
+
         Returns:
             the created workspace
         """
 
         # request
-        path = f'/api/v1/workspaces/'
+        path = '/api/v1/workspaces/'
         headers = {'x-deepint-organization': self.organization.organization_id}
         parameters = {'name': name, 'description': description}
         response = handle_request(method='POST', path=path, credentials=self.organization.credentials,
@@ -74,13 +75,13 @@ class OrganizationWorkspaces:
     def create_if_not_exists(self, name: str) -> Workspace:
         """Creates a workspace in current organization if not exists, else retrieves the given worksapce.
 
-        The source is created with the :obj:`deepint.core.organization.OrganizationWorkspaces.create`, so it's reccomended to 
+        The source is created with the :obj:`deepint.core.organization.OrganizationWorkspaces.create`, so it's reccomended to
         read the documentation of that method to learn more about the possible artguments of creation.
         Before creation, the workspace is loaded and stored locally in the internal list of workspaces in the current instance.
 
         Args:
             name: new workspace's name.
-        
+
         Returns:
             the created workspace if not exists, else the retrieved workspace
         """
@@ -95,9 +96,9 @@ class OrganizationWorkspaces:
         # if not exists, create
         return self.create(name, '')
 
-    def import_ws(self, name:str, description:str, file_path: str, wait_for_creation: bool = True) -> Workspace:
+    def import_ws(self, name: str, description: str, file_path: str, wait_for_creation: bool = True) -> Workspace:
         """Imports a workspace to ZIP into the selected path.
-        
+
         Args:
             name: new workspace's name.
             description: new workspace's description.
@@ -111,16 +112,18 @@ class OrganizationWorkspaces:
         # read the file
 
         try:
-            file_content = open(file_path,'rb').read()
+            file_content = open(file_path, 'rb').read()
         except:
-            raise DeepintBaseError(code='FILE_NOT_FOUND', message=f'The providen ZIP file {path} was not found.')
+            raise DeepintBaseError(
+                code='FILE_NOT_FOUND', message=f'The providen ZIP file {file_path} was not found.')
 
         # build request
-        path = f'/api/v1/workspaces/import'
+        path = '/api/v1/workspaces/import'
         headers = {'x-deepint-organization': self.organization.organization_id}
         parameters = {'name': name, 'description': description}
         files = {'file': file_content}
-        response = handle_request(method='POST', path=path, headers=headers, parameters=parameters, files=files, credentials=self.organization.credentials)
+        response = handle_request(method='POST', path=path, headers=headers,
+                                  parameters=parameters, files=files, credentials=self.organization.credentials)
 
         # create task to fetch the workspace
         task = Task.build(task_id=response['task_id'], workspace_id=response['workspace_id'],
@@ -146,8 +149,8 @@ class OrganizationWorkspaces:
     def fetch(self, workspace_id: str = None, name: str = None, force_reload: bool = False) -> Optional[Workspace]:
         """Search for a workspace in the organization.
 
-        The first time is invoked, buidls a generator to retrieve workspaces directly from deepint.net API. However, 
-        if there is stored workspaces and the force_reload option is not specified, only iterates in local 
+        The first time is invoked, buidls a generator to retrieve workspaces directly from deepint.net API. However,
+        if there is stored workspaces and the force_reload option is not specified, only iterates in local
         workspaces. In other case, it request the workspaces to deepint.net API and iterates over it.
 
         Note: if no name or id is provided, the returned value is None.
@@ -157,7 +160,7 @@ class OrganizationWorkspaces:
             name: workspace's name to search by.
             force_reload: if set to True, workspaces are reloaded before the search with the
                 :obj:`deepint.core.organization.OrganizationWorkspaces.load` method.
-        
+
         Returns:
             retrieved workspace if found, and in other case None.
         """
@@ -192,15 +195,15 @@ class OrganizationWorkspaces:
 
     def fetch_all(self, force_reload: bool = False) -> Generator[Workspace, None, None]:
         """Retrieves all organization's workspaces.
-        
-        The first time is invoked, buidls a generator to retrieve workspaces directly from deepint.net API. However, 
-        if there is stored workspaces and the force_reload option is not specified, only iterates in local 
+
+        The first time is invoked, buidls a generator to retrieve workspaces directly from deepint.net API. However,
+        if there is stored workspaces and the force_reload option is not specified, only iterates in local
         workspaces. In other case, it request the workspaces to deepint.net API and iterates over it.
 
         Args:
             force_reload: if set to True, workspaces are reloaded before the search with the
                 :obj:`deepint.core.organization.OrganizationWorkspaces.load` method.
-        
+
         Yields:
             :obj:`deepint.core.workspace.Workspace`: The next workspace returned by deeepint.net API.
 
@@ -218,13 +221,12 @@ class OrganizationWorkspaces:
             yield from self._workspaces
 
 
-
 class Organization:
     """A Deep Intelligence Organization.
-    
+
     Note: This class should not be instanced directly, and it's recommended to use the :obj:`deepint.core.organization.Organization.build`
         method.
-    
+
     Attributes:
         organization_id: the id of the organization.
         workspaces: :obj:`deepint.core.organization.OrganizationWorkspaces` to operate with organization's workspaces.
@@ -247,11 +249,11 @@ class Organization:
             return False
         else:
             return self.organization_id == other.organization_id
-            
+
     @classmethod
     def build(cls, organization_id: str = None, credentials: Credentials = None) -> 'Organization':
         """Builds an organization.
-        
+
         Note: when organization is created, the organization's information and account are retrieved from API.
 
         Args:
@@ -264,7 +266,8 @@ class Organization:
         """
 
         credentials = credentials if credentials is not None else Credentials.build()
-        org = cls(organization_id=organization_id, credentials=credentials, workspaces=None, account=None)
+        org = cls(organization_id=organization_id,
+                  credentials=credentials, workspaces=None, account=None)
         org.load()
         org.workspaces.load()
         return org
@@ -278,8 +281,8 @@ class Organization:
         Example:
             - https://app.deepint.net/o/3a874c05-26d1-4b8c-894d-caf90e40078b/workspace?ws=f0e2095f-fe2b-479e-be4b-bbc77207f42d
             - https://app.deepint.net/api/v1/workspace/f0e2095f-fe2b-479e-be4b-bbc77207f42
-        
-        Note: when organization is created, the organization's information and list of it's associated objects (workspaces) are loaded. 
+
+        Note: when organization is created, the organization's information and list of it's associated objects (workspaces) are loaded.
             Also it is remmarkable that if the API URL is providen, the organization_id must be provided in the optional parameter, otherwise
             this ID won't be found on the URL and the Organization will not be created, raising a value error.
 
@@ -296,13 +299,15 @@ class Organization:
         url_info, hostname = parse_url(url)
 
         if 'organization_id' not in url_info and organization_id is None:
-            raise ValueError('Fields organization_id must be in url to build the object. Or providen as optional parameter.')
+            raise ValueError(
+                'Fields organization_id must be in url to build the object. Or providen as optional parameter.')
 
         organization_id = url_info['organization_id'] if 'organization_id' in url_info else organization_id
 
         # create new credentials
-        new_credentials = Credentials(token=credentials.token, instance=hostname)
-        
+        new_credentials = Credentials(
+            token=credentials.token, instance=hostname)
+
         return cls.build(organization_id=organization_id, credentials=new_credentials)
 
     def load(self):
@@ -312,13 +317,15 @@ class Organization:
         """
 
         # request
-        path = f'/api/v1/who'
+        path = '/api/v1/who'
         headers = {'x-deepint-organization': self.organization_id}
-        response_who = handle_request(method='GET', path=path, headers=headers, credentials=self.credentials)
+        response_who = handle_request(
+            method='GET', path=path, headers=headers, credentials=self.credentials)
 
-        path = f'/api/v1/profile'
+        path = '/api/v1/profile'
         headers = {'x-deepint-organization': self.organization_id}
-        response_profile = handle_request(method='GET', path=path, headers=headers, credentials=self.credentials)
+        response_profile = handle_request(
+            method='GET', path=path, headers=headers, credentials=self.credentials)
 
         # map results
         response = {**response_who, **response_profile}
@@ -327,7 +334,7 @@ class Organization:
     def clean(self):
         """Deletes all workspaces in organization.
         """
-        
+
         for ws in self.workspaces.fetch_all():
             ws.delete()
         self.workspaces.load()

@@ -3,8 +3,9 @@
 # Copyright 2021 Deep Intelligence
 # See LICENSE for details.
 
-import requests
 from time import sleep
+
+import requests
 
 from ..auth import Credentials
 from ..error import DeepintHTTPError
@@ -40,7 +41,8 @@ def handle_request(credentials: Credentials = None, method: str = None, path: st
         header = {**auth_header, **headers}
 
     if parameters is not None:
-        parameters = {k: parameters[k] for k in parameters if parameters[k] is not None}
+        parameters = {k: parameters[k]
+                      for k in parameters if parameters[k] is not None}
 
     # prepare request parts
     url = f'https://{credentials.instance}{path}'
@@ -49,7 +51,8 @@ def handle_request(credentials: Credentials = None, method: str = None, path: st
     json_data = parameters if method != 'GET' and files is None else None
 
     # perform request
-    response = requests.request(method=method, url=url, headers=header, params=params, json=json_data, data=data, files=files)
+    response = requests.request(method=method, url=url, headers=header,
+                                params=params, json=json_data, data=data, files=files)
 
     if response.status_code == 500:
         raise DeepintHTTPError(code='UNKOWN_ERROR',
@@ -68,10 +71,12 @@ def handle_request(credentials: Credentials = None, method: str = None, path: st
     try:
         response_json = response.json()
     except:
-        raise DeepintHTTPError(code=response.status_code, message='The API returned a no JSON-deserializable response.', method=method, url=url)
+        raise DeepintHTTPError(
+            code=response.status_code, message='The API returned a no JSON-deserializable response.', method=method, url=url)
 
     if response.status_code != 200:
-        raise DeepintHTTPError(code=response_json['code'], message=response_json['message'], method=method, url=url)
+        raise DeepintHTTPError(
+            code=response_json['code'], message=response_json['message'], method=method, url=url)
 
     return response_json
 
@@ -79,21 +84,23 @@ def handle_request(credentials: Credentials = None, method: str = None, path: st
 def handle_paginated_request(credentials: Credentials = None, method: str = None, path: str = None,
                              headers: dict = None, parameters: dict = None, files: tuple = None):
     # first response
-    response = handle_request(credentials=credentials, method=method, path=path, parameters=parameters, headers=headers, files=files)
+    response = handle_request(credentials=credentials, method=method,
+                              path=path, parameters=parameters, headers=headers, files=files)
 
     # update state and return items
     yield from response['items']
     next_page = response['page'] + 1
     total_pages = response['pages_count']
 
-    # create parameters    
+    # create parameters
     parameters = parameters if parameters is not None else {}
 
     # request the rest of the data
     while next_page < total_pages:
         # update parameters and perform request
         parameters['page'] = next_page
-        response = handle_request(credentials=credentials, method=method, path=path, headers=headers, parameters=parameters, files=files)
+        response = handle_request(credentials=credentials, method=method,
+                                  path=path, headers=headers, parameters=parameters, files=files)
 
         # update state and return items
         yield from response['items']
