@@ -5,6 +5,10 @@ Source
    :exclude-members:
    :members:
 
+.. autoclass:: deepint.core.SourceType
+   :exclude-members:
+   :members:
+
 .. autoclass:: deepint.core.SourceFeature
    :exclude-members:
    :members:
