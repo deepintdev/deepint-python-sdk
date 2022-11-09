@@ -4,26 +4,27 @@
 # See LICENSE for details.
 
 import os
-import requests
-import pandas as pd
 from datetime import datetime
-from typing import Any, List, Dict, Optional, Generator, Union
+from typing import Any, Dict, Generator, List, Optional, Union
 
-from .dashboard import Dashboard
-from .task import Task, TaskStatus
-from .alert import Alert, AlertType
-from .visualization import Visualization
-from .model import Model, ModelMethod, ModelType
-from .source import Source, SourceFeature, FeatureType
+import pandas as pd
+import requests
 
 from ..auth import Credentials
 from ..error import DeepintBaseError
-from ..util import handle_request, handle_paginated_request, parse_date, parse_url
+from ..util import (handle_paginated_request, handle_request, parse_date,
+                    parse_url)
+from .alert import Alert, AlertType
+from .dashboard import Dashboard
+from .model import Model, ModelMethod, ModelType
+from .source import Source, SourceFeature
+from .task import Task, TaskStatus
+from .visualization import Visualization
 
 
 class WorkspaceInfo:
     """Stores the information of a Deep Intelligence workspace.
-    
+
     Attributes:
         workspace_id: workspace's id in format uuid4.
         created: Creation date.
@@ -41,6 +42,40 @@ class WorkspaceInfo:
     def __init__(self, workspace_id: str, name: str, description: str, created: datetime, last_modified: datetime,
                  last_access: datetime, sources_count: int, dashboards_count: int, visualizations_count: int,
                  models_count: int, size_bytes: int) -> None:
+
+        if not isinstance(workspace_id, str):
+            raise ValueError('workspace_id must be str')
+
+        if not isinstance(name, str):
+            raise ValueError('name must be str')
+
+        if not isinstance(description, str):
+            raise ValueError('description must be str')
+
+        if not isinstance(created, datetime):
+            raise ValueError('created must be datetime.datetime')
+
+        if not isinstance(last_modified, datetime):
+            raise ValueError('last_modified must be datetime.datetime')
+
+        if not isinstance(last_access, datetime):
+            raise ValueError('last_access must be datetime.datetime')
+
+        if not isinstance(sources_count, int):
+            raise ValueError('sources_count must be int')
+
+        if not isinstance(dashboards_count, int):
+            raise ValueError('dashboards_count must be int')
+
+        if not isinstance(visualizations_count, int):
+            raise ValueError('visualizations_count must be int')
+
+        if not isinstance(models_count, int):
+            raise ValueError('models_count must be int')
+
+        if not isinstance(size_bytes, int):
+            raise ValueError('size_bytes must be int')
+
         self.workspace_id = workspace_id
         self.name = name
         self.description = description
@@ -53,13 +88,13 @@ class WorkspaceInfo:
         self.models_count = models_count
         self.size_bytes = size_bytes
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         if not isinstance(other, WorkspaceInfo):
             return False
         else:
             return self.workspace_id == other.workspace_id
 
-    def __str__(self):
+    def __str__(self) -> str:
         return ' '.join([f'{k}={v}' for k, v in self.to_dict().items()])
 
     @staticmethod
@@ -84,6 +119,7 @@ class WorkspaceInfo:
         visualizations_count = int(obj.get("visualizations_count"))
         models_count = int(obj.get("models_count"))
         size_bytes = int(obj.get("size_bytes"))
+
         return WorkspaceInfo(workspace_id, name, description, created, last_modified, last_access, sources_count,
                              dashboards_count, visualizations_count, models_count, size_bytes)
 
@@ -104,43 +140,58 @@ class WorkspaceInfo:
 
 class WorkspaceVisualizations:
     """Operates over the visualizations of a concrete workspace.
-    
+
     Note: This class should not be instanced, and only be used within an :obj:`deepint.core.workspace.Workspace`.
-    
+
     Attributes:
         workspace: the workspace with which to operate with its visualizations.
     """
 
     def __init__(self, workspace: 'Workspace', visualizations: List[Visualization]):
+
+        if not isinstance(workspace, Workspace):
+            raise ValueError(f'workspace must be {Workspace.__class__}')
+
+        if not isinstance(visualizations, list):
+            raise ValueError(
+                f'visualizations must be a list of {Visualization.__class__}')
+
+        for v in visualizations:
+            if not isinstance(v, Visualization):
+                raise ValueError(
+                    f'visualizations must be a list of {Visualization.__class__}')
+
         self.workspace = workspace
         self._generator = None
         self._visualizations = visualizations
 
     def create(self, name: str, description: str, privacy: str, source: str, configuration: Dict[str, Any] = {}) -> Visualization:
         """Creates a visualization in current workspace.
-        
+
         Args:
             name: new visualization's name.
             description: new visualization's description.
-            
+
         Returns:
             The created visualization
         """
         path = f'/api/v1/workspace/{self.workspace.info.workspace_id}/visualizations'
-        parameters = {'name': name, 'description': description, 'privacy': privacy, 'source': source, 'configuration': configuration}
+        parameters = {'name': name, 'description': description,
+                      'privacy': privacy, 'source': source, 'configuration': configuration}
         headers = {'x-deepint-organization': self.workspace.organization_id}
-        response = handle_request(method='POST', path=path, headers=headers, parameters=parameters, credentials=self.workspace.credentials)
+        response = handle_request(method='POST', path=path, headers=headers,
+                                  parameters=parameters, credentials=self.workspace.credentials)
 
-        #map results
+        # map results
         new_visualization = Visualization.build(workspace_id=self.workspace.info.workspace_id, visualization_id=response['visualization_id'],
-                            organization_id=self.workspace.organization_id, credentials=self.workspace.credentials)
-        
-        #update local state
+                                                organization_id=self.workspace.organization_id, credentials=self.workspace.credentials)
+
+        # update local state
         self._visualizations = self._visualizations if self._visualizations is not None else []
         self._visualizations.append(new_visualization)
-        
+
         return new_visualization
-    
+
     def load(self) -> None:
         """Loads a workspace's visualizations.
 
@@ -150,18 +201,19 @@ class WorkspaceVisualizations:
         # request
         path = f'/api/v1/workspace/{self.workspace.info.workspace_id}/visualizations'
         headers = {'x-deepint-organization': self.workspace.organization_id}
-        response = handle_paginated_request(method='GET', path=path, headers=headers, credentials=self.workspace.credentials)
+        response = handle_paginated_request(
+            method='GET', path=path, headers=headers, credentials=self.workspace.credentials)
 
         # map results
         self._visualizations = None
         self._generator = (Visualization.build(workspace_id=self.workspace.info.workspace_id, visualization_id=v['id'],
-                                                organization_id=self.workspace.organization_id, source_id=None, credentials=self.workspace.credentials) for v in response)
+                                               organization_id=self.workspace.organization_id, source_id=None, credentials=self.workspace.credentials) for v in response)
 
     def fetch(self, visualization_id: str = None, name: str = None, force_reload: bool = False) -> Optional[Visualization]:
         """Search for a visualization in the workspace.
 
-        The first time is invoked, builds a generator to retrieve visualizations directly from deepint.net API. However, 
-        if there is stored visualizations and the force_reload option is not specified, only iterates in local 
+        The first time is invoked, builds a generator to retrieve visualizations directly from deepint.net API. However,
+        if there is stored visualizations and the force_reload option is not specified, only iterates in local
         visualizations. In other case, it request the visualizations to deepint.net API and iterates over it.
 
         Note: if no name or id is provided, the returned value is None.
@@ -171,7 +223,7 @@ class WorkspaceVisualizations:
             name: visualization's name to search by.
             force_reload: if set to True, visualizations are reloaded before the search with the
                 :obj:`deepint.core.workspace.WorkspaceVisualizations.load` method.
-        
+
         Returns:
             retrieved visualization if found, and in other case None.
         """
@@ -199,15 +251,15 @@ class WorkspaceVisualizations:
 
     def fetch_all(self, force_reload: bool = False) -> Generator[Visualization, None, None]:
         """Retrieves all workspace's visualizations.
-        
-        The first time is invoked, builds a generator to retrieve visualizations directly from deepint.net API. However, 
-        if there is stored visualizations and the force_reload option is not specified, only iterates in local 
+
+        The first time is invoked, builds a generator to retrieve visualizations directly from deepint.net API. However,
+        if there is stored visualizations and the force_reload option is not specified, only iterates in local
         visualizations. In other case, it request the visualizations to deepint.net API and iterates over it.
 
         Args:
             force_reload: if set to True, visualizations are reloaded before the search with the
                 :obj:`deepint.core.workspace.WorkspaceVisualization.load` method.
-        
+
         Yields:
             :obj:`deepint.core.workspace.Visualization`: The next visualization returned by deeepint.net API.
 
@@ -222,26 +274,39 @@ class WorkspaceVisualizations:
         if force_reload or self._visualizations is None:
             yield from self._generator
         else:
-            yield from  self._visualizations
+            yield from self._visualizations
 
 
 class WorkspaceDashboards:
     """Operates over the dashboards of a concrete workspace.
-    
+
     Note: This class should not be instanced, and only be used within an :obj:`deepint.core.workspace.Workspace`.
-    
+
     Attributes:
         workspace: the workspace with which to operate with its dashboards.
     """
 
     def __init__(self, workspace: 'Workspace', dashboards: List[Dashboard]):
+
+        if not isinstance(workspace, Workspace):
+            raise ValueError(f'workspace must be {Workspace.__class__}')
+
+        if not isinstance(dashboards, list):
+            raise ValueError(
+                f'dashboards must be a list of {Dashboard.__class__}')
+
+        for d in dashboards:
+            if not isinstance(d, Dashboard):
+                raise ValueError(
+                    f'dashboards must be a list of {Dashboard.__class__}')
+
         self.workspace = workspace
         self._generator = None
         self._dashboards = dashboards
-    
+
     def create(self, name: str, description: str, privacy: str, share_opt: str, restricted: bool, ga_id: str = None, configuration: Dict[str, Any] = {}) -> Dashboard:
         """Creates a dashboard in the current workspace.
-        
+
         Args
             name: new dashboard's name
             description: new dashboard's description
@@ -250,20 +315,22 @@ class WorkspaceDashboards:
             ga_id: Opctional Google Analytics ID
             restricted: True to check for explicit permission for shared dashboard
             configuration: advanced option.
-        
-        Returns: 
+
+        Returns:
             The created dashboard
         """
 
         path = f'/api/v1/workspace/{self.workspace.info.workspace_id}/dashboards'
-        parameters = {'name': name, 'description': description, 'privacy': privacy, 'shareOpt': share_opt, 'gaId': ga_id, 'restricted': restricted, 'configuration': configuration}
+        parameters = {'name': name, 'description': description, 'privacy': privacy,
+                      'shareOpt': share_opt, 'gaId': ga_id, 'restricted': restricted, 'configuration': configuration}
         headers = {'x-deepint-organization': self.workspace.organization_id}
-        response = handle_request(method='POST', path=path, parameters=parameters, headers=headers, credentials=self.workspace.credentials)
-        
+        response = handle_request(method='POST', path=path, parameters=parameters,
+                                  headers=headers, credentials=self.workspace.credentials)
+
         # map result
         new_dashboard = Dashboard.build(workspace_id=self.workspace.info.workspace_id, organization_id=self.workspace.organization_id,
                                         dashboard_id=response['dashboard_id'], credentials=self.workspace.credentials)
-        
+
         # update local state
         self._dashboards = self._dashboards if self._dashboards is not None else []
         self._dashboards.append(new_dashboard)
@@ -279,18 +346,19 @@ class WorkspaceDashboards:
         # request
         path = f'/api/v1/workspace/{self.workspace.info.workspace_id}/dashboards'
         headers = {'x-deepint-organization': self.workspace.organization_id}
-        response = handle_paginated_request(method='GET', path=path, headers=headers, credentials=self.workspace.credentials)
+        response = handle_paginated_request(
+            method='GET', path=path, headers=headers, credentials=self.workspace.credentials)
 
         # map results
         self.dashboards = None
         self._generator = (Dashboard.build(organization_id=self.workspace.organization_id, workspace_id=self.workspace.info.workspace_id,
-                         dashboard_id=d['id'], credentials=self.workspace.credentials) for d in response)
-        
+                                           dashboard_id=d['id'], credentials=self.workspace.credentials) for d in response)
+
     def fetch(self, dashboard_id: str = None, name: str = None, force_reload: bool = False) -> Optional[Dashboard]:
         """Search for a dashboard in the workspace.
 
-        The first time is invoked, builds a generator to retrieve dashboards directly from deepint.net API. However, 
-        if there is stored dashboards and the force_reload option is not specified, only iterates in local 
+        The first time is invoked, builds a generator to retrieve dashboards directly from deepint.net API. However,
+        if there is stored dashboards and the force_reload option is not specified, only iterates in local
         dashboards. In other case, it request the dashboards to deepint.net API and iterates over it.
 
         Note: if no name or id is provided, the returned value is None.
@@ -300,7 +368,7 @@ class WorkspaceDashboards:
             name: dashboard's name to search by.
             force_reload: if set to True, dashboards are reloaded before the search with the
                 :obj:`deepint.core.workspace.WorkspaceDashboards.load` method.
-        
+
         Returns:
             Retrieved dashboard if found, and in other case None.
         """
@@ -328,15 +396,15 @@ class WorkspaceDashboards:
 
     def fetch_all(self, force_reload: bool = False) -> Generator[Dashboard, None, None]:
         """Retrieves all workspace's dashboards.
-        
-        The first time is invoked, builds a generator to retrieve dashboards directly from deepint.net API. However, 
-        if there is stored dashboards and the force_reload option is not specified, only iterates in local 
+
+        The first time is invoked, builds a generator to retrieve dashboards directly from deepint.net API. However,
+        if there is stored dashboards and the force_reload option is not specified, only iterates in local
         dashboards. In other case, it request the dashboards to deepint.net API and iterates over it.
-        
+
         Args:
             force_reload: if set to True, dashboards are reloaded before the search with the
                 :obj:`deepint.core.workspace.WorkspaceDashboard.load` method.
-        
+
         Yields:
             :obj:`deepint.core.workspace.Dashboard`: The next dashboard returned by deeepint.net API.
 
@@ -351,19 +419,32 @@ class WorkspaceDashboards:
         if force_reload or self._dashboards is None:
             yield from self._generator
         else:
-            yield from  self._dashboards
+            yield from self._dashboards
 
 
 class WorkspaceSources:
     """Operates over the sources of a concrete workspace.
-    
+
     Note: This class should not be instanced, and only be used within an :obj:`deepint.core.workspace.Workspace`.
-    
+
     Attributes:
         workspace: the workspace with which to operate with its sources.
     """
 
     def __init__(self, workspace: 'Workspace', sources: List[Source]):
+
+        if not isinstance(workspace, Workspace):
+            raise ValueError(f'workspace must be {Workspace.__class__}')
+
+        if not isinstance(sources, list):
+            raise ValueError(
+                f'dashboards must be a list of {Source.__class__}')
+
+        for s in sources:
+            if not isinstance(s, Source):
+                raise ValueError(
+                    f'dashboards must be a list of {Source.__class__}')
+
         self.workspace = workspace
         self._generator = None
         self._sources = sources
@@ -377,12 +458,13 @@ class WorkspaceSources:
         # request
         path = f'/api/v1/workspace/{self.workspace.info.workspace_id}/sources'
         headers = {'x-deepint-organization': self.workspace.organization_id}
-        response = handle_paginated_request(method='GET', path=path, headers=headers, credentials=self.workspace.credentials)
+        response = handle_paginated_request(
+            method='GET', path=path, headers=headers, credentials=self.workspace.credentials)
 
         # map results
         self._sources = None
         self._generator = (Source.build(workspace_id=self.workspace.info.workspace_id, source_id=s['id'],
-                                        organization_id=self.workspace.organization_id, 
+                                        organization_id=self.workspace.organization_id,
                                         credentials=self.workspace.credentials) for s in response)
 
     def create(self, name: str, description: str, features: List[SourceFeature]) -> Source:
@@ -394,7 +476,7 @@ class WorkspaceSources:
             name: new source's name.
             descrpition: new source's description.
             features: list of source's features.
-        
+
         Returns:
             the created source
         """
@@ -402,8 +484,10 @@ class WorkspaceSources:
         # request
         path = f'/api/v1/workspace/{self.workspace.info.workspace_id}/sources'
         headers = {'x-deepint-organization': self.workspace.organization_id}
-        parameters = {'name': name, 'description': description, 'features': [f.to_dict_minimized() for f in features]}
-        response = handle_request(method='POST', path=path, headers=headers, credentials=self.workspace.credentials, parameters=parameters)
+        parameters = {'name': name, 'description': description,
+                      'features': [f.to_dict_minimized() for f in features]}
+        response = handle_request(method='POST', path=path, headers=headers,
+                                  credentials=self.workspace.credentials, parameters=parameters)
 
         # map results
         new_source = Source.build(source_id=response['source_id'], workspace_id=self.workspace.info.workspace_id,
@@ -425,11 +509,11 @@ class WorkspaceSources:
             name: new source's name.
             descrpition: new source's description.
             data: data to in initialize the source. The source's feature names and data types are extracted from the given DataFrame.
-            date_formats: dicionary contianing the association between feature (column name) and date format like the ones specified 
-                in [#/date_formats]. Is optional to provide value for any column, but if not provided will be considered as 
+            date_formats: dicionary contianing the association between feature (column name) and date format like the ones specified
+                in [#/date_formats]. Is optional to provide value for any column, but if not provided will be considered as
                 null and the date format (in case of being a date type) will be the default one assigned by Deep Intelligence.
-            wait_for_initialization: if set to True, before the source creation, it waits for the source to update it's instances. In 
-                other case, only the source is created, and then is returned without any guarantee that the instances have been 
+            wait_for_initialization: if set to True, before the source creation, it waits for the source to update it's instances. In
+                other case, only the source is created, and then is returned without any guarantee that the instances have been
                 inserted into the source.
 
         Returns:
@@ -437,10 +521,12 @@ class WorkspaceSources:
         """
 
         # create features from dataframe
-        features = SourceFeature.from_dataframe(data, date_formats=date_formats)
+        features = SourceFeature.from_dataframe(
+            data, date_formats=date_formats)
 
         # create source
-        source = self.create(name=name, description=description, features=features)
+        source = self.create(
+            name=name, description=description, features=features)
 
         # update data in source
         task = source.instances.update(data=data)
@@ -450,9 +536,9 @@ class WorkspaceSources:
         return source
 
     def create_if_not_exists(self, name: str) -> Source:
-        """Creates a source and initializes it, if it doesn't exist any source with same name. 
-        
-        The source is created with the :obj:`deepint.core.worksapce.WorkspaceSources.create`, so it's reccomended to 
+        """Creates a source and initializes it, if it doesn't exist any source with same name.
+
+        The source is created with the :obj:`deepint.core.worksapce.WorkspaceSources.create`, so it's reccomended to
         read the documentation of that method to learn more about the possible artguments of creation.
         Before creation, the source is loaded and stored locally in the internal list of sources in the current instance.
 
@@ -473,14 +559,14 @@ class WorkspaceSources:
         # if not exists, create
         return self.create(name, '', [])
 
-    def create_else_update(self, name:str, data: pd.DataFrame, delete_instances_on_feature_update: bool = True, **kwargs) -> Source:
-        """Creates a source and initializes it, if it doesn't exist any source with same name. Else updates the source's instances. 
-        
-        The source is created with the :obj:`deepint.core.worksapce.WorkspaceSources.create_and_initialize`, so it's 
-        reccomended to read the documentation of that method to learn more about the possible arguments of creation  (that can be 
-        providen in kwargs). Before creation, the source is loaded and stored locally in the internal list of sources in the 
+    def create_else_update(self, name: str, data: pd.DataFrame, delete_instances_on_feature_update: bool = True, **kwargs) -> Source:
+        """Creates a source and initializes it, if it doesn't exist any source with same name. Else updates the source's instances.
+
+        The source is created with the :obj:`deepint.core.worksapce.WorkspaceSources.create_and_initialize`, so it's
+        reccomended to read the documentation of that method to learn more about the possible arguments of creation  (that can be
+        providen in kwargs). Before creation, the source is loaded and stored locally in the internal list of sources in the
         current instance. Also it's remmarkable that the source instance's are updated with the :obj:`deepint.core.source.SourceInstances.update`
-        method, so it's reccomended to read the documentation of that method to learn more about the possible arguments of update (that 
+        method, so it's reccomended to read the documentation of that method to learn more about the possible arguments of update (that
         can be providen in the kwargs).
 
         Note: if features change, then the source instances are deleted
@@ -499,7 +585,7 @@ class WorkspaceSources:
 
         # if exists update else create
         if selected_source is not None:
-            
+
             # calculate features
             new_features = SourceFeature.from_dataframe(df=data)
 
@@ -523,19 +609,19 @@ class WorkspaceSources:
                     break
 
             # update source instances
-            selected_source.instances.update(data=data,**kwargs)
+            selected_source.instances.update(data=data, **kwargs)
 
         else:
-            selected_source = self.create_and_initialize(name, '', data, **kwargs)
+            selected_source = self.create_and_initialize(
+                name, '', data, **kwargs)
 
         return selected_source
-
 
     def fetch(self, source_id: str = None, name: str = None, force_reload: bool = False) -> Optional[Source]:
         """Search for a source in the workspace.
 
-        The first time is invoked, builds a generator to retrieve sources directly from deepint.net API. However, 
-        if there is stored sources and the force_reload option is not specified, only iterates in local 
+        The first time is invoked, builds a generator to retrieve sources directly from deepint.net API. However,
+        if there is stored sources and the force_reload option is not specified, only iterates in local
         sources. In other case, it request the sources to deepint.net API and iterates over it.
 
         Note: if no name or id is provided, the returned value is None.
@@ -545,7 +631,7 @@ class WorkspaceSources:
             name: source's name to search by.
             force_reload: if set to True, sources are reloaded before the search with the
                 :obj:`deepint.core.workspace.WorkspaceSources.load` method.
-        
+
         Returns:
             retrieved source if found, and in other case None.
         """
@@ -573,15 +659,15 @@ class WorkspaceSources:
 
     def fetch_all(self, force_reload: bool = False) -> Generator[Source, None, None]:
         """Retrieves all workspace's sources.
-        
-        The first time is invoked, builds a generator to retrieve sources directly from deepint.net API. However, 
-        if there is stored sources and the force_reload option is not specified, only iterates in local 
+
+        The first time is invoked, builds a generator to retrieve sources directly from deepint.net API. However,
+        if there is stored sources and the force_reload option is not specified, only iterates in local
         sources. In other case, it request the sources to deepint.net API and iterates over it.
 
         Args:
             force_reload: if set to True, sources are reloaded before the search with the
                 :obj:`deepint.core.workspace.WorkspaceSource.load` method.
-        
+
         Yields:
             :obj:`deepint.core.workspace.Source`: The next source returned by deeepint.net API.
 
@@ -596,19 +682,30 @@ class WorkspaceSources:
         if force_reload or self._sources is None:
             yield from self._generator
         else:
-            yield from  self._sources
+            yield from self._sources
 
 
 class WorkspaceTasks:
     """Operates over the tasks of a concrete workspace.
-    
+
     Note: This class should not be instanced, and only be used within an :obj:`deepint.core.workspace.Workspace`.
-    
+
     Attributes:
         workspace: the workspace with which to operate with its tasks.
     """
 
     def __init__(self, workspace: 'Workspace', tasks: List[Task]):
+
+        if not isinstance(workspace, Workspace):
+            raise ValueError(f'workspace must be {Workspace.__class__}')
+
+        if not isinstance(tasks, list):
+            raise ValueError(f'tasks must be a list of {Source.__class__}')
+
+        for t in tasks:
+            if not isinstance(t, Task):
+                raise ValueError(f'tasks must be a list of {Task.__class__}')
+
         self.workspace = workspace
         self._generator = None
         self._tasks = tasks
@@ -622,19 +719,20 @@ class WorkspaceTasks:
         # request
         path = f'/api/v1/workspace/{self.workspace.info.workspace_id}/tasks'
         headers = {'x-deepint-organization': self.workspace.organization_id}
-        response = handle_paginated_request(method='GET', path=path, headers=headers, credentials=self.workspace.credentials)
+        response = handle_paginated_request(
+            method='GET', path=path, headers=headers, credentials=self.workspace.credentials)
 
         # map results
         self._tasks = None
         self._generator = (
-            Task.build(organization_id=self.workspace.organization_id, workspace_id=self.workspace.info.workspace_id, 
+            Task.build(organization_id=self.workspace.organization_id, workspace_id=self.workspace.info.workspace_id,
                        credentials=self.workspace.credentials, task_id=t['id']) for t in response)
 
     def fetch(self, task_id: str = None, name: str = None, force_reload: bool = False) -> Optional[Task]:
         """Search for a task in the workspace.
 
-        The first time is invoked, builds a generator to retrieve tasks directly from deepint.net API. However, 
-        if there is stored tasks and the force_reload option is not specified, only iterates in local 
+        The first time is invoked, builds a generator to retrieve tasks directly from deepint.net API. However,
+        if there is stored tasks and the force_reload option is not specified, only iterates in local
         tasks. In other case, it request the tasks to deepint.net API and iterates over it.
 
         Note: if no name or id is provided, the returned value is None.
@@ -644,7 +742,7 @@ class WorkspaceTasks:
             name: task's name to search by.
             force_reload: if set to True, tasks are reloaded before the search with the
                 :obj:`deepint.core.workspace.WorkspaceTasks.load` method.
-        
+
         Returns:
             retrieved task if found, and in other case None.
         """
@@ -673,15 +771,15 @@ class WorkspaceTasks:
     def fetch_by_status(self, status: TaskStatus, force_reload: bool = False) -> Generator[Task, None, None]:
         """Search for a task in the workspace by status.
 
-        The first time is invoked, builds a generator to retrieve tasks directly from deepint.net API. However, 
-        if there is stored tasks and the force_reload option is not specified, only iterates in local 
+        The first time is invoked, builds a generator to retrieve tasks directly from deepint.net API. However,
+        if there is stored tasks and the force_reload option is not specified, only iterates in local
         tasks. In other case, it request the tasks to deepint.net API and iterates over it.
 
         Args:
             status: task's status to search by.
             force_reload: if set to True, tasks are reloaded before the search with the
                 :obj:`deepint.core.workspace.WorkspaceTasks.load` method.
-        
+
         Returns:
             list of tasks in the given status if found, and in other case an empty list.
         """
@@ -696,15 +794,15 @@ class WorkspaceTasks:
 
     def fetch_all(self, force_reload: bool = False) -> Generator[Task, None, None]:
         """Retrieves all workspace's tasks.
-        
-        The first time is invoked, builds a generator to retrieve tasks directly from deepint.net API. However, 
-        if there is stored tasks and the force_reload option is not specified, only iterates in local 
+
+        The first time is invoked, builds a generator to retrieve tasks directly from deepint.net API. However,
+        if there is stored tasks and the force_reload option is not specified, only iterates in local
         tasks. In other case, it request the tasks to deepint.net API and iterates over it.
 
         Args:
             force_reload: if set to True, tasks are reloaded before the search with the
                 :obj:`deepint.core.workspace.WorkspaceTask.load` method.
-        
+
         Yields:
             :obj:`deepint.core.workspace.Task`: The next task returned by deeepint.net API.
 
@@ -719,18 +817,30 @@ class WorkspaceTasks:
         if force_reload or self._tasks is None:
             yield from self._generator
         else:
-            yield from  self._tasks
+            yield from self._tasks
+
 
 class WorkspaceAlerts:
     """Operates over the alerts of a concrete workspace.
-    
+
     Note: This class should not be instanced, and only be used within an :obj:`deepint.core.workspace.Workspace`.
-    
+
     Attributes:
         workspace: the workspace with which to operate with its alerts.
     """
 
     def __init__(self, workspace: 'Workspace', alerts: List[Alert]):
+
+        if not isinstance(workspace, Workspace):
+            raise ValueError(f'workspace must be {Workspace.__class__}')
+
+        if not isinstance(alerts, list):
+            raise ValueError(f'alerts must be a list of {Alert.__class__}')
+
+        for a in alerts:
+            if not isinstance(a, Alert):
+                raise ValueError(f'alerts must be a list of {Alert.__class__}')
+
         self.workspace = workspace
         self._generator = None
         self._alerts = alerts
@@ -744,12 +854,13 @@ class WorkspaceAlerts:
         # request
         path = f'/api/v1/workspace/{self.workspace.info.workspace_id}/alerts'
         headers = {'x-deepint-organization': self.workspace.organization_id}
-        response = handle_paginated_request(method='GET', path=path, headers=headers, credentials=self.workspace.credentials)
+        response = handle_paginated_request(
+            method='GET', path=path, headers=headers, credentials=self.workspace.credentials)
 
         # map results
         self._alerts = None
         self._generator = (
-            Alert.build(organization_id=self.workspace.organization_id, workspace_id=self.workspace.info.workspace_id, 
+            Alert.build(organization_id=self.workspace.organization_id, workspace_id=self.workspace.info.workspace_id,
                         credentials=self.workspace.credentials, alert_id=a['id']) for a in response)
 
     def create(self, name: str, description: str, subscriptions: List[str], color: str, alert_type: AlertType,
@@ -763,7 +874,7 @@ class WorkspaceAlerts:
             description: alert's description.
             subscriptions: List of emails subscribed to the alert.
             color: Color for the alert
-            alert_type: type of alert (update, stall). Set to 'update' if you want to trigger when a source updated 
+            alert_type: type of alert (update, stall). Set to 'update' if you want to trigger when a source updated
                 on certain conditions. Set to 'stall' if you want to trigger when a source do not update for a long time.
             source_id: Identifier of associated source.
             condition: condition to trigger the alert.
@@ -775,7 +886,8 @@ class WorkspaceAlerts:
 
         # check parameters
         if time_stall is not None and time_stall < 60:
-            raise DeepintBaseError(code='ALERT_CREATION_VALUES', message='Minimum alert time stall is 60 seconds.')
+            raise DeepintBaseError(
+                code='ALERT_CREATION_VALUES', message='Minimum alert time stall is 60 seconds.')
 
         # request
         path = f'/api/v1/workspace/{self.workspace.info.workspace_id}/alerts'
@@ -790,10 +902,11 @@ class WorkspaceAlerts:
             'condition': condition,
             'time_stall': time_stall
         }
-        response = handle_request(method='POST', path=path, headers=headers, credentials=self.workspace.credentials, parameters=parameters)
+        response = handle_request(method='POST', path=path, headers=headers,
+                                  credentials=self.workspace.credentials, parameters=parameters)
 
         # map results
-        new_alert = Alert.build(organization_id=self.workspace.organization_id, workspace_id=self.workspace.info.workspace_id, 
+        new_alert = Alert.build(organization_id=self.workspace.organization_id, workspace_id=self.workspace.info.workspace_id,
                                 credentials=self.workspace.credentials, alert_id=response['alert_id'])
 
         # update local state
@@ -805,8 +918,8 @@ class WorkspaceAlerts:
     def fetch(self, alert_id: str = None, name: str = None, force_reload: bool = False) -> Optional[Alert]:
         """Search for a alert in the workspace.
 
-        The first time is invoked, buidls a generator to retrieve alerts directly from deepint.net API. However, 
-        if there is stored alerts and the force_reload option is not specified, only iterates in local 
+        The first time is invoked, buidls a generator to retrieve alerts directly from deepint.net API. However,
+        if there is stored alerts and the force_reload option is not specified, only iterates in local
         alerts. In other case, it request the alerts to deepint.net API and iterates over it.
 
         Note: if no name or id is provided, the returned value is None.
@@ -816,7 +929,7 @@ class WorkspaceAlerts:
             name: alert's name to search by.
             force_reload: if set to True, alerts are reloaded before the search with the
                 :obj:`deepint.core.workspace.WorkspaceAlerts.load` method.
-        
+
         Returns:
             retrieved alert if found, and in other case None.
         """
@@ -844,15 +957,15 @@ class WorkspaceAlerts:
 
     def fetch_all(self, force_reload: bool = False) -> Generator[Alert, None, None]:
         """Retrieves all workspace's alerts.
-        
-        The first time is invoked, buidls a generator to retrieve alerts directly from deepint.net API. However, 
-        if there is stored alerts and the force_reload option is not specified, only iterates in local 
+
+        The first time is invoked, buidls a generator to retrieve alerts directly from deepint.net API. However,
+        if there is stored alerts and the force_reload option is not specified, only iterates in local
         alerts. In other case, it request the alerts to deepint.net API and iterates over it.
 
         Args:
             force_reload: if set to True, alerts are reloaded before the search with the
                 :obj:`deepint.core.workspace.WorkspaceAlert.load` method.
-        
+
         Yields:
             :obj:`deepint.core.workspace.Alert`: The next alert returned by deeepint.net API.
 
@@ -867,19 +980,30 @@ class WorkspaceAlerts:
         if force_reload or self._alerts is None:
             yield from self._generator
         else:
-            yield from  self._alerts
+            yield from self._alerts
 
 
 class WorkspaceModels:
     """Operates over the models of a concrete workspace.
-    
+
     Note: This class should not be instanced, and only be used within an :obj:`deepint.core.workspace.Workspace`.
-    
+
     Attributes:
         workspace: the workspace with which to operate with its models.
     """
 
     def __init__(self, workspace: 'Workspace', models: List[Model]):
+
+        if not isinstance(workspace, Workspace):
+            raise ValueError(f'workspace must be {Workspace.__class__}')
+
+        if not isinstance(models, list):
+            raise ValueError(f'models must be a list of {Model.__class__}')
+
+        for m in models:
+            if not isinstance(m, Model):
+                raise ValueError(f'models must be a list of {Model.__class__}')
+
         self.workspace = workspace
         self._generator = None
         self._models = models
@@ -893,12 +1017,13 @@ class WorkspaceModels:
         # request
         path = f'/api/v1/workspace/{self.workspace.info.workspace_id}/models'
         headers = {'x-deepint-organization': self.workspace.organization_id}
-        response = handle_paginated_request(method='GET', path=path, headers=headers, credentials=self.workspace.credentials)
+        response = handle_paginated_request(
+            method='GET', path=path, headers=headers, credentials=self.workspace.credentials)
 
         # map results
         self._models = None
         self._generator = (
-            Model.build(organization_id=self.workspace.organization_id, workspace_id=self.workspace.info.workspace_id, 
+            Model.build(organization_id=self.workspace.organization_id, workspace_id=self.workspace.info.workspace_id,
                         credentials=self.workspace.credentials, model_id=m['id']) for m in response)
 
     def create(self, name: str, description: str, model_type: ModelType, method: ModelMethod, source: Source,
@@ -938,10 +1063,11 @@ class WorkspaceModels:
                                    message=f'Provided model method ({method.name}) doesn\'t match for model type {model_type.name}. Allowed methods for provided type: {[x.name for x in allowed_methods]}')
 
         try:
-            target_index = [f.index for f in source.features.fetch_all() if f.name == target_feature_name][0]
+            target_index = [f.index for f in source.features.fetch_all(
+            ) if f.name == target_feature_name][0]
         except:
             raise DeepintBaseError(code='SOURCE_MISMATCH',
-                                   message=f'Provided source for model creation was not found or provided target feature is not configured in the source.')
+                                   message='Provided source for model creation was not found or provided target feature is not configured in the source.')
 
         # request
         path = f'/api/v1/workspace/{self.workspace.info.workspace_id}/models'
@@ -961,7 +1087,8 @@ class WorkspaceModels:
             },
             'hyper_search_configuration': hyper_parameters
         }
-        response = handle_request(method='POST', path=path, headers=headers, credentials=self.workspace.credentials, parameters=parameters)
+        response = handle_request(method='POST', path=path, headers=headers,
+                                  credentials=self.workspace.credentials, parameters=parameters)
 
         # map response
         task = Task.build(task_id=response['task_id'], workspace_id=self.workspace.info.workspace_id,
@@ -971,7 +1098,7 @@ class WorkspaceModels:
             # wait for task to finish and build model
             task.resolve()
             task_result = task.fetch_result()
-            new_model = Model.build(workspace_id=self.workspace.info.workspace_id, organization_id=self.workspace.organization_id, 
+            new_model = Model.build(workspace_id=self.workspace.info.workspace_id, organization_id=self.workspace.organization_id,
                                     credentials=self.workspace.credentials, model_id=task_result['model'])
 
             # update local state
@@ -985,8 +1112,8 @@ class WorkspaceModels:
     def fetch(self, model_id: str = None, name: str = None, force_reload: bool = False) -> Optional[Model]:
         """Search for a model in the workspace.
 
-        The first time is invoked, buidls a generator to retrieve models directly from deepint.net API. However, 
-        if there is stored models and the force_reload option is not specified, only iterates in local 
+        The first time is invoked, buidls a generator to retrieve models directly from deepint.net API. However,
+        if there is stored models and the force_reload option is not specified, only iterates in local
         models. In other case, it request the models to deepint.net API and iterates over it.
 
         Note: if no name or id is provided, the returned value is None.
@@ -996,7 +1123,7 @@ class WorkspaceModels:
             name: model's name to search by.
             force_reload: if set to True, models are reloaded before the search with the
                 :obj:`deepint.core.workspace.WorkspaceModels.load` method.
-        
+
         Returns:
             retrieved model if found, and in other case None.
         """
@@ -1024,15 +1151,15 @@ class WorkspaceModels:
 
     def fetch_all(self, force_reload: bool = False) -> Generator[Model, None, None]:
         """Retrieves all workspace's models.
-        
-        The first time is invoked, buidls a generator to retrieve models directly from deepint.net API. However, 
-        if there is stored models and the force_reload option is not specified, only iterates in local 
+
+        The first time is invoked, buidls a generator to retrieve models directly from deepint.net API. However,
+        if there is stored models and the force_reload option is not specified, only iterates in local
         models. In other case, it request the models to deepint.net API and iterates over it.
 
         Args:
             force_reload: if set to True, models are reloaded before the search with the
                 :obj:`deepint.core.workspace.WorkspaceModel.load` method.
-        
+
         Yields:
             :obj:`deepint.core.workspace.Model`: The next model returned by deeepint.net API.
 
@@ -1047,15 +1174,15 @@ class WorkspaceModels:
         if force_reload or self._models is None:
             yield from self._generator
         else:
-            yield from  self._models
+            yield from self._models
 
 
 class Workspace:
     """A Deep Intelligence workspace.
-    
+
     Note: This class should not be instanced directly, and it's recommended to use the :obj:`deepint.core.workspace.Workspace.build`
-    or :obj:`deepint.core.workspace.Workspace.from_url` methods. 
-    
+    or :obj:`deepint.core.workspace.Workspace.from_url` methods.
+
     Attributes:
         organization_id: the organziation where workspace is located.
         info: :obj:`deepint.core.workspace.WorkspaceInfo` to operate with workspace's information.
@@ -1072,6 +1199,65 @@ class Workspace:
     def __init__(self, organization_id: str, credentials: Credentials, info: WorkspaceInfo, sources: List[Source], models: List[Model],
                  tasks: List[Task], alerts: List[Alert], visualizations: List[Visualization],
                  dashboards: List[Dashboard]) -> None:
+
+        if not isinstance(organization_id, str):
+            raise ValueError('organization_id must be str')
+
+        if not isinstance(credentials, Credentials):
+            raise ValueError(
+                f'credentials must be a list of {Credentials.__class__}')
+
+        if not isinstance(info, WorkspaceInfo):
+            raise ValueError(
+                f'info must be a list of {WorkspaceInfo.__class__}')
+
+        if not isinstance(sources, list):
+            raise ValueError(f'sources must be a list of {Source.__class__}')
+
+        for s in sources:
+            if not isinstance(s, Source):
+                raise ValueError(
+                    f'sources must be a list of {Source.__class__}')
+
+        if not isinstance(models, list):
+            raise ValueError(f'models must be a list of {Source.__class__}')
+
+        for m in models:
+            if not isinstance(m, Model):
+                raise ValueError(f'models must be a list of {Model.__class__}')
+
+        if not isinstance(tasks, list):
+            raise ValueError(f'tasks must be a list of {Task.__class__}')
+
+        for t in tasks:
+            if not isinstance(t, Task):
+                raise ValueError(f'tasks must be a list of {Task.__class__}')
+
+        if not isinstance(alerts, list):
+            raise ValueError(f'alerts must be a list of {Alert.__class__}')
+
+        for a in alerts:
+            if not isinstance(a, Alert):
+                raise ValueError(f'alerts must be a list of {Alert.__class__}')
+
+        if not isinstance(visualizations, list):
+            raise ValueError(
+                f'visualizations must be a list of {Visualization.__class__}')
+
+        for v in visualizations:
+            if not isinstance(v, Visualization):
+                raise ValueError(
+                    f'visualizations must be a list of {Visualization.__class__}')
+
+        if not isinstance(dashboards, list):
+            raise ValueError(
+                f'sources must be a list of {Dashboard.__class__}')
+
+        for d in dashboards:
+            if not isinstance(d, Dashboard):
+                raise ValueError(
+                    f'dashboards must be a list of {Dashboard.__class__}')
+
         self.organization_id = organization_id
         self.info = info
         self.credentials = credentials
@@ -1094,7 +1280,7 @@ class Workspace:
     @classmethod
     def build(cls, organization_id: str, workspace_id: str, credentials: Credentials = None) -> 'Workspace':
         """Builds a workspace.
-        
+
         Note: when workspace is created, the workspace's information and list of it's associated objects (tasks, models, sources, etc.) are loaded.
 
         Args:
@@ -1112,9 +1298,9 @@ class Workspace:
                              last_access=None, sources_count=None, dashboards_count=None, visualizations_count=None,
                              models_count=None,
                              size_bytes=None)
-        ws = cls(organization_id=organization_id, credentials=credentials, info=info, sources=None, models=None, 
-                       tasks=None, alerts=None, visualizations=None, dashboards=None)
-    
+        ws = cls(organization_id=organization_id, credentials=credentials, info=info, sources=None, models=None,
+                 tasks=None, alerts=None, visualizations=None, dashboards=None)
+
         ws.load()
         ws.tasks.load()
         ws.models.load()
@@ -1134,7 +1320,7 @@ class Workspace:
         Example:
             - https://app.deepint.net/o/3a874c05-26d1-4b8c-894d-caf90e40078b/workspace?ws=f0e2095f-fe2b-479e-be4b-bbc77207f42d
             - https://app.deepint.net/api/v1/workspace/f0e2095f-fe2b-479e-be4b-bbc77207f42
-        
+
         Note: when workspace is created, the workspace's information and list of it's associated objects (tasks, models, sources, etc.) are loaded.
             Also it is remmarkable that if the API URL is providen, the organization_id must be provided in the optional parameter, otherwise
             this ID won't be found on the URL and the Organization will not be created, raising a value error.
@@ -1152,15 +1338,18 @@ class Workspace:
         url_info, hostname = parse_url(url)
 
         if 'organization_id' not in url_info and organization_id is None:
-            raise ValueError('Fields organization_id must be in url to build the object. Or providen as optional parameter.')
+            raise ValueError(
+                'Fields organization_id must be in url to build the object. Or providen as optional parameter.')
 
         if 'workspace_id' not in url_info:
-            raise ValueError('Fields workspace_id must be in url to build the object.')
+            raise ValueError(
+                'Fields workspace_id must be in url to build the object.')
 
         organization_id = url_info['organization_id'] if 'organization_id' in url_info else organization_id
 
-        new_credentials = Credentials(token=credentials.token, instance=hostname)
-        
+        new_credentials = Credentials(
+            token=credentials.token, instance=hostname)
+
         return cls.build(organization_id=organization_id, workspace_id=url_info['workspace_id'], credentials=new_credentials)
 
     def load(self):
@@ -1172,7 +1361,8 @@ class Workspace:
         # request
         path = f'/api/v1/workspace/{self.info.workspace_id}'
         headers = {'x-deepint-organization': self.organization_id}
-        response = handle_request(method='GET', path=path, headers=headers, credentials=self.credentials)
+        response = handle_request(
+            method='GET', path=path, headers=headers, credentials=self.credentials)
 
         # map results
         self.info = WorkspaceInfo.from_dict(response)
@@ -1193,7 +1383,8 @@ class Workspace:
         path = f'/api/v1/workspace/{self.info.workspace_id}'
         parameters = {'name': name, 'description': description}
         headers = {'x-deepint-organization': self.organization_id}
-        response = handle_request(method='POST', path=path, headers=headers, parameters=parameters, credentials=self.credentials)
+        _ = handle_request(method='POST', path=path, headers=headers,
+                                  parameters=parameters, credentials=self.credentials)
 
         # update local state
         self.info.name = name
@@ -1206,11 +1397,12 @@ class Workspace:
         # request
         path = f'/api/v1/workspace/{self.info.workspace_id}'
         headers = {'x-deepint-organization': self.organization_id}
-        handle_request(method='DELETE', path=path, headers=headers, credentials=self.credentials)
+        handle_request(method='DELETE', path=path,
+                       headers=headers, credentials=self.credentials)
 
-    def export(self, folder_path: str=".", wait_for_download: bool = True, task: Task = None) -> Union[str, Task]:
+    def export(self, folder_path: str = ".", wait_for_download: bool = True, task: Task = None) -> Union[str, Task]:
         """Exports a workspace to ZIP into the selected path.
-        
+
         Args:
             folder_path: the path where the zip should be located. This parameter must contain the name of the file. By default is the
                 current folder.
@@ -1218,7 +1410,7 @@ class Workspace:
                 returns a :obj:`deepint.core.task.Task`, that can be used later to get the ZIP with this metod, providing it into
                 the task parameter.
             task: :obj:`deepint.core.task.Task` used to obtain the URL to download the ZIP in a delayed download (when the wait_for_download parameter is set to false).
-        
+
         Returns:
             The path to downloaded ZIP in the case of wait_for_download is set to True. In other case the task generated to build the ZIP.
         """
@@ -1228,7 +1420,8 @@ class Workspace:
             # build request
             path = f'/api/v1/workspace/{self.info.workspace_id}/export'
             headers = {'x-deepint-organization': self.organization_id}
-            response = handle_request(method='POST', path=path, headers=headers,credentials=self.credentials)
+            response = handle_request(
+                method='POST', path=path, headers=headers, credentials=self.credentials)
 
             # create task to fetch the ZIP file
             task = Task.build(task_id=response['task_id'], workspace_id=self.info.workspace_id,
@@ -1242,23 +1435,26 @@ class Workspace:
         result = task.fetch_result()
 
         if 'file' not in result:
-            raise DeepintBaseError(code='DOWNLOAD_FAILED', message="The task generated to build the ZIP file failed, please try again in a few seconds")
+            raise DeepintBaseError(
+                code='DOWNLOAD_FAILED', message="The task generated to build the ZIP file failed, please try again in a few seconds")
 
         file_url = result['file']
 
         # download and store ZIP file
-        try:            
-            file_path = os.path.join(folder_path, f'{self.info.workspace_id}.zip')
+        try:
+            file_path = os.path.join(
+                folder_path, f'{self.info.workspace_id}.zip')
             file_path = os.path.abspath(file_path)
             r = requests.get(file_url)
             open(file_path, 'wb').write(r.content)
             return file_path
         except:
-            raise DeepintBaseError(code='DOWNLOAD_FAILED', message="Unable to write the file's content. Check the path and permisions.")
+            raise DeepintBaseError(
+                code='DOWNLOAD_FAILED', message="Unable to write the file's content. Check the path and permisions.")
 
-    def clone(self, name:str = None) -> 'Workspace':
+    def clone(self, name: str = None) -> 'Workspace':
         """Clones a workspace.
-        
+
         Args:
             name: name for the new workspace. If not providen the name will be `Copy of <current workspace's name>`
 
@@ -1274,10 +1470,12 @@ class Workspace:
         path = f'/api/v1/workspace/{self.info.workspace_id}/clone'
         parameters = {'name': name}
         headers = {'x-deepint-organization': self.organization_id}
-        response = handle_request(method='POST', path=path, headers=headers, parameters=parameters, credentials=self.credentials)
+        response = handle_request(method='POST', path=path, headers=headers,
+                                  parameters=parameters, credentials=self.credentials)
 
         # retrieve task
-        task = Task.build(task_id=response['task_id'], workspace_id=response['workspace_id'], organization_id=self.organization_id, credentials=self.credentials)
+        task = Task.build(task_id=response['task_id'], workspace_id=response['workspace_id'],
+                          organization_id=self.organization_id, credentials=self.credentials)
 
         # resolve task and build workspace
         task.resolve()
@@ -1286,7 +1484,6 @@ class Workspace:
         new_workspace = Workspace.build(organization_id=self.organization_id, workspace_id=response['workspace_id'],
                                         credentials=self.credentials)
         return new_workspace
-        
 
     def to_dict(self) -> Dict[str, Any]:
         """Builds a dictionary containing the information stored in current object.

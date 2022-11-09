@@ -5,17 +5,17 @@
 
 import enum
 import warnings
+from datetime import datetime
+from typing import Any, Dict, List, Optional
+
 import numpy as np
 import pandas as pd
-from datetime import datetime, date
-from typing import Any, List, Dict, Type, Optional
 from dateutil.parser import parse as python_date_parser
 
-from .task import Task
 from ..auth import Credentials
 from ..error import DeepintBaseError
 from ..util import handle_request, parse_date, parse_url
-
+from .task import Task
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
@@ -67,7 +67,7 @@ class FeatureType(enum.Enum):
             return cls.logic
         elif np.issubdtype(t, np.character):
             try:
-                r = python_date_parser(column.iloc[0])
+                _ = python_date_parser(column.iloc[0])
                 is_date = True
             except:
                 is_date = False
@@ -85,7 +85,7 @@ class FeatureType(enum.Enum):
 
 class SourceFeature:
     """ Stores the index, name, type and stats of a feature associated with a deepint.net source.
-    
+
     Attributes:
         index: Feature index, starting with 0.
         name: Feature name (max 120 characters).
@@ -104,12 +104,48 @@ class SourceFeature:
                  date_format: str, computed: bool, null_count: int, min_value: int,
                  max_value: int, mean_value: int, deviation: int, mapped_to: int) -> None:
 
+        if not isinstance(index, int):
+            raise ValueError('index must be int')
+
+        if not isinstance(name, str):
+            raise ValueError('name must be str')
+
+        if not isinstance(feature_type, FeatureType) or isinstance(feature_type, int):
+            raise ValueError('feature_type must be FeatureType')
+
+        if not isinstance(indexed, bool):
+            raise ValueError('indexed must be bool')
+
+        if not isinstance(date_format, str):
+            raise ValueError('date_format must be str')
+
+        if not isinstance(computed, bool):
+            raise ValueError('computed must be bool')
+
+        if not isinstance(null_count, int):
+            raise ValueError('null_count must be int')
+
+        if not isinstance(min_value, int):
+            raise ValueError('min_value must be int')
+
+        if not isinstance(max_value, int):
+            raise ValueError('max_value must be int')
+
+        if not isinstance(mean_value, int):
+            raise ValueError('mean_value must be int')
+
+        if not isinstance(deviation, int):
+            raise ValueError('deviation must be int')
+
+        if not isinstance(mapped_to, int):
+            raise ValueError('mapped_to must be int')
+
         self.index = index
         self.name = name
         self.feature_type = feature_type
         self.indexed = indexed
         self.date_format = date_format if not (
-                date_format is None and feature_type == FeatureType.date) else 'YYYY-MM-DD'
+            date_format is None and feature_type == FeatureType.date) else 'YYYY-MM-DD'
         self.computed = computed
         self.null_count = null_count
         self.min_value = min_value
@@ -126,7 +162,6 @@ class SourceFeature:
 
     def __str__(self):
         return '<SourceFeature ' + ' '.join([f'{k}={v}' for k, v in self.to_dict().items()]) + '>'
-
 
     @staticmethod
     def from_dict(obj: Any) -> 'SourceFeature':
@@ -145,14 +180,16 @@ class SourceFeature:
         indexed = bool(obj.get("indexed"))
         date_format = obj.get("date_format")
         computed = bool(obj.get("computed"))
-        null_count = int(obj.get("null_count")) if obj.get("null_count") is not None else None
+        null_count = int(obj.get("null_count")) if obj.get(
+            "null_count") is not None else None
         min_value = obj.get("min") if obj.get('min') is None or feature_type != FeatureType.date else parse_date(
             obj.get('min'))
         max_value = obj.get("max") if obj.get('max') is None or feature_type != FeatureType.date else parse_date(
             obj.get('max'))
         mean_value = obj.get("mean")
         deviation = obj.get("deviation")
-        mapped_to = int(obj.get("mapped_to")) if obj.get("mapped_to") is not None else None
+        mapped_to = int(obj.get("mapped_to")) if obj.get(
+            "mapped_to") is not None else None
         return SourceFeature(index, name, feature_type, indexed, date_format,
                              computed, null_count, min_value, max_value, mean_value, deviation, mapped_to)
 
@@ -183,19 +220,19 @@ class SourceFeature:
 
     @classmethod
     def from_dataframe(cls, df: pd.DataFrame, date_formats: Dict[str, str] = None, min_text_length: int = 1000) -> List[
-        'SourceFeature']:
+            'SourceFeature']:
         """Given an :obj:`pandas.DataFrame` buils the list of :obj:`deepint.core.source.SourceFeature` associated with each of its columns.
 
-        The given resulting ditionary only contains fields for the name, type, indexed, date_format 
+        The given resulting ditionary only contains fields for the name, type, indexed, date_format
         and mapped_to attributes.
 
         Note: The index values are assigned with the order of the columns in the given :obj:`pandas.DataFrame`
 
         Args:
-            df: :obj:`pandas.DataFrame` from which the data types for each of its columns will be constructed. 
-            date_formats: dicionary contianing the association between column name and date format like the ones specified 
-                in [#/date_formats]. Is optional to provide value for any column, but if not provided will be considered as 
-                null and the date format (in case of being a date type) will be the default one assigned by Deep Intelligence. 
+            df: :obj:`pandas.DataFrame` from which the data types for each of its columns will be constructed.
+            date_formats: dicionary contianing the association between column name and date format like the ones specified
+                in [#/date_formats]. Is optional to provide value for any column, but if not provided will be considered as
+                null and the date format (in case of being a date type) will be the default one assigned by Deep Intelligence.
             min_text_length: the minimun length of an element to consider the type as text instead of nominal.
 
         Returns:
@@ -204,16 +241,17 @@ class SourceFeature:
 
         # prepare date formats
         date_formats = {} if date_formats is None else date_formats
-        date_formats = {c: None if c not in date_formats else date_formats[c] for c in df.columns}
+        date_formats = {
+            c: None if c not in date_formats else date_formats[c] for c in df.columns}
 
         # build features
         return [cls(i, c, FeatureType.from_pandas_type(df[c]), True, date_formats[c], False, None, None, None,
-                              None, None, None) for i, c in enumerate(df.columns)]
+                    None, None, None) for i, c in enumerate(df.columns)]
 
 
 class SourceInfo:
     """Stores the information of a Deep Intelligence source.
-    
+
     Attributes:
         source_id: source's id in format uuid4.
         created: Creation date.
@@ -230,6 +268,34 @@ class SourceInfo:
                  last_modified: datetime, last_access: datetime, name: str,
                  description: str, source_type: str, instances: int,
                  size_bytes: int) -> None:
+
+        if not isinstance(source_id, str):
+            raise ValueError('source_id must be str')
+
+        if not isinstance(created, datetime):
+            raise ValueError('created must be datetime.datetime')
+
+        if not isinstance(last_modified, datetime):
+            raise ValueError('last_modified must be datetime.datetime')
+
+        if not isinstance(last_access, datetime):
+            raise ValueError('last_access must be datetime.datetime')
+
+        if not isinstance(name, str):
+            raise ValueError('name must be str')
+
+        if not isinstance(description, str):
+            raise ValueError('description must be str')
+
+        if not isinstance(source_type, str):
+            raise ValueError('source_type must be str')
+
+        if not isinstance(instances, int):
+            raise ValueError('instances must be int')
+
+        if not isinstance(size_bytes, int):
+            raise ValueError('size_bytes must be int')
+
         self.source_id = source_id
         self.created = created
         self.last_modified = last_modified
@@ -290,7 +356,7 @@ class SourceInstances:
     """Operates over the instances of a concrete source.
 
     Note: This class should not be instanced, and only be used within an :obj:`deepint.core.source.Source`
-    
+
     Attributes:
         source: the source with which to operate with its instances
     """
@@ -331,7 +397,8 @@ class SourceInstances:
             'offset': offset,
             'limit': limit
         }
-        response = handle_request(method='GET', path=path, headers=headers, credentials=self.source.credentials, parameters=parameters)
+        response = handle_request(method='GET', path=path, headers=headers,
+                                  credentials=self.source.credentials, parameters=parameters)
 
         # format response
         result = [{
@@ -355,20 +422,22 @@ class SourceInstances:
         Args:
             data: data to update the instances. The column names must correspond to source's feature names.
             replace: if set to True the source's content is replaced by the new insertions.
-            pk: feature used primary key during the instances insertion, to update the existing values and insert the not 
+            pk: feature used primary key during the instances insertion, to update the existing values and insert the not
                 existing ones. If is provided with the replace set to True, all the instances will be replaced.
             date_format_feature: the input pk for the request body.
             send_with_index: if set to False the data is send without the index as first field. Else index is send.
 
-        Returns: 
+        Returns:
             reference to task created to perform the source instances update operation.
         """
 
         # check arguments
         if not isinstance(data, pd.DataFrame):
-            raise DeepintBaseError(code='TYPE_MISMATCH', message='The provided input is not a DataFrame.')
+            raise DeepintBaseError(
+                code='TYPE_MISMATCH', message='The provided input is not a DataFrame.')
         elif data.empty or data is None:
-            raise DeepintBaseError(code='EMPTY_DATA', message='The provided DataFrame is empty.')
+            raise DeepintBaseError(
+                code='EMPTY_DATA', message='The provided DataFrame is empty.')
         elif len(data.columns) != len([f for f in self.source.features.fetch_all() if not f.computed]):
             raise DeepintBaseError(code='INPUTS_MISMATCH',
                                    message='The provided DataFrame must have same number of columns as current source.')
@@ -387,7 +456,8 @@ class SourceInstances:
 
         # convert content to CSV
         try:
-            column_order = [f.name for f in self.source.features.fetch_all() if not f.computed]
+            column_order = [
+                f.name for f in self.source.features.fetch_all() if not f.computed]
             streaming_values_data = data.to_csv(sep=',',
                                                 index=send_with_index,
                                                 columns=column_order)
@@ -408,7 +478,8 @@ class SourceInstances:
             'json_fields': '',
             'date_format': date_format
         }
-        response = handle_request(method='POST', path=path, headers=headers, parameters=parameters, files=files, credentials=self.source.credentials)
+        response = handle_request(method='POST', path=path, headers=headers,
+                                  parameters=parameters, files=files, credentials=self.source.credentials)
 
         # map response
         task = Task.build(task_id=response['task_id'], workspace_id=self.source.workspace_id,
@@ -422,7 +493,7 @@ class SourceInstances:
         Args:
             where: query in Deepint Query Language, to select which instances delete.
 
-        Returns: 
+        Returns:
             reference to task created to perform the source instances deletion operation.
         """
 
@@ -431,7 +502,8 @@ class SourceInstances:
         parameters = {
             'where': where
         }
-        response = handle_request(method='DELETE', path=path, headers=headers, credentials=self.source.credentials, parameters=parameters)
+        response = handle_request(method='DELETE', path=path, headers=headers,
+                                  credentials=self.source.credentials, parameters=parameters)
 
         # map response
         task = Task.build(task_id=response['task_id'], workspace_id=self.source.workspace_id,
@@ -442,14 +514,22 @@ class SourceInstances:
 
 class SourceFeatures:
     """Operates over the features of a concrete source.
-    
+
     Note: This class should not be instanced, and only be used within an :obj:`deepint.core.source.Source`.
-    
+
     Attributes:
         source: the source with which to operate with its features.
     """
 
     def __init__(self, source: 'Source', features: List[SourceFeature]) -> None:
+
+        if not isinstance(features, list):
+            raise ValueError('features must be list')
+
+        for f in features:
+            if not isinstance(f, SourceFeature):
+                raise ValueError(f'features must be a list of {SourceFeature.__class__}')
+
         self.source = source
         self._features = features
         if self._features is not None:
@@ -460,7 +540,7 @@ class SourceFeatures:
             return False
         else:
             for f in self._features:
-                other_f = other.fetch(name=f.name) 
+                other_f = other.fetch(name=f.name)
                 if (other_f is not None) and f != other_f:
                     return False
             return True
@@ -474,19 +554,21 @@ class SourceFeatures:
         # request
         path = f'/api/v1/workspace/{self.source.workspace_id}/source/{self.source.info.source_id}'
         headers = {'x-deepint-organization': self.source.organization_id}
-        response = handle_request(method='GET', path=path, headers=headers, credentials=self.source.credentials)
+        response = handle_request(
+            method='GET', path=path, headers=headers, credentials=self.source.credentials)
 
         # map results
-        self._features = [SourceFeature.from_dict(f) for f in response['features']]
+        self._features = [SourceFeature.from_dict(
+            f) for f in response['features']]
 
     def update(self, features: List[SourceFeature] = None) -> Task:
         """Updates a source's features.
 
         If the features were already loaded, this ones are replace by the new ones after retrieval.
-        
+
         Args:
             features: the new eatures to update the source. If not provided the source's internal ones are used.
-        
+
         Returns:
             reference to task created to perform the source features update operation.
         """
@@ -498,7 +580,8 @@ class SourceFeatures:
         path = f'/api/v1/workspace/{self.source.workspace_id}/source/{self.source.info.source_id}/features'
         headers = {'x-deepint-organization': self.source.organization_id}
         parameters = {'features': [f.to_dict_minimized() for f in features]}
-        response = handle_request(method='POST', path=path, headers=headers, parameters=parameters, credentials=self.source.credentials)
+        response = handle_request(method='POST', path=path, headers=headers,
+                                  parameters=parameters, credentials=self.source.credentials)
 
         # update local state
         self._features = features
@@ -511,7 +594,7 @@ class SourceFeatures:
 
     def fetch(self, index: int = None, name: str = None, force_reload: bool = False) -> Optional[SourceFeature]:
         """Search for a feature in the source.
-        
+
         Note: if no name or index is provided, the returned value is None.
 
         Args:
@@ -519,7 +602,7 @@ class SourceFeatures:
             name: feature's name to search by.
             force_reload: if set to True, features are reloaded before the search with the
                 :obj:`deepint.core.source.SourceFeature.load` method.
-        
+
         Returns:
             retrieved feature if found, and in other case None.
         """
@@ -540,11 +623,11 @@ class SourceFeatures:
 
     def fetch_all(self, force_reload: bool = False) -> List[SourceFeature]:
         """Retrieves all source's features.
-        
+
         Args:
             force_reload: if set to True, features are reloaded before the search with the
                 :obj:`deepint.core.source.SourceFeature.load` method.
-        
+
         Returns:
             the source's features.
         """
@@ -558,10 +641,10 @@ class SourceFeatures:
 
 class Source:
     """A Deep Intelligence source.
-    
+
     Note: This class should not be instanced directly, and it's recommended to use the :obj:`deepint.core.source.Source.build`
-    or :obj:`deepint.core.source.Source.from_url` methods. 
-    
+    or :obj:`deepint.core.source.Source.from_url` methods.
+
     Attributes:
         organization_id: organization where source is located.
         workspace_id: workspace where source is located.
@@ -574,6 +657,26 @@ class Source:
 
     def __init__(self, organization_id: str, workspace_id: str, credentials: Credentials,
                  info: SourceInfo, features: List[SourceFeature]) -> None:
+
+        if not isinstance(organization_id, str):
+            raise ValueError('organization_id must be str')
+
+        if not isinstance(workspace_id, str):
+            raise ValueError('workspace_id must be str')
+
+        if not isinstance(credentials, Credentials):
+            raise ValueError(f'credentials must be {Credentials.__class__}')
+
+        if not isinstance(info, SourceInfo):
+            raise ValueError(f'info must be {SourceInfo.__class__}')
+
+        if not isinstance(features, list):
+            raise ValueError('features must be list')
+
+        for f in features:
+            if not isinstance(f, SourceFeature):
+                raise ValueError(f'features must be a list of {SourceFeature.__class__}')
+
         self.info = info
         self.credentials = credentials
         self.workspace_id = workspace_id
@@ -593,7 +696,7 @@ class Source:
     @classmethod
     def build(cls, organization_id: str, workspace_id: str, source_id: str, credentials: Credentials = None) -> 'Source':
         """Builds a source.
-        
+
         Note: when source is created, the source's information and features are retrieved from API.
 
         Args:
@@ -610,7 +713,8 @@ class Source:
         credentials = credentials if credentials is not None else Credentials.build()
         src_info = SourceInfo(source_id=source_id, created=None, last_modified=None, last_access=None,
                               name=None, description=None, source_type=None, instances=None, size_bytes=None)
-        src = cls(organization_id=organization_id, workspace_id=workspace_id, credentials=credentials, info=src_info, features=None)
+        src = cls(organization_id=organization_id, workspace_id=workspace_id,
+                  credentials=credentials, info=src_info, features=None)
         src.load()
         src.features.load()
         return src
@@ -624,7 +728,7 @@ class Source:
         Example:
             - https://app.deepint.net/o/3a874c05-26d1-4b8c-894d-caf90e40078b/workspace?ws=f0e2095f-fe2b-479e-be4b-bbc77207f42d&s=source&i=db98f976-f4bb-43d5-830e-bc18a3a89641
             - https://app.deepint.net/api/v1/workspace/f0e2095f-fe2b-479e-be4b-bbc77207f42/source/db98f976-f4bb-43d5-830e-bc18a3a89641
-        
+
         Note: when source is created, the source's information and features are retrieved from API.
             Also it is remmarkable that if the API URL is providen, the organization_id must be provided in the optional parameter, otherwise
             this ID won't be found on the URL and the Organization will not be created, raising a value error.
@@ -642,16 +746,19 @@ class Source:
         url_info, hostname = parse_url(url)
 
         if 'organization_id' not in url_info and organization_id is None:
-            raise ValueError('Fields organization_id must be in url to build the object. Or providen as optional parameter.')
+            raise ValueError(
+                'Fields organization_id must be in url to build the object. Or providen as optional parameter.')
 
         if 'workspace_id' not in url_info or 'source_id' not in url_info:
-            raise ValueError('Fields workspace_id and source_id must be in url to build the object.')
+            raise ValueError(
+                'Fields workspace_id and source_id must be in url to build the object.')
 
         organization_id = url_info['organization_id'] if 'organization_id' in url_info else organization_id
 
         # create new credentials
-        new_credentials = Credentials(token=credentials.token, instance=hostname)
-        
+        new_credentials = Credentials(
+            token=credentials.token, instance=hostname)
+
         return cls.build(organization_id=organization_id, workspace_id=url_info['workspace_id'], source_id=url_info['source_id'],
                          credentials=new_credentials)
 
@@ -664,7 +771,8 @@ class Source:
         # request
         path = f'/api/v1/workspace/{self.workspace_id}/source/{self.info.source_id}'
         headers = {'x-deepint-organization': self.organization_id}
-        response = handle_request(method='GET', path=path, headers=headers, credentials=self.credentials)
+        response = handle_request(
+            method='GET', path=path, headers=headers, credentials=self.credentials)
 
         # map results
         self.info = SourceInfo.from_dict(response)
@@ -685,7 +793,8 @@ class Source:
         path = f'/api/v1/workspace/{self.workspace_id}/source/{self.info.source_id}'
         headers = {'x-deepint-organization': self.organization_id}
         parameters = {'name': name, 'description': description}
-        response = handle_request(method='POST', path=path, headers=headers, parameters=parameters, credentials=self.credentials)
+        _ = handle_request(method='POST', path=path, headers=headers,
+                                  parameters=parameters, credentials=self.credentials)
 
         # update local state
         self.info.name = name
@@ -698,7 +807,8 @@ class Source:
         # request
         path = f'/api/v1/workspace/{self.workspace_id}/source/{self.info.source_id}'
         headers = {'x-deepint-organization': self.organization_id}
-        handle_request(method='DELETE', path=path, headers=headers, credentials=self.credentials)
+        handle_request(method='DELETE', path=path,
+                       headers=headers, credentials=self.credentials)
 
     def to_dict(self) -> Dict[str, Any]:
         """Builds a dictionary containing the information stored in current object.

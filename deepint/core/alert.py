@@ -5,7 +5,7 @@
 
 import enum
 from datetime import datetime
-from typing import Any, List, Dict
+from typing import Any, Dict, List
 
 from ..auth import Credentials
 from ..error import DeepintBaseError
@@ -39,18 +39,18 @@ class AlertType(enum.Enum):
         Returns:
             all available alert types
         """
-        
+
         return [e.name for e in cls]
 
 
 class AlertInfo:
     """Stores the information of a Deep Intelligence alert.
-    
+
     Attributes:
         alert_id: alert's id in format uuid4.
         name: alert's name.
         description: alert's description.
-        alert_type: type of alert (update, stall). Set to 'update' if you want to trigger when a source updated 
+        alert_type: type of alert (update, stall). Set to 'update' if you want to trigger when a source updated
             on certain conditions. Set to 'stall' if you want to trigger when a source do not update for a long time.
         last_modified: Last modified date.
         created: Creation date.
@@ -64,6 +64,44 @@ class AlertInfo:
     def __init__(self, alert_id: str, name: str, description: str, created: datetime, last_modified: datetime,
                  subscriptions: List[str], color: str, alert_type: AlertType, source_id: str, condition: Dict[str, Any],
                  time_stall: int) -> None:
+
+        if not isinstance(alert_id, str):
+            raise ValueError('alert_id must be str')
+
+        if not isinstance(name, str):
+            raise ValueError('name must be str')
+
+        if not isinstance(description, str):
+            raise ValueError('description must be str')
+
+        if not isinstance(created, datetime):
+            raise ValueError('created must be datetime.datetime')
+
+        if not isinstance(last_modified, datetime):
+            raise ValueError('last_modified must be datetime.datetime')
+
+        if not isinstance(subscriptions, list):
+            raise ValueError('subscriptions must be a list of str')
+
+        for s in subscriptions:
+            if not isinstance(s, list):
+                raise ValueError('subscriptions must be a list of str')
+
+        if not isinstance(color, str):
+            raise ValueError('sources_count must be str')
+
+        if not isinstance(alert_type, AlertType) or not not isinstance(alert_type, int):
+            raise ValueError('alert_type must be AlertType')
+
+        if not isinstance(source_id, str):
+            raise ValueError('source_id must be str')
+
+        if not isinstance(condition, dict):
+            raise ValueError('condition must be dict')
+
+        if not isinstance(time_stall, int):
+            raise ValueError('time_stall must be int')
+
         self.alert_id = alert_id
         self.name = name
         self.description = description
@@ -76,7 +114,7 @@ class AlertInfo:
         self.condition = condition
         self.time_stall = time_stall
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> None:
         if not isinstance(other, AlertInfo):
             return False
         else:
@@ -106,7 +144,8 @@ class AlertInfo:
         alert_type = AlertType.from_string(obj.get("type"))
         source_id = obj.get("source")
         condition = obj.get("condition")
-        time_stall = int(obj.get("time_stall")) if obj.get("time_stall") is not None else None
+        time_stall = int(obj.get("time_stall")) if obj.get(
+            "time_stall") is not None else None
         return AlertInfo(alert_id, name, description, created, last_modified, subscriptions, color, alert_type,
                          source_id, condition, time_stall)
 
@@ -135,19 +174,23 @@ class AlertInstances:
     """Operates over the instances of a concrete alert.
 
     Note: This class should not be instanced, and only be used within an :obj:`deepint.core.alert.Alert`
-    
+
     Attributes:
         alert: the alert with which to operate with its instances
     """
 
     def __init__(self, alert: 'Alert'):
+
+        if not isinstance(alert, Alert):
+            raise ValueError('alert must be Alert')
+
         self.alert = alert
 
     def fetch(self) -> List[Dict]:
         # request
         path = f'/api/v1/workspace/{self.alert.workspace_id}/alerts/{self.alert.info.alert_id}/instances'
         headers = {'x-deepint-organization': self.alert.organization_id}
-        response = handle_request(method='GET', path=path, headers=headers, parameters=parameters, credentials=self.alert.credentials)
+        response = handle_request(method='GET', path=path, headers=headers, credentials=self.alert.credentials)
 
         # format response
         return response
@@ -155,10 +198,10 @@ class AlertInstances:
 
 class Alert:
     """A Deep Intelligence alert.
-    
+
     Note: This class should not be instanced directly, and it's recommended to use the :obj:`deepint.core.alert.Alert.build`
-    or :obj:`deepint.core.alert.Alert.from_url` methods. 
-    
+    or :obj:`deepint.core.alert.Alert.from_url` methods.
+
     Attributes:
         organization_id: organization where alert is located.
         workspace_id: workspace where alert is located.
@@ -169,6 +212,19 @@ class Alert:
     """
 
     def __init__(self, organization_id: str, workspace_id: str, credentials: Credentials, info: AlertInfo) -> None:
+
+        if not isinstance(organization_id, str):
+            raise ValueError('organization_id must be str')
+
+        if not isinstance(workspace_id, str):
+            raise ValueError('workspace_id must be str')
+
+        if not isinstance(credentials, Credentials):
+            raise ValueError(f'credentials must be {Credentials.__class__}')
+
+        if not isinstance(info, AlertInfo):
+            raise ValueError(f'info must be {AlertInfo.__class__}')
+
         self.info = info
         self.credentials = credentials
         self.workspace_id = workspace_id
@@ -187,7 +243,7 @@ class Alert:
     @classmethod
     def build(cls, organization_id: str, workspace_id: str, alert_id: str, credentials: Credentials = None) -> 'Alert':
         """Builds an alert.
-        
+
         Note: when alert is created, the alert's information is retrieved from API.
 
         Args:
@@ -205,7 +261,8 @@ class Alert:
         alert_info = AlertInfo(alert_id=alert_id, name=None, description=None, created=None, last_modified=None,
                                subscriptions=None, color=None, alert_type=None, source_id=None, condition=None,
                                time_stall=None)
-        alert = cls(organization_id=organization_id, workspace_id=workspace_id, credentials=credentials, info=alert_info)
+        alert = cls(organization_id=organization_id, workspace_id=workspace_id,
+                    credentials=credentials, info=alert_info)
         alert.load()
         return alert
 
@@ -218,7 +275,7 @@ class Alert:
         Example:
             - https://app.deepint.net/o/3a874c05-26d1-4b8c-894d-caf90e40078b/workspace?ws=f0e2095f-fe2b-479e-be4b-bbc77207f42d&s=alert&i=db98f976-f4bb-43d5-830e-bc18a3a89641
             - https://app.deepint.net/api/v1/workspace/f0e2095f-fe2b-479e-be4b-bbc77207f42/alerts/db98f976-f4bb-43d5-830e-bc18a3a89641
-        
+
         Note: when alert is created, the alert's information is retrieved from API.
             Also it is remmarkable that if the API URL is providen, the organization_id must be provided in the optional parameter, otherwise
             this ID won't be found on the URL and the Organization will not be created, raising a value error.
@@ -236,15 +293,18 @@ class Alert:
         url_info, hostname = parse_url(url)
 
         if 'organization_id' not in url_info and organization_id is None:
-            raise ValueError('Fields organization_id must be in url to build the object. Or providen as optional parameter.')
+            raise ValueError(
+                'Fields organization_id must be in url to build the object. Or providen as optional parameter.')
 
         if 'workspace_id' not in url_info or 'alert_id' not in url_info:
-            raise ValueError('Fields workspace_id and alert_id must be in url to build the object.')
+            raise ValueError(
+                'Fields workspace_id and alert_id must be in url to build the object.')
 
         organization_id = url_info['organization_id'] if 'organization_id' in url_info else organization_id
 
         # create new credentials
-        new_credentials = Credentials(token=credentials.token, instance=hostname)
+        new_credentials = Credentials(
+            token=credentials.token, instance=hostname)
 
         return cls.build(organization_id=organization_id, workspace_id=url_info['workspace_id'], alert_id=url_info['alert_id'], credentials=new_credentials)
 
@@ -257,7 +317,8 @@ class Alert:
         # request
         path = f'/api/v1/workspace/{self.workspace_id}/alerts/{self.info.alert_id}'
         headers = {'x-deepint-organization': self.organization_id}
-        response = handle_request(method='GET', path=path, headers=headers, credentials=self.credentials)
+        response = handle_request(
+            method='GET', path=path, headers=headers, credentials=self.credentials)
 
         # map results
         self.info = AlertInfo.from_dict(response)
@@ -288,7 +349,8 @@ class Alert:
         time_stall = time_stall if time_stall is not None else self.info.time_stall
 
         if alert_type == AlertType.stall and time_stall is not None and time_stall < 60:
-            raise DeepintBaseError(code='ALERT_CREATION_VALUES', message='Minimum alert time stall is 60 seconds.')
+            raise DeepintBaseError(
+                code='ALERT_CREATION_VALUES', message='Minimum alert time stall is 60 seconds.')
 
         # request
         path = f'/api/v1/workspace/{self.workspace_id}/alerts/{self.info.alert_id}'
@@ -303,7 +365,8 @@ class Alert:
             'condition': condition,
             'time_stall': time_stall
         }
-        response = handle_request(method='POST', path=path, headers=headers, parameters=parameters, credentials=self.credentials)
+        _ = handle_request(method='POST', path=path, headers=headers,
+                                  parameters=parameters, credentials=self.credentials)
 
         # map results
         self.info.name = name
@@ -321,7 +384,8 @@ class Alert:
         # request
         path = f'/api/v1/workspace/{self.workspace_id}/alerts/{self.info.alert_id}'
         headers = {'x-deepint-organization': self.organization_id}
-        handle_request(method='DELETE', path=path, headers=headers, credentials=self.credentials)
+        handle_request(method='DELETE', path=path,
+                       headers=headers, credentials=self.credentials)
 
     def to_dict(self) -> Dict[str, Any]:
         """Builds a dictionary containing the information stored in current object.

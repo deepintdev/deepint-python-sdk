@@ -4,4 +4,4 @@
 # See LICENSE for details.
 
 from .parser import parse_date, parse_url
-from .request import handle_request, handle_paginated_request
+from .request import handle_paginated_request, handle_request
