@@ -104,6 +104,7 @@ class FeatureType(enum.Enum):
         Returns:
             The feature type associated to the given column
         """
+
         t = column.dtype
         # Cf. generic types in
         # https://numpy.org/doc/stable/reference/arrays.scalars.html

@@ -93,7 +93,6 @@ def test_credentials_load():
 def test_organization_CRUD():
     # create
     org = Organization.build(organization_id=DEEPINT_ORGANIZATION)
-    org.clean()
 
     assert (org.account is not None)
     assert (not list(org.workspaces.fetch_all()))
@@ -374,16 +373,16 @@ def test_model_CRUD():
     org = Organization.build(organization_id=DEEPINT_ORGANIZATION)
     ws_name = serve_name(TEST_WS_NAME)
     ws = org.workspaces.create(name=ws_name, description=TEST_WS_DESC)
-    data = pd.read_csv(TEST_CSV)
+    data = pd.read_csv(TEST_CSV).dropna()
     src_name = serve_name(TEST_SRC_NAME)
     source = ws.sources.create_and_initialize(name=src_name, description=TEST_SRC_DESC, data=data, wait_for_initialization=True)
 
     # create model
     target_feature = [f for f in source.features.fetch_all(
-    ) if f.feature_type == FeatureType.numeric][0]
+    ) if f.feature_type == FeatureType.nominal][0]
     model_name = serve_name(TEST_MODEL_NAME)
 
-    model = ws.models.create(name=model_name, description=TEST_MODEL_DESC, model_type=ModelType.regressor, method=ModelMethod.tree, source=source, target_feature_name=target_feature.name, wait_for_model_creation=True)
+    model = ws.models.create(name=model_name, description=TEST_MODEL_DESC, model_type=ModelType.classifier, method=ModelMethod.bayes, source=source, target_feature_name=target_feature.name, wait_for_model_creation=True)
 
     # retrieve
     retrieved_model = Model.build(organization_id=DEEPINT_ORGANIZATION, model_id=model.info.model_id, workspace_id=ws.info.workspace_id,
@@ -533,14 +532,14 @@ def test_url_parser():
     workspace = org.workspaces.create(
         name=serve_name(TEST_WS_NAME), description=TEST_WS_DESC)
 
-    data = pd.read_csv(TEST_CSV)
+    data = pd.read_csv(TEST_CSV).dropna()
     source = workspace.sources.create_and_initialize(
         name=serve_name(TEST_SRC_NAME), description=TEST_SRC_DESC, data=data)
 
-    target_feature = [f for f in source.features.fetch_all() if f.feature_type == FeatureType.numeric][0]
+    target_feature = [f for f in source.features.fetch_all() if f.feature_type == FeatureType.nominal][0]
     model_name = serve_name(TEST_MODEL_NAME)
-    model = workspace.models.create(name=model_name, description=TEST_MODEL_DESC, model_type=ModelType.regressor,
-                                    method=ModelMethod.tree, source=source, target_feature_name=target_feature.name, wait_for_model_creation=True)
+    model = workspace.models.create(name=model_name, description=TEST_MODEL_DESC, model_type=ModelType.classifier,
+                                    method=ModelMethod.bayes, source=source, target_feature_name=target_feature.name, wait_for_model_creation=True)
 
     alert = workspace.alerts.create(name=serve_name(TEST_ALERT_NAME), description=TEST_ALERT_DESC,
                                     subscriptions=TEST_ALERT_SUBSCRIPTIONS,
@@ -634,15 +633,17 @@ def cleanup(request):
 
 
 if __name__ == '__main__':
+    org = Organization.build(organization_id=DEEPINT_ORGANIZATION)
+    org.clean()
     test_credentials_load()
-    # test_organization_CRUD()
-    # test_workspace_CRUD()
-    # test_source_CRUD()
-    # test_real_time_source_CRUD()
-    # test_external_source_CRUD()
-    # test_task_CRUD()
-    # test_alert_CRUD()
+    test_organization_CRUD()
+    test_workspace_CRUD()
+    test_source_CRUD()
+    test_real_time_source_CRUD()
+    test_external_source_CRUD()
+    test_task_CRUD()
+    test_alert_CRUD()
     test_model_CRUD()
-    # test_visualization_CRUD()
+    test_visualization_CRUD()
     test_dashboard_CRUD()
     test_url_parser()
