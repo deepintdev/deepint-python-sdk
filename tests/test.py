@@ -142,6 +142,8 @@ def test_workspace_CRUD():
     assert (ws == ws1)
     ws.delete()
 
+    # TODO: fetch_iframe_token
+
 
 def test_source_CRUD():
     # load organization and create workspace
@@ -227,8 +229,35 @@ def test_source_CRUD():
 
     source.delete()
 
+    # TODO: create_derived
+    # TODO: create_other_type
+    # TODO: clone
+    # TODO: fetch_actualization_config
+    # TODO: update_actualization_config
+
     # delete workspace
     ws.delete()
+
+
+def test_real_time_source_CRUD():
+
+    # TODO: create_real_time
+    # TODO: fetch_connection
+    # TODO: update_connection
+    # TODO: push
+    # TODO: clear
+    pass
+
+
+def test_external_source_CRUD():
+
+    # TODO: create_external
+    # TODO: force_update
+    # TODO: fetch_connection
+    # TODO: update_connection
+    # TODO: fetch_actualization_config
+    # TODO: update_actualization_config
+    pass
 
 
 def test_task_CRUD():
@@ -579,6 +608,8 @@ if __name__ == '__main__':
     test_organization_CRUD()
     test_workspace_CRUD()
     test_source_CRUD()
+    test_real_time_source_CRUD()
+    test_external_source_CRUD()
     test_task_CRUD()
     test_alert_CRUD()
     test_model_CRUD()
