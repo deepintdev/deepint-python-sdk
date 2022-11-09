@@ -129,7 +129,8 @@ class FeatureType(enum.Enum):
         elif np.issubdtype(t, np.datetime64) or np.issubdtype(t, np.timedelta64):
             return cls.date
         else:
-            return cls.unknown
+            # by default return nominal
+            return cls.nominal
 
 
 class SourceFeature:
@@ -894,32 +895,142 @@ class Source:
 
 
 class RealTimeSource(Source):
+    """Operates over a Deep Intelligence Real Time Source.
+    """
 
     @classmethod
-    def build(cls, source: Source):
-        """Builds RT source from a source
-        """
-        raise Exception('Not implemented Error')
+    def build(cls, source: Source) -> 'RealTimeSource':
+        """Builds a Real-Time source from an :obj:`deepint.core.source.Source`
 
-    def fetch_connection(self):
-        """Future implementation of /api/v1/workspace/<workspaceid>/sources/<sourceid>/real_time
-        """
-        raise Exception('Not implemented Error')
+        This allows to use the Real Time data sources extra funcionality.
 
-    def update_connection(self):
-        """Future implementation of /api/v1/workspace/<workspaceid>/sources/<sourceid>/real_time
-        """
-        raise Exception('Not implemented Error')
+        Args:
+            source: original source.
 
-    def push(self):
-        """Future implementation of /api/v1/workspace/<workspaceid>/sources/<sourceid>/real_time_psh
+        Returns:
+            the source build from the given source and credentials.
         """
-        raise Exception('Not implemented Error')
 
-    def clear(self):
-        """Future implementation of /api/v1/workspace/<workspaceid>/sources/<sourceid>/real_time_clear
+        rt_src = cls(organization_id=source.organization_id, workspace_id=source.workspace_id, credentials=source.credentials, info=source.info, features=source.features)
+        rt_src.instances = RealTimeSourceInstances()
+
+        return rt_src
+
+    def fetch_connection(self) -> Dict[str, Any]:
+        """Retrieves Real Time source connection details. Currently on MQTT.
+
+        Returns:
+            a dictionary containing max_age number (Max age of registers in milliseconds. Set to 0 or negative
+            for unlimited), mqtt_url (Connection URl to the MQTT service), mqtt_user (Username to authenticate
+            to the source), mqtt_password (Password to authenticate to the source), mqtt_topic (Topic to
+            publish registers to the source)
         """
-        raise Exception('Not implemented Error')
+
+        # request
+        path = f'/api/v1/workspace/{self.workspace_id}/source/{self.info.source_id}/real_time'
+        headers = {'x-deepint-organization': self.organization_id}
+        response = handle_request(method='GET', path=path, headers=headers, credentials=self.credentials)
+
+        return response
+
+    def update_connection(self, max_age: int, regenerate_password: bool = False) -> None:
+        """Updates the Realtime source connection details. Currently on MQTT.
+
+        Args:
+            max_age: maximum age of registers in milliseconds. Set to 0 or negative for unlimited
+            regenerate_password: set to true to regenerate the MQTT password, if it was compromised. By default is false.
+        """
+
+        # request
+        path = f'/api/v1/workspace/{self.workspace_id}/source/{self.info.source_id}/real_time'
+        headers = {'x-deepint-organization': self.organization_id}
+        params = {
+            'max_age': max_age,
+            'regenerate_password': regenerate_password
+        }
+        _ = handle_request(method='POST', path=path, headers=headers, params=params, credentials=self.credentials)
+
+
+class RealTimeSourceInstances:
+    """Operates over a Deep Intelligence Real Time Source's instances.
+    """
+
+    @classmethod
+    def build(cls, source_instances: SourceInstances) -> 'RealTimeSourceInstances':
+        """Builds a Real-Time source instances from an :obj:`deepint.core.source.SourceInstances`
+
+        This allows to use the Real Time data source instances extra funcionality.
+
+        Args:
+            source_instances: original source instances.
+
+        Returns:
+            the source instances build from the given source and credentials.
+        """
+
+        return cls(source=source_instances.source)
+
+    def update(self, data: pd.DataFrame, **kwargs) -> None:
+        """Overwrites the update on a real time source's instances.
+
+        Note: it's important to highlight that only the data parameter is used.
+
+        Args:
+            data: data to update the instances. The column names must correspond to source's feature names.
+        """
+
+        # check arguments
+        if data is not None and not isinstance(data, pd.DataFrame):
+            raise DeepintBaseError(
+                code='TYPE_MISMATCH', message='The provided input is not a DataFrame.')
+        elif data.empty or data is None:
+            raise DeepintBaseError(
+                code='EMPTY_DATA', message='The provided DataFrame is empty.')
+        elif len(data.columns) != len([f for f in self.source.features.fetch_all() if not f.computed]):
+            raise DeepintBaseError(code='INPUTS_MISMATCH',
+                                   message='The provided DataFrame must have same number of columns as current source.')
+        else:
+            for c in data.columns:
+                if self.source.features.fetch(name=c) is None:
+                    raise DeepintBaseError(code='INPUTS_MISMATCH',
+                                           message='The provided DataFrame columns must have same names as the soure\'s features.')
+
+        # calculate column order
+        column_order = [f.name for f in self.source.features.fetch_all() if not f.computed]
+
+        # convert dataframe to arrays
+        dict_instances = data.to_dict(orient='records')
+        instances = [[instance[c] for c in column_order] for instance in dict_instances]
+
+        # request
+        for instance in instances:
+            path = f'/api/v1/workspace/{self.source.workspace_id}/source/{self.source.info.source_id}/real_time_push'
+            headers = {'x-deepint-organization': self.source.organization_id}
+            json = {
+                'data': instance
+            }
+            _ = handle_request(method='POST', path=path, headers=headers, json=json, credentials=self.source.credentials)
+
+    def clear_queued_instances(self, from_time: datetime, to_time: datetime) -> None:
+        """Clears instances of a real time source between the limit of a time span.
+
+        Args:
+            from_time: start of clear range
+            to_time: start of clear range
+        """
+
+        # convert times to unix timestamp in millis
+        from_time_timestamp = from_time.timestamp() * 1e3
+        to_time_timestamp = to_time.timestamp() * 1e3
+
+        # request
+        path = f'/api/v1/workspace/{self.source.workspace_id}/source/{self.source.info.source_id}/real_time_clear'
+        headers = {'x-deepint-organization': self.source.organization_id}
+        json = {
+            'from_time': from_time_timestamp,
+            'to_time': to_time_timestamp
+        }
+        _ = handle_request(method='POST', path=path, headers=headers, json=json, credentials=self.source.credentials)
 
 
 class ExternalSource(Source):
