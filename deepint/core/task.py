@@ -69,6 +69,49 @@ class TaskInfo:
     def __init__(self, task_id: str, user_id: str, user_name: str, created: datetime, status: TaskStatus, duration: int,
                  name: str, description: str, progress: int, subtask: str, result: str, result_type: str,
                  error_code: str, error_description: str) -> None:
+
+        if not isinstance(task_id, str):
+            raise ValueError('task_id must be str')
+
+        if not isinstance(user_id, str):
+            raise ValueError('user_id must be str')
+
+        if not isinstance(user_name, str):
+            raise ValueError('user_name must be str')
+
+        if not isinstance(created, datetime):
+            raise ValueError('created must be datetime.datetime')
+
+        if not isinstance(status, int) or isinstance(status, TaskStatus):
+            raise ValueError('status must be str')
+
+        if not isinstance(duration, int):
+            raise ValueError('duration must be int')
+
+        if not isinstance(name, str):
+            raise ValueError('name must be str')
+
+        if not isinstance(description, str):
+            raise ValueError('description must be str')
+
+        if not isinstance(progress, int):
+            raise ValueError('progress must be int')
+
+        if not isinstance(subtask, str):
+            raise ValueError('subtask must be str')
+
+        if not isinstance(result, str):
+            raise ValueError('result must be str')
+
+        if not isinstance(result_type, str):
+            raise ValueError('result_type must be str')
+
+        if not isinstance(error_code, str):
+            raise ValueError('error_code must be str')
+
+        if not isinstance(error_description, str):
+            raise ValueError('error_description must be str')
+
         self.task_id = task_id
         self.user_id = user_id
         self.user_name = user_name
@@ -151,6 +194,19 @@ class Task:
     """
 
     def __init__(self, organization_id: str, workspace_id: str, credentials: Credentials, info: TaskInfo) -> None:
+
+        if not isinstance(organization_id, str):
+            raise ValueError('organization_id must be str')
+
+        if not isinstance(workspace_id, str):
+            raise ValueError('workspace_id must be str')
+
+        if not isinstance(credentials, Credentials):
+            raise ValueError(f'credentials must be {Credentials.__class__}')
+
+        if not isinstance(info, TaskInfo):
+            raise ValueError(f'info must be {TaskInfo.__class__}')
+
         self.credentials = credentials
         self.info = info
         self.workspace_id = workspace_id

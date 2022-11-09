@@ -34,6 +34,36 @@ class VisualizationInfo:
                  last_access: datetime, name: str, description: str,
                  visualization_type: str, public: bool, source_id: str, configuration: str) -> None:
 
+        if not isinstance(visualization_id, str):
+            raise ValueError('visualization_id must be str')
+
+        if not isinstance(created, datetime):
+            raise ValueError('created must be datetime.datetime')
+
+        if not isinstance(last_modified, datetime):
+            raise ValueError('last_modified must be datetime.datetime')
+
+        if not isinstance(last_access, datetime):
+            raise ValueError('last_access must be datetime.datetime')
+
+        if not isinstance(name, str):
+            raise ValueError('name must be str')
+
+        if not isinstance(description, str):
+            raise ValueError('description must be str')
+
+        if not isinstance(visualization_type, str):
+            raise ValueError('visualization_type must be str')
+
+        if not isinstance(public, bool):
+            raise ValueError('public must be bool')
+
+        if not isinstance(source_id, str):
+            raise ValueError('source_id must be str')
+
+        if not isinstance(configuration, str):
+            raise ValueError('configuration must be dict')
+
         self.visualization_id = visualization_id
         self.created = created
         self.last_modified = last_modified
@@ -107,6 +137,19 @@ class Visualization:
 
     def __init__(self, workspace_id: str, organization_id: str,
                  info: VisualizationInfo, credentials: Credentials) -> None:
+
+        if not isinstance(organization_id, str):
+            raise ValueError('organization_id must be str')
+
+        if not isinstance(workspace_id, str):
+            raise ValueError('workspace_id must be str')
+
+        if not isinstance(credentials, Credentials):
+            raise ValueError(f'credentials must be {Credentials.__class__}')
+
+        if not isinstance(info, VisualizationInfo):
+            raise ValueError(f'info must be {VisualizationInfo.__class__}')
+
         self.info = info
         self.organization_id = organization_id
         self.credentials = credentials

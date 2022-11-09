@@ -104,6 +104,42 @@ class SourceFeature:
                  date_format: str, computed: bool, null_count: int, min_value: int,
                  max_value: int, mean_value: int, deviation: int, mapped_to: int) -> None:
 
+        if not isinstance(index, int):
+            raise ValueError('index must be int')
+
+        if not isinstance(name, str):
+            raise ValueError('name must be str')
+
+        if not isinstance(feature_type, FeatureType) or isinstance(feature_type, int):
+            raise ValueError('feature_type must be FeatureType')
+
+        if not isinstance(indexed, bool):
+            raise ValueError('indexed must be bool')
+
+        if not isinstance(date_format, str):
+            raise ValueError('date_format must be str')
+
+        if not isinstance(computed, bool):
+            raise ValueError('computed must be bool')
+
+        if not isinstance(null_count, int):
+            raise ValueError('null_count must be int')
+
+        if not isinstance(min_value, int):
+            raise ValueError('min_value must be int')
+
+        if not isinstance(max_value, int):
+            raise ValueError('max_value must be int')
+
+        if not isinstance(mean_value, int):
+            raise ValueError('mean_value must be int')
+
+        if not isinstance(deviation, int):
+            raise ValueError('deviation must be int')
+
+        if not isinstance(mapped_to, int):
+            raise ValueError('mapped_to must be int')
+
         self.index = index
         self.name = name
         self.feature_type = feature_type
@@ -232,6 +268,34 @@ class SourceInfo:
                  last_modified: datetime, last_access: datetime, name: str,
                  description: str, source_type: str, instances: int,
                  size_bytes: int) -> None:
+
+        if not isinstance(source_id, str):
+            raise ValueError('source_id must be str')
+
+        if not isinstance(created, datetime):
+            raise ValueError('created must be datetime.datetime')
+
+        if not isinstance(last_modified, datetime):
+            raise ValueError('last_modified must be datetime.datetime')
+
+        if not isinstance(last_access, datetime):
+            raise ValueError('last_access must be datetime.datetime')
+
+        if not isinstance(name, str):
+            raise ValueError('name must be str')
+
+        if not isinstance(description, str):
+            raise ValueError('description must be str')
+
+        if not isinstance(source_type, str):
+            raise ValueError('source_type must be str')
+
+        if not isinstance(instances, int):
+            raise ValueError('instances must be int')
+
+        if not isinstance(size_bytes, int):
+            raise ValueError('size_bytes must be int')
+
         self.source_id = source_id
         self.created = created
         self.last_modified = last_modified
@@ -458,6 +522,14 @@ class SourceFeatures:
     """
 
     def __init__(self, source: 'Source', features: List[SourceFeature]) -> None:
+
+        if not isinstance(features, list):
+            raise ValueError('features must be list')
+
+        for f in features:
+            if not isinstance(f, SourceFeature):
+                raise ValueError(f'features must be a list of {SourceFeature.__class__}')
+
         self.source = source
         self._features = features
         if self._features is not None:
@@ -585,6 +657,26 @@ class Source:
 
     def __init__(self, organization_id: str, workspace_id: str, credentials: Credentials,
                  info: SourceInfo, features: List[SourceFeature]) -> None:
+
+        if not isinstance(organization_id, str):
+            raise ValueError('organization_id must be str')
+
+        if not isinstance(workspace_id, str):
+            raise ValueError('workspace_id must be str')
+
+        if not isinstance(credentials, Credentials):
+            raise ValueError(f'credentials must be {Credentials.__class__}')
+
+        if not isinstance(info, SourceInfo):
+            raise ValueError(f'info must be {SourceInfo.__class__}')
+
+        if not isinstance(features, list):
+            raise ValueError('features must be list')
+
+        for f in features:
+            if not isinstance(f, SourceFeature):
+                raise ValueError(f'features must be a list of {SourceFeature.__class__}')
+
         self.info = info
         self.credentials = credentials
         self.workspace_id = workspace_id

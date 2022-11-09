@@ -22,6 +22,13 @@ class Credentials:
     """
 
     def __init__(self, token: str, instance: str = 'app.deepint.net') -> None:
+
+        if not isinstance(token, str):
+            raise ValueError('token must be str')
+
+        if not isinstance(instance, str):
+            raise ValueError('instance must be str')
+
         self.token = token
         self.instance = instance
 

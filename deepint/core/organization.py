@@ -22,6 +22,14 @@ class OrganizationWorkspaces:
     """
 
     def __init__(self, organization: 'Organization', workspaces: List[Workspace]):
+
+        if not isinstance(workspaces, list):
+            raise ValueError('workspaces must be list')
+
+        for w in workspaces:
+            if not isinstance(w, workspaces):
+                raise ValueError(f'workspaces must be a list of {Workspace.__class__}')
+
         self.organization = organization
         self._workspaces = workspaces
         self._generator = None
@@ -236,6 +244,23 @@ class Organization:
     """
 
     def __init__(self, organization_id: str, credentials: Credentials, workspaces: List[Workspace], account: Dict[Any, Any]) -> None:
+
+        if not isinstance(organization_id, str):
+            raise ValueError('organization_id must be str')
+
+        if not isinstance(credentials, Credentials):
+            raise ValueError(f'credentials must be {Credentials.__class__}')
+
+        if not isinstance(account, dict):
+            raise ValueError('account must be dict')
+
+        if not isinstance(workspaces, list):
+            raise ValueError('workspaces must be list')
+
+        for w in workspaces:
+            if not isinstance(w, workspaces):
+                raise ValueError(f'workspaces must be a list of {Workspace.__class__}')
+
         self.account = account
         self.credentials = credentials
         self.organization_id = organization_id

@@ -110,6 +110,16 @@ class ModelFeature:
     """
 
     def __init__(self, name: str, input_type: FeatureType, index: int = None) -> None:
+
+        if not isinstance(name, str):
+            raise ValueError('name must be str')
+
+        if not isinstance(input_type, FeatureType) or isinstance(input_type, int):
+            raise ValueError('input_type must be FeatureType')
+
+        if not isinstance(index, int):
+            raise ValueError('index must be int')
+
         self.name = name
         self.index = index
         self.input_type = input_type
@@ -176,6 +186,40 @@ class ModelInfo:
     def __init__(self, model_id: str, name: str, description: str, model_type: ModelType, method: ModelMethod,
                  created: datetime, last_modified: datetime, last_access: datetime, source_train: str,
                  configuration: dict, size_bytes: int) -> None:
+
+        if not isinstance(model_id, str):
+            raise ValueError('model_id must be str')
+
+        if not isinstance(name, str):
+            raise ValueError('name must be str')
+
+        if not isinstance(description, str):
+            raise ValueError('description must be str')
+
+        if not isinstance(model_type, ModelType) or isinstance(model_type, int):
+            raise ValueError('model_type must be ModelType')
+
+        if not isinstance(method, ModelMethod) or isinstance(method, int):
+            raise ValueError('method must be ModelMethod')
+
+        if not isinstance(created, datetime):
+            raise ValueError('created must be datetime.datetime')
+
+        if not isinstance(last_modified, datetime):
+            raise ValueError('last_modified must be datetime.datetime')
+
+        if not isinstance(last_access, datetime):
+            raise ValueError('last_access must be datetime.datetime')
+
+        if not isinstance(source_train, str):
+            raise ValueError('source_train must be str')
+
+        if not isinstance(configuration, str):
+            raise ValueError('configuration must be dict')
+
+        if not isinstance(size_bytes, int):
+            raise ValueError('size_bytes must be int')
+
         self.model_id = model_id
         self.name = name
         self.description = description
@@ -246,6 +290,7 @@ class ModelPredictions:
     """
 
     def __init__(self, model: 'Model'):
+
         self.model = model
 
     def evaluation(self) -> Dict[str, Any]:
@@ -474,6 +519,33 @@ class Model:
 
     def __init__(self, organization_id: str, workspace_id: str, credentials: Credentials, info: ModelInfo,
                  input_features: List[ModelFeature], output_features: ModelFeature) -> None:
+
+        if not isinstance(organization_id, str):
+            raise ValueError('organization_id must be str')
+
+        if not isinstance(workspace_id, str):
+            raise ValueError('workspace_id must be str')
+
+        if not isinstance(credentials, Credentials):
+            raise ValueError(f'credentials must be {Credentials.__class__}')
+
+        if not isinstance(info, ModelInfo):
+            raise ValueError(f'info must be {ModelInfo.__class__}')
+
+        if not isinstance(input_features, list):
+            raise ValueError('input_features must be list')
+
+        for f in input_features:
+            if not isinstance(f, ModelFeature):
+                raise ValueError(f'input_features must be a list of {ModelFeature.__class__}')
+
+        if not isinstance(output_features, list):
+            raise ValueError('output_features must be list')
+
+        for f in output_features:
+            if not isinstance(f, ModelFeature):
+                raise ValueError(f'output_features must be a list of {ModelFeature.__class__}')
+
         self.organization_id = organization_id
         self.info = info
         self.credentials = credentials

@@ -31,6 +31,40 @@ class DashboardInfo:
     def __init__(self, dashboard_id: str, created: datetime.datetime, last_modified: datetime.datetime, last_access: datetime.datetime,
                  name: str, description: str, privacy: str, share_opt: str, ga_id: str, restricted: bool,
                  configuration: Dict[str, Any] = {}) -> None:
+
+        if not isinstance(dashboard_id, str):
+            raise ValueError('dashboard_id must be str')
+
+        if not isinstance(created, datetime):
+            raise ValueError('created must be datetime.datetime')
+
+        if not isinstance(last_modified, datetime):
+            raise ValueError('last_modified must be datetime.datetime')
+
+        if not isinstance(last_access, datetime):
+            raise ValueError('last_access must be datetime.datetime')
+
+        if not isinstance(name, str):
+            raise ValueError('name must be str')
+
+        if not isinstance(description, str):
+            raise ValueError('description must be str')
+
+        if not isinstance(privacy, str):
+            raise ValueError('privacy must be str')
+
+        if not isinstance(share_opt, str):
+            raise ValueError('share_opt must be str')
+
+        if not isinstance(ga_id, str):
+            raise ValueError('ga_id must be str')
+
+        if not isinstance(restricted, bool):
+            raise ValueError('restricted must be bool')
+
+        if not isinstance(configuration, str):
+            raise ValueError('configuration must be dict')
+
         self.dashboard_id = dashboard_id
         self.created = created
         self.last_modified = last_modified
@@ -107,6 +141,19 @@ class Dashboard:
 
     def __init__(self, organization_id: str, workspace_id: str, info: DashboardInfo,
                  credentials: Credentials) -> None:
+
+        if not isinstance(organization_id, str):
+            raise ValueError('organization_id must be str')
+
+        if not isinstance(workspace_id, str):
+            raise ValueError('workspace_id must be str')
+
+        if not isinstance(credentials, Credentials):
+            raise ValueError(f'credentials must be {Credentials.__class__}')
+
+        if not isinstance(info, DashboardInfo):
+            raise ValueError(f'info must be {DashboardInfo.__class__}')
+
         self.organization_id = organization_id
         self.workspace_id = workspace_id
         self.info = info
