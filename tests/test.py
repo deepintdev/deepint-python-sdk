@@ -16,6 +16,10 @@ from deepint import *
 # create test credentials
 
 TEST_CREDENTIALS_FILE = 'test_config.json'
+TEST_CSV = None
+TEST_CSV2 = None
+DEEPINT_TOKEN = None
+DEEPINT_ORGANIZATION = None
 
 try:
     with open(TEST_CREDENTIALS_FILE, 'r') as f:
