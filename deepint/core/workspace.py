@@ -17,7 +17,7 @@ from ..util import (handle_paginated_request, handle_request, parse_date,
 from .alert import Alert, AlertType
 from .dashboard import Dashboard
 from .model import Model, ModelMethod, ModelType
-from .source import Source, SourceFeature
+from .source import RealTimeSource, Source, SourceFeature
 from .task import Task, TaskStatus
 from .visualization import Visualization
 
@@ -512,10 +512,36 @@ class WorkspaceSources:
         """
         raise Exception('Not implemented Error')
 
-    def create_real_time(self):
-        """Future implementation of /api/v1/workspace/<workspaceid>/sources/real_time
+    def create_real_time(self, name: str, description: str, features: List[SourceFeature], max_age: int = 0) -> RealTimeSource:
+        """Creates a Real Time source in current workspace.
+
+        Before creation, the source is loaded and stored locally in the internal list of sources in the current instance.
+
+        Args:
+            name: new source's name.
+            descrpition: new source's description.
+            max_age: maximum age of registers in milliseconds. Set to 0 or negative for unlimited age. By default is 0.
+            features: list of source's features.
+
+        Returns:
+            the created source
         """
-        raise Exception('Not implemented Error')
+
+        # request
+        path = f'/api/v1/workspace/{self.workspace.info.workspace_id}/sources/real_time'
+        headers = {'x-deepint-organization': self.workspace.organization_id}
+        parameters = {'name': name, 'description': description, 'max_age': max_age, 'features': [f.to_dict_minimized() for f in features]}
+        response = handle_request(method='POST', path=path, headers=headers, credentials=self.workspace.credentials, parameters=parameters)
+
+        # map results
+        new_source = Source.build(source_id=response['source_id'], workspace_id=self.workspace.info.workspace_id,
+                                  organization_id=self.workspace.organization_id, credentials=self.workspace.credentials)
+
+        # update local state
+        self._sources = self._sources if self._sources is not None else []
+        self._sources.append(new_source)
+
+        return new_source
 
     def create_other_type(self):
         """Future implementation of /api/v1/workspace/<workspaceid>/sources/other
@@ -544,12 +570,11 @@ class WorkspaceSources:
         """
 
         # create features from dataframe
-        features = SourceFeature.from_dataframe(
-            data, date_formats=date_formats)
+        features = SourceFeature.from_dataframe(data, date_formats=date_formats)
 
         # create source
-        source = self.create(
-            name=name, description=description, features=features)
+        source = self.create(name=name, description=description, features=features)
+        source.features.load()
 
         # update data in source
         task = source.instances.update(data=data)

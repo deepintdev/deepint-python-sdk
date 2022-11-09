@@ -267,12 +267,38 @@ def test_source_CRUD():
 
 def test_real_time_source_CRUD():
 
-    # TODO: create_real_time
-    # TODO: fetch_connection
-    # TODO: update_connection
-    # TODO: push
-    # TODO: clear
-    pass
+    # load organization and create workspace
+    org = Organization.build(organization_id=DEEPINT_ORGANIZATION)
+    ws = org.workspaces.create(name=serve_name(TEST_WS_NAME), description=TEST_WS_DESC)
+
+    # create base source to extract feature info
+    data = pd.read_csv(TEST_CSV)
+    src_name = serve_name(TEST_SRC_NAME)
+    source = ws.sources.create_and_initialize(name=src_name, description=TEST_SRC_DESC, data=data, wait_for_initialization=True)
+
+    # create source
+    src_name = serve_name(TEST_SRC_NAME)
+    rt_source = ws.sources.create_real_time(name=src_name, description=TEST_SRC_DESC, features=source.features.fetch_all(force_reload=True))
+
+    # update connection
+    connection_value = 10
+    rt_source.fetch_connection(max_age=connection_value)
+
+    # retrieve connection
+    connection_info = rt_source.fetch_connection()
+    assert(connection_info['max_age'] == connection_value)
+
+    # update instances
+    rt_source.instances.update(data=data)
+
+    # retrieve instances
+    instances = rt_source.instances.fetch()
+    assert (len(instances) == len(data))
+
+    # clear queued instances
+    to_time = datetime.datetime.now()
+    from_time = datetime.datetime.now() - datetime.timedelta(minutes=5)
+    rt_source.instances.clear_queued_instances(from_time=from_time, to_time=to_time)
 
 
 def test_external_source_CRUD():
@@ -635,10 +661,10 @@ def cleanup(request):
 if __name__ == '__main__':
     org = Organization.build(organization_id=DEEPINT_ORGANIZATION)
     org.clean()
-    test_credentials_load()
-    test_organization_CRUD()
-    test_workspace_CRUD()
-    test_source_CRUD()
+    # test_credentials_load()
+    # test_organization_CRUD()
+    # test_workspace_CRUD()
+    # test_source_CRUD()
     test_real_time_source_CRUD()
     test_external_source_CRUD()
     test_task_CRUD()
