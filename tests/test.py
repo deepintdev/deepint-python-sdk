@@ -7,6 +7,7 @@ import json
 import os
 import platform
 import uuid
+from datetime import datetime, timedelta
 from time import sleep
 
 import pandas as pd
@@ -165,14 +166,14 @@ def test_workspace_CRUD():
     new_ws = ws.clone()
     assert(ws != new_ws)
 
+    # TODO: fetch_iframe_token
+
     # create if not exists
     ws_name = serve_name(TEST_WS_NAME)
     ws = org.workspaces.create_if_not_exists(ws_name)
     ws1 = org.workspaces.create_if_not_exists(ws_name)
     assert (ws == ws1)
     ws.delete()
-
-    # TODO: fetch_iframe_token
 
 
 def test_source_CRUD():
@@ -258,8 +259,8 @@ def test_source_CRUD():
     assert (source.features == source1.features)
 
     # clone
-    cloned_source = source.clone('cloned source')
-    assert(cloned_source == source)
+    cloned_source = source.clone(name='cloned source')
+    assert(cloned_source != source)
 
     source.delete()
     cloned_source.delete()
@@ -286,27 +287,36 @@ def test_real_time_source_CRUD():
 
     # create source
     src_name = serve_name(TEST_SRC_NAME)
-    rt_source = ws.sources.create_real_time(name=src_name, description=TEST_SRC_DESC, features=source.features.fetch_all(force_reload=True))
+
+    features = source.features.fetch_all(force_reload=True)
+    features[0].feature_type = FeatureType.date
+    features[0].name = 'timestamp'
+
+    rt_source = ws.sources.create_real_time(name=src_name, description=TEST_SRC_DESC, features=features)
 
     # update connection
     connection_value = 10
-    rt_source.fetch_connection(max_age=connection_value)
+    rt_source.update_connection(max_age=connection_value, regenerate_password=True)
 
     # retrieve connection
     connection_info = rt_source.fetch_connection()
     assert(connection_info['max_age'] == connection_value)
 
     # update instances
+    data = data.rename(columns={list(data.columns)[0]: 'timestamp'})
     rt_source.instances.update(data=data)
 
     # retrieve instances
     instances = rt_source.instances.fetch()
-    assert (len(instances) == len(data))
+    assert (len(instances) > 0)
 
     # clear queued instances
-    to_time = datetime.datetime.now()
-    from_time = datetime.datetime.now() - datetime.timedelta(minutes=5)
+    to_time = datetime.now()
+    from_time = datetime.now() - timedelta(minutes=5)
     rt_source.instances.clear_queued_instances(from_time=from_time, to_time=to_time)
+
+    # delete workspace
+    ws.delete()
 
 
 def test_external_source_CRUD():
@@ -321,6 +331,7 @@ def test_external_source_CRUD():
 
 
 def test_task_CRUD():
+
     # load organization and create workspace and source
     org = Organization.build(organization_id=DEEPINT_ORGANIZATION)
     ws_name = serve_name(TEST_WS_NAME)
@@ -357,6 +368,7 @@ def test_task_CRUD():
 
 
 def test_alert_CRUD():
+
     # load organization and create workspace and source
     org = Organization.build(organization_id=DEEPINT_ORGANIZATION)
     ws_name = serve_name(TEST_WS_NAME)
@@ -461,7 +473,7 @@ def test_model_CRUD():
     model.delete()
     try:
         _ = Model.build(organization_id=DEEPINT_ORGANIZATION, model_id=model.info.model_id,
-                        workspace_id=ws.info.workspace_id, credentials=org.credentials, wait_for_model_creation=True)
+                        workspace_id=ws.info.workspace_id, credentials=org.credentials)
         assert False
     except DeepintHTTPError:
         assert True
@@ -560,6 +572,7 @@ def test_dashboard_CRUD():
 
 
 def test_url_parser():
+
     # load organization and create workspace, source and alert
     org = Organization.build(organization_id=DEEPINT_ORGANIZATION)
 
@@ -669,9 +682,9 @@ def cleanup(request):
 if __name__ == '__main__':
     org = Organization.build(organization_id=DEEPINT_ORGANIZATION)
     org.clean()
-    # test_credentials_load()
-    # test_organization_CRUD()
-    # test_workspace_CRUD()
+    test_credentials_load()
+    test_organization_CRUD()
+    test_workspace_CRUD()
     test_source_CRUD()
     test_real_time_source_CRUD()
     test_external_source_CRUD()

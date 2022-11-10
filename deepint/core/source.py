@@ -28,11 +28,11 @@ class SourceType(enum.Enum):
     ms_sql = 1
     oracle = 2
     pg = 3
-    url_json = 4
+    url_parameters = 4
     url_sql = 5
     url_sqlite = 6
     file_csv = 7
-    file_json = 8
+    file_parameters = 8
     file_sql = 9
     file_sqlite = 10
     url_csv = 11
@@ -525,7 +525,7 @@ class SourceInstances:
             'separator': ',',
             'quotes': '"',
             'csv_header': 'yes',
-            'json_fields': '',
+            'parameters_fields': '',
             'date_format': date_format
         }
         response = handle_request(method='POST', path=path, headers=headers,
@@ -886,8 +886,9 @@ class Source:
         # request visualization clone
         path = f'/api/v1/workspace/{self.workspace_id}/source/{self.info.source_id}/clone'
         headers = {'x-deepint-organization': self.organization_id}
+        parameters = {'name': name}
         response = handle_request(
-            method='POST', path=path, headers=headers, credentials=self.credentials)
+            method='POST', path=path, parameters=parameters, headers=headers, credentials=self.credentials)
 
         new_source = Source.build(organization_id=self.organization_id, workspace_id=self.workspace_id,
                                                 source_id=response['source_id'], credentials=self.credentials)
@@ -930,8 +931,8 @@ class RealTimeSource(Source):
             the source build from the given source and credentials.
         """
 
-        rt_src = cls(organization_id=source.organization_id, workspace_id=source.workspace_id, credentials=source.credentials, info=source.info, features=source.features)
-        rt_src.instances = RealTimeSourceInstances()
+        rt_src = cls(organization_id=source.organization_id, workspace_id=source.workspace_id, credentials=source.credentials, info=source.info, features=source.features.fetch_all(force_reload=True))
+        rt_src.instances = RealTimeSourceInstances.build(source.instances)
 
         return rt_src
 
@@ -963,14 +964,13 @@ class RealTimeSource(Source):
         # request
         path = f'/api/v1/workspace/{self.workspace_id}/source/{self.info.source_id}/real_time'
         headers = {'x-deepint-organization': self.organization_id}
-        params = {
-            'max_age': max_age,
-            'regenerate_password': regenerate_password
+        parameters = {
+            'max_age': max_age, 'regenerate_password': regenerate_password
         }
-        _ = handle_request(method='POST', path=path, headers=headers, params=params, credentials=self.credentials)
+        _ = handle_request(method='POST', path=path, headers=headers, parameters=parameters, credentials=self.credentials)
 
 
-class RealTimeSourceInstances:
+class RealTimeSourceInstances(SourceInstances):
     """Operates over a Deep Intelligence Real Time Source's instances.
     """
 
@@ -1025,10 +1025,10 @@ class RealTimeSourceInstances:
         for instance in instances:
             path = f'/api/v1/workspace/{self.source.workspace_id}/source/{self.source.info.source_id}/real_time_push'
             headers = {'x-deepint-organization': self.source.organization_id}
-            json = {
+            parameters = {
                 'data': instance
             }
-            _ = handle_request(method='POST', path=path, headers=headers, json=json, credentials=self.source.credentials)
+            _ = handle_request(method='POST', path=path, headers=headers, parameters=parameters, credentials=self.source.credentials)
 
     def clear_queued_instances(self, from_time: datetime, to_time: datetime) -> None:
         """Clears instances of a real time source between the limit of a time span.
@@ -1045,11 +1045,11 @@ class RealTimeSourceInstances:
         # request
         path = f'/api/v1/workspace/{self.source.workspace_id}/source/{self.source.info.source_id}/real_time_clear'
         headers = {'x-deepint-organization': self.source.organization_id}
-        json = {
+        parameters = {
             'from_time': from_time_timestamp,
             'to_time': to_time_timestamp
         }
-        _ = handle_request(method='POST', path=path, headers=headers, json=json, credentials=self.source.credentials)
+        _ = handle_request(method='POST', path=path, headers=headers, parameters=parameters, credentials=self.source.credentials)
 
 
 class ExternalSource(Source):

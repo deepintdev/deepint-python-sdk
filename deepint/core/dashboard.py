@@ -305,8 +305,9 @@ class Dashboard:
         # request dashboard clone
         path = f'/api/v1/workspace/{self.workspace_id}/dashboard/{self.info.dashboard_id}/clone'
         headers = {'x-deepint-organization': self.organization_id}
+        parameters = {'name': name}
         response = handle_request(
-            method='POST', path=path, headers=headers, credentials=self.credentials)
+            method='POST', path=path, parameters=parameters, headers=headers, credentials=self.credentials)
 
         new_dashboard = Dashboard.build(organization_id=self.organization_id, workspace_id=self.workspace_id,
                                         dashboard_id=response['dashboard_id'], credentials=self.credentials)

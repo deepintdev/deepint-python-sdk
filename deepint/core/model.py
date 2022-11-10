@@ -214,7 +214,7 @@ class ModelInfo:
         if source_train is not None and not isinstance(source_train, str):
             raise ValueError('source_train must be str')
 
-        if configuration is not None and not isinstance(configuration, str):
+        if configuration is not None and not isinstance(configuration, dict):
             raise ValueError('configuration must be dict')
 
         if size_bytes is not None and not isinstance(size_bytes, int):

@@ -17,7 +17,7 @@ from ..util import (handle_paginated_request, handle_request, parse_date,
 from .alert import Alert, AlertType
 from .dashboard import Dashboard
 from .model import Model, ModelMethod, ModelType
-from .source import RealTimeSource, Source, SourceFeature
+from .source import FeatureType, RealTimeSource, Source, SourceFeature
 from .task import Task, TaskStatus
 from .visualization import Visualization
 
@@ -526,6 +526,14 @@ class WorkspaceSources:
         Returns:
             the created source
         """
+
+        # perform check
+        if not features:
+            raise DeepintBaseError(code='BAD_RT_FEATURES', message='Real time sources must have a feature of type date in first position.')
+
+        first_feature = features[0]
+        if not first_feature.feature_type == FeatureType.date:
+            raise DeepintBaseError(code='BAD_RT_FEATURES', message='Real time sources must have a feature of type date in first position.')
 
         # request
         path = f'/api/v1/workspace/{self.workspace.info.workspace_id}/sources/real_time'
@@ -1525,8 +1533,8 @@ class Workspace:
 
         # request workspace clone
         path = f'/api/v1/workspace/{self.info.workspace_id}/clone'
-        parameters = {'name': name}
         headers = {'x-deepint-organization': self.organization_id}
+        parameters = {'name': name}
         response = handle_request(method='POST', path=path, headers=headers,
                                   parameters=parameters, credentials=self.credentials)
 
