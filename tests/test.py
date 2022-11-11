@@ -315,18 +315,33 @@ def test_real_time_source_CRUD():
     from_time = datetime.now() - timedelta(minutes=5)
     rt_source.instances.clear_queued_instances(from_time=from_time, to_time=to_time)
 
+    # TODO: fetch_actualization_config
+    # TODO: update_actualization_config
+    
     # delete workspace
     ws.delete()
 
 
 def test_external_source_CRUD():
 
+    # load organization and create workspace
+    org = Organization.build(organization_id=DEEPINT_ORGANIZATION)
+    ws = org.workspaces.create(name=serve_name(TEST_WS_NAME), description=TEST_WS_DESC)
+
+    # create base source to extract feature info
+    data = pd.read_csv(TEST_CSV)
+    src_name = serve_name(TEST_SRC_NAME)
+    source = ws.sources.create_and_initialize(name=src_name, description=TEST_SRC_DESC, data=data, wait_for_initialization=True)
+
+    # create source
+    src_name = serve_name(TEST_SRC_NAME)
+    features = source.features.fetch_all(force_reload=True)
+    external_source = ws.sources.create_external(name=src_name, description=TEST_SRC_DESC, url=EXTERNAL_SOURCE_URL, features=features)
+
     # TODO: create_external
     # TODO: force_update
     # TODO: fetch_connection
     # TODO: update_connection
-    # TODO: fetch_actualization_config
-    # TODO: update_actualization_config
     pass
 
 

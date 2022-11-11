@@ -916,6 +916,18 @@ class Source:
 
 class RealTimeSource(Source):
     """Operates over a Deep Intelligence Real Time Source.
+
+    Note: This class should not be instanced directly, and it's recommended to use the :obj:`deepint.core.source.Source.build`
+    or :obj:`deepint.core.source.Source.from_url` methods.
+
+    Attributes:
+        organization_id: organization where source is located.
+        workspace_id: workspace where source is located.
+        info: :obj:`deepint.core.source.SourceInfo` to operate with source's information.
+        instances: :obj:`deepint.core.source.SourceInstances` to operate with source's instances.
+        features: :obj:`deepint.core.source.SourceFeatures` to operate with source's features.
+        credentials: credentials to authenticate with Deep Intelligence API and be allowed to perform operations over the source. If
+                 not provided, the credentials are generated with the :obj:`deepint.auth.credentials.Credentials.build`.
     """
 
     @classmethod
@@ -972,6 +984,11 @@ class RealTimeSource(Source):
 
 class RealTimeSourceInstances(SourceInstances):
     """Operates over a Deep Intelligence Real Time Source's instances.
+
+    Note: This class should not be instanced, and only be used within an :obj:`deepint.core.source.Source`
+
+    Attributes:
+        source: the source with which to operate with its instances
     """
 
     @classmethod
@@ -1053,34 +1070,144 @@ class RealTimeSourceInstances(SourceInstances):
 
 
 class ExternalSource(Source):
+    """Operates over a Deep Intelligence External Source.
+
+    To learn more about external sources, please check the (External Sources documentation)[https://deepintdev.github.io/deepint-documentation/EXTERNAL-SOURCES.html].
+
+    Note: This class should not be instanced directly, and it's recommended to use the :obj:`deepint.core.source.Source.build`
+    or :obj:`deepint.core.source.Source.from_url` methods.
+
+    Attributes:
+        organization_id: organization where source is located.
+        workspace_id: workspace where source is located.
+        info: :obj:`deepint.core.source.SourceInfo` to operate with source's information.
+        instances: :obj:`deepint.core.source.SourceInstances` to operate with source's instances.
+        features: :obj:`deepint.core.source.SourceFeatures` to operate with source's features.
+        credentials: credentials to authenticate with Deep Intelligence API and be allowed to perform operations over the source. If
+                 not provided, the credentials are generated with the :obj:`deepint.auth.credentials.Credentials.build`.
+        public_key: External source public key.
+        secret_key: External source secret  key.
+    """
+
+    def __init__(self, *args, public_key: str = None, secret_key: str = None, **kwargs):
+
+        super.__init__(*args, **kwargs)
+
+        self.public_key = public_key
+        self.secret_key = secret_key
 
     @classmethod
-    def build(cls, source: Source):
-        """Builds external source from a source
-        """
-        raise Exception('Not implemented Error')
+    def build(cls, source: Source) -> 'ExternalSource':
+        """Builds an External source from an :obj:`deepint.core.source.Source`
 
-    def force_update(self):
-        """Future implementation of /api/v1/external/source/update
-        """
-        raise Exception('Not implemented Error')
+        This allows to use the External sources extra funcionality.
 
-    def fetch_connection(self):
-        """Future implementation of /api/v1/workspace/<workspaceid>/sources/<sourceid>/connection
-        """
-        raise Exception('Not implemented Error')
+        Args:
+            source: original source.
 
-    def update_connection(self):
-        """Future implementation of /api/v1/workspace/<workspaceid>/sources/<sourceid>/connection
+        Returns:
+            the source build from the given source and credentials.
         """
-        raise Exception('Not implemented Error')
 
-    def fetch_actualization_config(self):
-        """Future overwritting to not be able to /api/v1/workspace/<workspaceid>/sources/<sourceid>/autoupdate
-        """
-        raise Exception('Not implemented Error')
+        external_src = cls(organization_id=source.organization_id, workspace_id=source.workspace_id, credentials=source.credentials, info=source.info, features=source.features.fetch_all(force_reload=True))
+        external_src.instances = ExternalSourceInstances.build(source.instances)
 
-    def update_actualization_config(self):
-        """Future overwritting to not be able to /api/v1/workspace/<workspaceid>/sources/<sourceid>/autoupdate
+        return external_src
+
+    def fetch_connection(self) -> str:
+        """Gets external source connection URL.
+        
+        Returns:
+            the URL to connect to external source
         """
-        raise Exception('Not implemented Error')
+
+        # request
+        path = f'/api/v1/workspace/{self.source.workspace_id}/source/{self.source.info.source_id}/connection'
+        headers = {'x-deepint-organization': self.source.organization_id}
+        response = handle_request(method='GET', path=path, headers=headers, credentials=self.source.credentials)
+
+        # retrieve url
+        url = response['url']
+
+        return url
+
+    def update_connection(self, url: str) -> None:
+        """Gets external source connection URL.
+        
+        Args:
+            url: the URL to connect to external source
+        """
+
+        # request
+        path = f'/api/v1/workspace/{self.source.workspace_id}/source/{self.source.info.source_id}/connection'
+        headers = {'x-deepint-organization': self.source.organization_id}
+        parameters = {'url': url}
+        _ = handle_request(method='POST', path=path, headers=headers, parameters=parameters, credentials=self.source.credentials)
+
+
+class ExternalSourceInstances(SourceInstances):
+    """Operates over a Deep Intelligence External Source's instances.
+
+    Note: This class should not be instanced, and only be used within an :obj:`deepint.core.source.Source`
+
+    Attributes:
+        source: the source with which to operate with its instances
+    """
+
+    @classmethod
+    def build(cls, source_instances: SourceInstances) -> 'ExternalSourceInstances':
+        """Builds a External source instances from an :obj:`deepint.core.source.SourceInstances`
+
+        This allows to use the External source instances extra funcionality.
+
+        Args:
+            source_instances: original source instances.
+
+        Returns:
+            the source instances build from the given source and credentials.
+        """
+
+        return cls(source=source_instances.source)
+
+    def update(self, data: pd.DataFrame, **kwargs) -> None:
+        """Overwrites the update on a external source's instances.
+
+        Note: it's important to highlight that only the data parameter is used. The other ones are ignored.
+
+        Args:
+            data: data to update the instances. The column names must correspond to source's feature names.
+        """
+
+        # check arguments
+        if data is not None and not isinstance(data, pd.DataFrame):
+            raise DeepintBaseError(
+                code='TYPE_MISMATCH', message='The provided input is not a DataFrame.')
+        elif data.empty or data is None:
+            raise DeepintBaseError(
+                code='EMPTY_DATA', message='The provided DataFrame is empty.')
+        elif len(data) > 100:
+            raise DeepintBaseError(
+                code='TOO_LARGE_DATA', message='The provided DataFrame is too big. A maximum of 100 instances can be providen for each update in external sources.')
+        elif len(data.columns) != len([f for f in self.source.features.fetch_all() if not f.computed]):
+            raise DeepintBaseError(code='INPUTS_MISMATCH',
+                                   message='The provided DataFrame must have same number of columns as current source.')
+        else:
+            for c in data.columns:
+                if self.source.features.fetch(name=c) is None:
+                    raise DeepintBaseError(code='INPUTS_MISMATCH',
+                                           message='The provided DataFrame columns must have same names as the soure\'s features.')
+
+        # calculate column order
+        column_order = [f.name for f in self.source.features.fetch_all() if not f.computed]
+
+        # convert dataframe to arrays
+        dict_instances = data.to_dict(orient='records')
+        instances = [[instance[c] for c in column_order] for instance in dict_instances]
+
+        # request
+        path = f'/api/v1/workspace/{self.source.workspace_id}/source/{self.source.info.source_id}/real_time_push'
+        headers = {'x-deepint-organization': self.source.organization_id, 'x-public-key': self.source.public_key, 'x-secret-key': self.source.secret_key}
+        parameters = {
+            'data': instances
+        }
+        _ = handle_request(method='POST', path=path, headers=headers, parameters=parameters, credentials=self.source.credentials)

@@ -507,10 +507,38 @@ class WorkspaceSources:
         """
         raise Exception('Not implemented Error')
 
-    def create_external(self):
-        """Future implementation of /api/v1/workspace/<workspaceid>/sources/external
+    def create_external(self, name: str, description: str, url: str, features: List[SourceFeature]) -> ExternalSource:
+        """Creates an External source in current workspace.
+
+        Before creation, the source is  loadedand stored locally in the internal list of sources in the current instance.
+
+        To learn more about external sources, please check the (External Sources documentation)[https://deepintdev.github.io/deepint-documentation/EXTERNAL-SOURCES.html].
+    
+        Args:
+            name: new source's name.
+            descrpition: new source's description.
+            url: external connection URL.
+            features: list of source's features.
+
+        Returns:
+            the created source
         """
-        raise Exception('Not implemented Error')
+
+        # request
+        path = f'/api/v1/workspace/{self.workspace.info.workspace_id}/sources/external'
+        headers = {'x-deepint-organization': self.workspace.organization_id}
+        parameters = {'name': name, 'description': description, 'url': url, 'features': [f.to_dict_minimized() for f in features]}
+        response = handle_request(method='POST', path=path, headers=headers, credentials=self.workspace.credentials, parameters=parameters)
+
+        # map results
+        new_source = Source.build(source_id=response['source_id'], workspace_id=self.workspace.info.workspace_id,
+                                  organization_id=self.workspace.organization_id, credentials=self.workspace.credentials)
+
+        # update local state
+        self._sources = self._sources if self._sources is not None else []
+        self._sources.append(new_source)
+
+        return new_source
 
     def create_real_time(self, name: str, description: str, features: List[SourceFeature], max_age: int = 0) -> RealTimeSource:
         """Creates a Real Time source in current workspace.
