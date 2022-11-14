@@ -18,7 +18,7 @@ from .alert import Alert, AlertType
 from .dashboard import Dashboard
 from .model import Model, ModelMethod, ModelType
 from .source import (DerivedSourceType, ExternalSource, FeatureType,
-                     RealTimeSource, Source, SourceFeature)
+                     RealTimeSource, Source, SourceFeature, SourceType)
 from .task import Task, TaskStatus
 from .visualization import Visualization
 
@@ -523,7 +523,7 @@ class WorkspaceSources:
             wait_for_creation: if set to true, it waits until the source is created and a Source is returned. Otherwise it returns a :obj:`deepint.core.Task`, that when resolved, the new source id will be returned and the source will not be added to the local state, beign neccesary to update it manually with the method :obj:`deepint.core.WorkspaceSources.load`.
 
         Returns:
-            the created source
+            the created source if wait_for_creation set to True, otherwise the :obj:`deepint.core.Task`
         """
 
         # check
@@ -640,8 +640,53 @@ class WorkspaceSources:
 
         return new_source
 
-    def create_autoupdated(self):
-        """Future implementation of /api/v1/workspace/<workspaceid>/sources/other
+    def create_autoupdated(self, name: str, descrpition: str, source_type: SourceType, is_encrypted: bool = False, is_shuffled: bool = False, is_indexed: bool = True, auto_update: bool = True, auto_update_period: int = 3600000, replace_on_update: bool = True, pk_for_update: str = None, update_duplicates: bool = True, separator: str = ',', quotes: str = '"', has_csv_header: bool = True, json_fields: List[str] = None, json_prefix: str = None, is_single_json_obj: bool = False, date_format: str = None, url: str = None, is_csv_content: str = False, is_json_content: str = True, http_headers: Dict[str, str] = None, ignore_security_certificates: bool = True, enable_store_data_parameters: bool = False, stored_data_parameters_sorting_desc: bool = True, database: str = None, user: str = None, password: str = None, table: str = None, query: str = None, mongodb_sort: Dict[str, Any] = None, mongodb_project: str = None, limit: int = None, relational_database_type: SourceType = None, host: str = None, port: str = None, topics: List[str] = None, fields_expected: List[Dict[str, str]] = None) -> Source:
+        """Creates a Real Time source in current workspace.
+
+        Before creation, the source is loaded and stored locally in the internal list of sources in the current instance.
+
+        Args:
+            name: new source's name.
+            descrpition: new source's description.
+            source_type: AutoUpdatedSourceType
+            is_encrypted: true to encrypt the data source
+            is_shuffled: true to shuffle instances
+            is_indexed: True to index the fields
+            auto_update: set to true to enable auto update
+            auto_update_period: auto update delay in milliseconds. Minimum is 5 minutes.
+            replace_on_update: set to true to replace the entire data set with each update. False to append the data.
+            pk_for_update: Name of the primary key field. In order to check for duplicates when appending.
+            update_duplicates: Set to true to update existing rows (by primary key). Set to false to skip duplicate rows. If you set dyn_replace to true. This option does not have any effect.
+            separator: separator character for csv files
+            quotes: quotes character for csv files.
+            has_csv_header: Set to false if the csv files does not have a header.
+            json_fields: List of fileds to get, in order, for json files or mongo databases.
+            json_prefix: Prefix to tell the engine where the data is in the JSON file. Use dots to split levels.
+            is_single_json_obj: Set to true in case there is a single instance in the JSON.
+            date_format: Date format in the CSV of JSON file. By default is the ISO format. This uses the Moment.js formats.
+            url: URL for url/any and ckan source types. In case of S3. This is the URI of the object inside the bucket. For mongo and influx, this is the connection URL.
+            is_csv_content: Set to True to indicate that is a CSV content. Otherwise the content will be considered as JSON.
+            http_headers: Custom headers to send by Deep Intelligence for requesting the data. example: "example: Header1: Value1 Header2: Value2"
+            ignore_security_certificates:   Set to true to ignore invalid certificates for HTTPs
+            enable_store_data_parameters: Set to true to enable stored data parameter in the Query. Any instances of ${SDP} will be replaced.
+            enable_stored_data_parameters: Name of the field to use for SDP.
+            stored_data_parameters_sorting: Sorting direction to calc the SDP. Must be asc or desc.
+            database: Name of the database or the S3 bucket.
+            user: User / Access key ID
+            password: Password / Secret key
+            table: Name of the table / collection
+            query: Database Query. For mongo, this is a JSON.
+            sort: For MongoDB. Sorting
+            project: MongoDB project.
+            limit: Limit of results per Deep Intelligent data retrieval query against source.
+            relational_database_type: Database type (for relational): must be mysql, pg, oracle, ms
+            host: Database host
+            port: Port number
+            topics: For MQTT, list of topics split by commas.
+            fields_expected: List of expected fields for MQTT. Read Deep Intelligence advanced documentation for more information.
+
+        Returns
+            the created source
         """
 
         raise Exception('Not implemented Error')
