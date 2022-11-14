@@ -944,7 +944,7 @@ class RealTimeSource(Source):
         """
 
         rt_src = cls(organization_id=source.organization_id, workspace_id=source.workspace_id, credentials=source.credentials, info=source.info, features=source.features.fetch_all(force_reload=True))
-        rt_src.instances = RealTimeSourceInstances.build(source.instances)
+        rt_src.instances = RealTimeSourceInstances.build(rt_src)
 
         return rt_src
 
@@ -992,19 +992,19 @@ class RealTimeSourceInstances(SourceInstances):
     """
 
     @classmethod
-    def build(cls, source_instances: SourceInstances) -> 'RealTimeSourceInstances':
+    def build(cls, source: Source) -> 'RealTimeSourceInstances':
         """Builds a Real-Time source instances from an :obj:`deepint.core.source.SourceInstances`
 
         This allows to use the Real Time data source instances extra funcionality.
 
         Args:
-            source_instances: original source instances.
+            source: original source.
 
         Returns:
             the source instances build from the given source and credentials.
         """
 
-        return cls(source=source_instances.source)
+        return cls(source=source)
 
     def update(self, data: pd.DataFrame, **kwargs) -> None:
         """Overwrites the update on a real time source's instances.
@@ -1089,13 +1089,6 @@ class ExternalSource(Source):
         secret_key: External source secret  key.
     """
 
-    def __init__(self, *args, public_key: str = None, secret_key: str = None, **kwargs):
-
-        super.__init__(*args, **kwargs)
-
-        self.public_key = public_key
-        self.secret_key = secret_key
-
     @classmethod
     def build(cls, source: Source) -> 'ExternalSource':
         """Builds an External source from an :obj:`deepint.core.source.Source`
@@ -1110,39 +1103,40 @@ class ExternalSource(Source):
         """
 
         external_src = cls(organization_id=source.organization_id, workspace_id=source.workspace_id, credentials=source.credentials, info=source.info, features=source.features.fetch_all(force_reload=True))
-        external_src.instances = ExternalSourceInstances.build(source.instances)
+        external_src.instances = ExternalSourceInstances.build(external_src)
 
         return external_src
 
     def fetch_connection(self) -> str:
         """Gets external source connection URL.
-        
+
         Returns:
             the URL to connect to external source
         """
 
         # request
-        path = f'/api/v1/workspace/{self.source.workspace_id}/source/{self.source.info.source_id}/connection'
-        headers = {'x-deepint-organization': self.source.organization_id}
-        response = handle_request(method='GET', path=path, headers=headers, credentials=self.source.credentials)
+        path = f'/api/v1/workspace/{self.workspace_id}/source/{self.info.source_id}/connection'
+        headers = {'x-deepint-organization': self.organization_id}
+        response = handle_request(method='GET', path=path, headers=headers, credentials=self.credentials)
 
         # retrieve url
         url = response['url']
+        url = url.replace('|EX|', '')
 
         return url
 
     def update_connection(self, url: str) -> None:
         """Gets external source connection URL.
-        
+
         Args:
             url: the URL to connect to external source
         """
 
         # request
-        path = f'/api/v1/workspace/{self.source.workspace_id}/source/{self.source.info.source_id}/connection'
-        headers = {'x-deepint-organization': self.source.organization_id}
+        path = f'/api/v1/workspace/{self.workspace_id}/source/{self.info.source_id}/connection'
+        headers = {'x-deepint-organization': self.organization_id}
         parameters = {'url': url}
-        _ = handle_request(method='POST', path=path, headers=headers, parameters=parameters, credentials=self.source.credentials)
+        _ = handle_request(method='POST', path=path, headers=headers, parameters=parameters, credentials=self.credentials)
 
 
 class ExternalSourceInstances(SourceInstances):
@@ -1152,62 +1146,26 @@ class ExternalSourceInstances(SourceInstances):
 
     Attributes:
         source: the source with which to operate with its instances
+        connection_url: url to update instances from  external source.
     """
 
     @classmethod
-    def build(cls, source_instances: SourceInstances) -> 'ExternalSourceInstances':
+    def build(cls, source: Source) -> 'ExternalSourceInstances':
         """Builds a External source instances from an :obj:`deepint.core.source.SourceInstances`
 
         This allows to use the External source instances extra funcionality.
 
         Args:
-            source_instances: original source instances.
+            source: original source.
 
         Returns:
             the source instances build from the given source and credentials.
         """
 
-        return cls(source=source_instances.source)
+        return cls(source=source)
 
-    def update(self, data: pd.DataFrame, **kwargs) -> None:
+    def update(self, *args, **kwargs) -> None:
         """Overwrites the update on a external source's instances.
-
-        Note: it's important to highlight that only the data parameter is used. The other ones are ignored.
-
-        Args:
-            data: data to update the instances. The column names must correspond to source's feature names.
         """
 
-        # check arguments
-        if data is not None and not isinstance(data, pd.DataFrame):
-            raise DeepintBaseError(
-                code='TYPE_MISMATCH', message='The provided input is not a DataFrame.')
-        elif data.empty or data is None:
-            raise DeepintBaseError(
-                code='EMPTY_DATA', message='The provided DataFrame is empty.')
-        elif len(data) > 100:
-            raise DeepintBaseError(
-                code='TOO_LARGE_DATA', message='The provided DataFrame is too big. A maximum of 100 instances can be providen for each update in external sources.')
-        elif len(data.columns) != len([f for f in self.source.features.fetch_all() if not f.computed]):
-            raise DeepintBaseError(code='INPUTS_MISMATCH',
-                                   message='The provided DataFrame must have same number of columns as current source.')
-        else:
-            for c in data.columns:
-                if self.source.features.fetch(name=c) is None:
-                    raise DeepintBaseError(code='INPUTS_MISMATCH',
-                                           message='The provided DataFrame columns must have same names as the soure\'s features.')
-
-        # calculate column order
-        column_order = [f.name for f in self.source.features.fetch_all() if not f.computed]
-
-        # convert dataframe to arrays
-        dict_instances = data.to_dict(orient='records')
-        instances = [[instance[c] for c in column_order] for instance in dict_instances]
-
-        # request
-        path = f'/api/v1/workspace/{self.source.workspace_id}/source/{self.source.info.source_id}/real_time_push'
-        headers = {'x-deepint-organization': self.source.organization_id, 'x-public-key': self.source.public_key, 'x-secret-key': self.source.secret_key}
-        parameters = {
-            'data': instances
-        }
-        _ = handle_request(method='POST', path=path, headers=headers, parameters=parameters, credentials=self.source.credentials)
+        raise DeepintBaseError(code='OPERATION_NOT_ALLOWED', message='An external source can not be updated throught Deep Intelligence. The update must be performed internally.')

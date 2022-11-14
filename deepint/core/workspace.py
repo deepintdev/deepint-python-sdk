@@ -17,7 +17,8 @@ from ..util import (handle_paginated_request, handle_request, parse_date,
 from .alert import Alert, AlertType
 from .dashboard import Dashboard
 from .model import Model, ModelMethod, ModelType
-from .source import FeatureType, RealTimeSource, Source, SourceFeature
+from .source import (ExternalSource, FeatureType, RealTimeSource, Source,
+                     SourceFeature)
 from .task import Task, TaskStatus
 from .visualization import Visualization
 
@@ -513,7 +514,7 @@ class WorkspaceSources:
         Before creation, the source is  loadedand stored locally in the internal list of sources in the current instance.
 
         To learn more about external sources, please check the (External Sources documentation)[https://deepintdev.github.io/deepint-documentation/EXTERNAL-SOURCES.html].
-    
+
         Args:
             name: new source's name.
             descrpition: new source's description.

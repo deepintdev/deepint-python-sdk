@@ -16,11 +16,12 @@ from deepint import *
 
 # create test credentials
 
-TEST_CREDENTIALS_FILE = 'test_config.json'
 TEST_CSV = None
 TEST_CSV2 = None
 DEEPINT_TOKEN = None
 DEEPINT_ORGANIZATION = None
+TEST_EXTERNAL_SOURCE_URL = None
+TEST_CREDENTIALS_FILE = 'test_config.json'
 
 try:
     with open(TEST_CREDENTIALS_FILE, 'r') as f:
@@ -30,6 +31,7 @@ try:
     TEST_CSV2 = content.get("TEST_CSV2")
     DEEPINT_TOKEN = content.get("DEEPINT_TOKEN")
     DEEPINT_ORGANIZATION = content.get("DEEPINT_ORGANIZATION")
+    TEST_EXTERNAL_SOURCE_URL = content.get("TEST_EXTERNAL_SOURCE_URL")
 except:
     print(f'If you are in a local enviroment, you can load your test credentials from the \'{TEST_CREDENTIALS_FILE}\' file.')
 
@@ -44,6 +46,9 @@ if DEEPINT_TOKEN is None:
 
 if DEEPINT_ORGANIZATION is None:
     DEEPINT_ORGANIZATION = os.environ.get('DEEPINT_ORGANIZATION')
+
+if TEST_EXTERNAL_SOURCE_URL is None:
+    TEST_EXTERNAL_SOURCE_URL = os.environ.get('TEST_EXTERNAL_SOURCE_URL')
 
 # objects names
 PYTHON_VERSION_NAME = platform.python_version()
@@ -98,6 +103,7 @@ def test_credentials_load():
 def test_organization_CRUD():
     # create
     org = Organization.build(organization_id=DEEPINT_ORGANIZATION)
+    org.clean()
 
     assert (org.account is not None)
     assert (not list(org.workspaces.fetch_all()))
@@ -265,11 +271,6 @@ def test_source_CRUD():
     source.delete()
     cloned_source.delete()
 
-    # TODO: create_derived
-    # TODO: create_other_type
-    # TODO: fetch_actualization_config
-    # TODO: update_actualization_config
-
     # delete workspace
     ws.delete()
 
@@ -315,9 +316,6 @@ def test_real_time_source_CRUD():
     from_time = datetime.now() - timedelta(minutes=5)
     rt_source.instances.clear_queued_instances(from_time=from_time, to_time=to_time)
 
-    # TODO: fetch_actualization_config
-    # TODO: update_actualization_config
-    
     # delete workspace
     ws.delete()
 
@@ -328,21 +326,35 @@ def test_external_source_CRUD():
     org = Organization.build(organization_id=DEEPINT_ORGANIZATION)
     ws = org.workspaces.create(name=serve_name(TEST_WS_NAME), description=TEST_WS_DESC)
 
-    # create base source to extract feature info
-    data = pd.read_csv(TEST_CSV)
-    src_name = serve_name(TEST_SRC_NAME)
-    source = ws.sources.create_and_initialize(name=src_name, description=TEST_SRC_DESC, data=data, wait_for_initialization=True)
-
     # create source
     src_name = serve_name(TEST_SRC_NAME)
-    features = source.features.fetch_all(force_reload=True)
-    external_source = ws.sources.create_external(name=src_name, description=TEST_SRC_DESC, url=EXTERNAL_SOURCE_URL, features=features)
+    features = [SourceFeature.from_dict(f) for f in [
 
-    # TODO: create_external
-    # TODO: force_update
-    # TODO: fetch_connection
-    # TODO: update_connection
-    pass
+        {"index": 0, "name": "sepalLength", "type": "numeric", "dateFormat": "", "indexed": True}, {"index": 1, "name": "sepalWidth", "type": "numeric", "dateFormat": "", "indexed": True}, {"index": 2, "name": "petalLength", "type": "numeric", "dateFormat": "", "indexed": True}, {"index": 3, "name": "petalWidth", "type": "numeric", "dateFormat": "", "indexed": True}, {"index": 4, "name": "species", "type": "nominal", "dateFormat": "", "indexed": True}
+    ]]
+    external_source = ws.sources.create_external(name=src_name, description=TEST_SRC_DESC, url=TEST_EXTERNAL_SOURCE_URL, features=features)
+
+    # update instances
+    try:
+
+        data = [{
+            "sepalLength": 4.6,
+            "sepalWidth": 3.2,
+            "petalLength": 1.4,
+            "petalWidth": 0.2,
+            "species": "setosa"
+        }]
+        data = pd.DataFrame(data=data)
+        external_source.instances.update(data=data)
+
+        assert False
+    except DeepintBaseError:
+        assert True
+
+    # connection update and retrieval
+    external_source.update_connection(url=TEST_EXTERNAL_SOURCE_URL)
+    connection_url = external_source.fetch_connection()
+    assert(connection_url == TEST_EXTERNAL_SOURCE_URL)
 
 
 def test_task_CRUD():
@@ -695,8 +707,7 @@ def cleanup(request):
 
 
 if __name__ == '__main__':
-    org = Organization.build(organization_id=DEEPINT_ORGANIZATION)
-    org.clean()
+
     test_credentials_load()
     test_organization_CRUD()
     test_workspace_CRUD()
