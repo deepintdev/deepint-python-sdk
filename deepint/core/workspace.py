@@ -17,8 +17,8 @@ from ..util import (handle_paginated_request, handle_request, parse_date,
 from .alert import Alert, AlertType
 from .dashboard import Dashboard
 from .model import Model, ModelMethod, ModelType
-from .source import (ExternalSource, FeatureType, RealTimeSource, Source,
-                     SourceFeature)
+from .source import (DerivedSourceType, ExternalSource, FeatureType,
+                     RealTimeSource, Source, SourceFeature)
 from .task import Task, TaskStatus
 from .visualization import Visualization
 
@@ -503,10 +503,70 @@ class WorkspaceSources:
 
         return new_source
 
-    def create_derived(self):
-        """Future implementation of /api/v1/workspace/<workspaceid>/sources/derived
+    def create_derived(self, name: str, description: str, derived_type: DerivedSourceType, origin_source_id: str, origin_source_b_id: str = None, query: Dict[str, Any] = None, features: List[SourceFeature] = None, feature_a: SourceFeature = None, feature_b: SourceFeature = None, is_encrypted: bool = False, is_shuffled: bool = False, wait_for_creation: bool = True) -> Source:
+        """Creates a source in current workspace.
+
+        Before creation, the source is loaded and stored locally in the internal list of sources in the current instance.
+
+        Args:
+            name: new source's name.
+            descrpition: new source's description.
+            derived_type: Derived type.
+            origin_source_id: id of the origin source.
+            origin_source_b_id: id of the second origin source. For join and merge.
+            query: query to perform filtering
+            features: List of features indexes, split by commas. For filter, this selects the list of features to keep in the derived source. For extend, this selects the features to melt.
+            feature_a: Match feature for join in first origin source (origin_source). For merge, this sets the source name filed if the first source is already a merge source. For aggregate, this is the field to group by, set to None for no grouping.
+            feature_b: Match feature for join in the second origin source (origin_source_b).
+            is_encrypted: true to encrypt the data source
+            is_shuffled: true to shuffle instances
+            wait_for_creation: if set to true, it waits until the source is created and a Source is returned. Otherwise it returns a :obj:`deepint.core.Task`, that when resolved, the new source id will be returned and the source will not be added to the local state, beign neccesary to update it manually with the method :obj:`deepint.core.WorkspaceSources.load`.
+
+        Returns:
+            the created source
         """
-        raise Exception('Not implemented Error')
+
+        # check
+        if (derived_type == DerivedSourceType.join or derived_type == DerivedSourceType.merge) and origin_source_b_id is None:
+            raise DeepintBaseError(code="BAD_PARAMETERS", message="If creating a derived source for join or merge, a second source must be providen")
+
+        if derived_type == DerivedSourceType.filter and query is None:
+            raise DeepintBaseError(code="BAD_PARAMETERS", message="For a filtered source, it's mandatory to provide a filter query. It's worth to highlight, that an empty query {} can be providen if neccesary.")
+
+        # prepare parameters
+        features = [f.index for f in features]
+
+        feature_a = feature_a.index if feature_a is not None else None
+        feature_b = feature_b.index if feature_b is not None else None
+
+        if derived_type == DerivedSourceType.aggregate:
+            feature_a = -1 if feature_a is None else feature_a
+            feature_b = -1 if feature_b is None else feature_b
+
+        # request
+        path = f'/api/v1/workspace/{self.workspace.info.workspace_id}/sources/derived'
+        headers = {'x-deepint-organization': self.workspace.organization_id}
+        parameters = {'name': name, 'description': description, 'features': features, 'derived_type': derived_type.name, "origin": origin_source_id, "origin_b": origin_source_b_id, "query": query, "field_a": feature_a, "field_b": feature_b, "encrypted": is_encrypted, "shuffled": is_shuffled}
+        response = handle_request(method='POST', path=path, headers=headers,
+                                  credentials=self.workspace.credentials, parameters=parameters)
+
+        # map results
+        task = Task.build(task_id=response['task_id'], workspace_id=self.workspace.info.workspace_id,
+                          organization_id=self.workspace.organization_id, credentials=self.workspace.credentials)
+
+        if wait_for_creation:
+            task.resolve()
+            task_result = task.fetch_result()
+            new_source = Source.build(source_id=task_result['source'], workspace_id=self.workspace.info.workspace_id,
+                                      organization_id=self.workspace.organization_id, credentials=self.workspace.credentials)
+
+            # update local state
+            self._sources = self._sources if self._sources is not None else []
+            self._sources.append(new_source)
+
+            return new_source
+        else:
+            return task
 
     def create_external(self, name: str, description: str, url: str, features: List[SourceFeature]) -> ExternalSource:
         """Creates an External source in current workspace.
@@ -580,9 +640,10 @@ class WorkspaceSources:
 
         return new_source
 
-    def create_other_type(self):
+    def create_autoupdated(self):
         """Future implementation of /api/v1/workspace/<workspaceid>/sources/other
         """
+
         raise Exception('Not implemented Error')
 
     def create_and_initialize(self, name: str, description: str, data: pd.DataFrame,

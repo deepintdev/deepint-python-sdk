@@ -7,8 +7,8 @@ from .alert import Alert, AlertType
 from .dashboard import Dashboard
 from .model import Model, ModelMethod, ModelType
 from .organization import Organization
-from .source import (ExternalSource, FeatureType, RealTimeSource, Source,
-                     SourceFeature)
+from .source import (DerivedSourceType, ExternalSource, FeatureType,
+                     RealTimeSource, Source, SourceFeature)
 from .task import Task, TaskStatus
 from .visualization import Visualization
 from .workspace import Workspace

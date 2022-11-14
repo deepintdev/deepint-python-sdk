@@ -68,6 +68,38 @@ class SourceType(enum.Enum):
         return [e.name for e in cls]
 
 
+class DerivedSourceType(enum.Enum):
+    """Available derived source types in the system.
+    """
+
+    filter = 0
+    extend = 1
+    join = 2
+    merge = 3
+    aggregate = 4
+
+    @classmethod
+    def from_string(cls, _str: str) -> 'SourceType':
+        """Builds the :obj:`deepint.core.source.SourceType` from a :obj:`str`.
+
+        Args:
+            _str: name of the source type.
+
+        Returns:
+            the model type converted to :obj:`deepint.core.source.SourceType`.
+        """
+        return cls.unknown if _str not in [e.name for e in cls] else cls[_str]
+
+    @classmethod
+    def all(cls) -> List[str]:
+        """ Returns all available model types serialized to :obj:`str`.
+
+        Returns:
+            all available source types.
+        """
+        return [e.name for e in cls]
+
+
 class FeatureType(enum.Enum):
     """Available feature types in the system.
     """

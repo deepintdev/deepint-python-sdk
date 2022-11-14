@@ -172,6 +172,8 @@ def test_workspace_CRUD():
     new_ws = ws.clone()
     assert(ws != new_ws)
 
+    # TODO: crud emails
+
     # TODO: fetch_iframe_token
 
     # create if not exists
@@ -268,8 +270,17 @@ def test_source_CRUD():
     cloned_source = source.clone(name='cloned source')
     assert(cloned_source != source)
 
-    source.delete()
     cloned_source.delete()
+
+    #  create derived
+    src_name = serve_name(TEST_SRC_NAME)
+    derived_source = ws.sources.create_derived(name=src_name, description=TEST_WS_DESC, derived_type=DerivedSourceType.filter, origin_source_id=source.info.source_id, origin_source_b_id=None, query={}, features=source.features.fetch_all(), feature_a=None, feature_b=None, is_encrypted=False, is_shuffled=False, wait_for_creation=True)
+    derived_source.delete()
+    source.delete()
+
+    # TODO: create other
+
+    # TODO: autoupdate config and update with the other source
 
     # delete workspace
     ws.delete()
