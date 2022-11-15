@@ -276,11 +276,18 @@ def test_source_CRUD():
     src_name = serve_name(TEST_SRC_NAME)
     derived_source = ws.sources.create_derived(name=src_name, description=TEST_WS_DESC, derived_type=DerivedSourceType.filter, origin_source_id=source.info.source_id, origin_source_b_id=None, query={}, features=source.features.fetch_all(), feature_a=None, feature_b=None, is_encrypted=False, is_shuffled=False, wait_for_creation=True)
     derived_source.delete()
+
     source.delete()
 
-    # TODO: create other
+    # create autoupdated
+    src_name = serve_name(TEST_SRC_NAME)
+    auto_updated_source = ws.sources.create_autoupdated(
+        name=src_name, description=TEST_WS_DESC, source_type=SourceType.url_json, url='https://app.deepint.net/static/sources/iris.json', json_fields=["sepalLength", "sepalWidth", "petalLength", "petalWidth", "species"], json_prefix=None, http_headers=None, ignore_security_certificates=True, is_single_json_obj=False, wait_for_creation=True
+    )
 
     # TODO: autoupdate config and update with the other source
+
+    auto_updated_source.delete()
 
     # delete workspace
     ws.delete()

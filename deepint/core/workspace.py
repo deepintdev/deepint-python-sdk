@@ -478,7 +478,7 @@ class WorkspaceSources:
 
         Args:
             name: new source's name.
-            descrpition: new source's description.
+            description: new source's description.
             features: list of source's features.
 
         Returns:
@@ -510,7 +510,7 @@ class WorkspaceSources:
 
         Args:
             name: new source's name.
-            descrpition: new source's description.
+            description: new source's description.
             derived_type: Derived type.
             origin_source_id: id of the origin source.
             origin_source_b_id: id of the second origin source. For join and merge.
@@ -577,7 +577,7 @@ class WorkspaceSources:
 
         Args:
             name: new source's name.
-            descrpition: new source's description.
+            description: new source's description.
             url: external connection URL.
             features: list of source's features.
 
@@ -608,7 +608,7 @@ class WorkspaceSources:
 
         Args:
             name: new source's name.
-            descrpition: new source's description.
+            description: new source's description.
             max_age: maximum age of registers in milliseconds. Set to 0 or negative for unlimited age. By default is 0.
             features: list of source's features.
 
@@ -640,14 +640,15 @@ class WorkspaceSources:
 
         return new_source
 
-    def create_autoupdated(self, name: str, descrpition: str, source_type: SourceType, is_encrypted: bool = False, is_shuffled: bool = False, is_indexed: bool = True, auto_update: bool = True, auto_update_period: int = 3600000, replace_on_update: bool = True, pk_for_update: str = None, update_duplicates: bool = True, separator: str = ',', quotes: str = '"', has_csv_header: bool = True, json_fields: List[str] = None, json_prefix: str = None, is_single_json_obj: bool = False, date_format: str = None, url: str = None, is_csv_content: str = False, is_json_content: str = True, http_headers: Dict[str, str] = None, ignore_security_certificates: bool = True, enable_store_data_parameters: bool = False, stored_data_parameters_sorting_desc: bool = True, database: str = None, user: str = None, password: str = None, table: str = None, query: str = None, mongodb_sort: Dict[str, Any] = None, mongodb_project: str = None, limit: int = None, relational_database_type: SourceType = None, host: str = None, port: str = None, topics: List[str] = None, fields_expected: List[Dict[str, str]] = None) -> Source:
+    def create_autoupdated(self, name: str, description: str, source_type: SourceType, is_json_content: bool = False, is_csv_content: bool = False, is_encrypted: bool = False, is_shuffled: bool = False, is_indexed: bool = True, auto_update: bool = True, auto_update_period: int = 3600000, replace_on_update: bool = True, pk_for_update: str = None, update_duplicates: bool = True, separator: str = ',', quotes: str = '"', has_csv_header: bool = True, json_fields: List[str] = None, json_prefix: str = None, is_single_json_obj: bool = False, date_format: str = None, url: str = None, http_headers: Dict[str, str] = None, ignore_security_certificates: bool = True, enable_store_data_parameters: bool = False, stored_data_parameters_name: str = None, stored_data_parameters_sorting_desc: bool = True, database_name: str = None, database_user: str = None, database_password: str = None, database_table: str = None, database_query: str = None, mongodb_sort: Dict[str, Any] = None, mongodb_project: str = None, database_query_limit: int = None, database_host: str = None,
+                           database_port: str = None, topics: List[str] = None, fields_expected: List[Dict[str, str]] = None, wait_for_creation: bool = True) -> Source:
         """Creates a Real Time source in current workspace.
 
         Before creation, the source is loaded and stored locally in the internal list of sources in the current instance.
 
         Args:
             name: new source's name.
-            descrpition: new source's description.
+            description: new source's description.
             source_type: AutoUpdatedSourceType
             is_encrypted: true to encrypt the data source
             is_shuffled: true to shuffle instances
@@ -669,27 +670,161 @@ class WorkspaceSources:
             http_headers: Custom headers to send by Deep Intelligence for requesting the data. example: "example: Header1: Value1 Header2: Value2"
             ignore_security_certificates:   Set to true to ignore invalid certificates for HTTPs
             enable_store_data_parameters: Set to true to enable stored data parameter in the Query. Any instances of ${SDP} will be replaced.
-            enable_stored_data_parameters: Name of the field to use for SDP.
+            stored_data_parameters_name: Name of the field to use for SDP.
             stored_data_parameters_sorting: Sorting direction to calc the SDP. Must be asc or desc.
-            database: Name of the database or the S3 bucket.
-            user: User / Access key ID
-            password: Password / Secret key
-            table: Name of the table / collection
-            query: Database Query. For mongo, this is a JSON.
-            sort: For MongoDB. Sorting
-            project: MongoDB project.
-            limit: Limit of results per Deep Intelligent data retrieval query against source.
-            relational_database_type: Database type (for relational): must be mysql, pg, oracle, ms
+            database_name: Name of the database or the S3 bucket.
+            database_user: User / Access key ID
+            database_password: Password / Secret key
+            database_table: Name of the table / collection
+            database_query: Database Query. For mongo, this is a JSON.
+            mongodb_sort: For MongoDB. Sorting
+            mongodb_project: MongoDB project.
+            database_query_limit: Limit of results per Deep Intelligent data retrieval query against source.
             host: Database host
             port: Port number
             topics: For MQTT, list of topics split by commas.
-            fields_expected: List of expected fields for MQTT. Read Deep Intelligence advanced documentation for more information.
+            mqtt_fields: List of expected fields for MQTT. Read Deep Intelligence advanced documentation for more information.
+            wait_for_creation: if set to true, it waits until the source is created and a Source is returned. Otherwise it returns a :obj:`deepint.core.Task`, that when resolved, the new source id will be returned and the source will not be added to the local state, beign neccesary to update it manually with the method :obj:`deepint.core.WorkspaceSources.load`.
 
-        Returns
-            the created source
+        Returns:
+            the created source if wait_for_creation set to True, otherwise the :obj:`deepint.core.Task`
         """
 
-        raise Exception('Not implemented Error')
+        # preprocess parameters
+
+        if source_type == SourceType.url_csv:
+            is_csv_content, is_json_content = True, False
+        elif source_type == SourceType.url_json:
+            is_csv_content, is_json_content = False, True
+        elif source_type in [SourceType.ckan, SourceType.s3. SourceType.url_parameters] and not (is_json_content is True or is_csv_content is True):
+            raise DeepintBaseError(code='BAD_PARAMETERS', message='If you are providing an CKAN or S3 source, it\'s mandatory to provide the command is_json_content or is_csv_content')
+
+        if source_type in [SourceType.mysql, SourceType.pg, SourceType.oracle, SourceType.ms_sql, SourceType.mysql, SourceType.influx, SourceType.mongo]:
+
+            # perform check
+
+            if database_name is None or database_user is None or database_password is None or database_table is None or database_query is None or database_host is None or database_port is None:
+                raise DeepintBaseError(code='BAD_PARAMETERS', message='If a DB based source is beign created, the database_host, database_port database_name, database_user, database_password and database_query are mandatory')
+
+            # preprocess parameters
+
+            if source_type in [SourceType.mysql, SourceType.pg, SourceType.oracle, SourceType.ms_sql]:
+                database_type_str = source_type.name
+                source_type_str = None
+            else:
+                database_type_str = None
+                source_type_str = f'database/{source_type.name}'
+
+            if source_type == SourceType.mongo:
+                if mongodb_sort is None or mongodb_project is None:
+                    raise DeepintBaseError(code='BAD_PARAMETERS', message='If a mongo based source is beign created, the mongodb_sort and mongodb_project are mandatory')
+            else:
+                mongodb_sort = mongodb_project = None
+
+            # make None not used parameters
+
+            mqtt_topics = mqtt_fields = None
+            parser = separator = quotes = has_csv_header = None
+            json_fields = json_prefix = json_mode = None
+            url = parser = http_headers = ignore_security_certificates = None
+
+        elif is_csv_content:
+
+            # perform check
+
+            if separator is None or quotes is None or has_csv_header is None or url is None or ignore_security_certificates is None:
+                raise DeepintBaseError(code='BAD_PARAMETERS', message='If a CSV based source is beign created, the separator, quotes, url, ignore_security_certificates and has_csv_header are mandatory')
+
+            # preprocess parameters
+
+            parser = 'csv'
+            source_type_str = source_type.name if source_type in [SourceType.s3 or SourceType.ckan] else 'url/any'
+            http_headers = ' '.join([f'{k}={v}' for k, v in http_headers.items()]) if http_headers is not None else None
+
+            # make None not used parameters
+
+            database_name = database_user = database_password = database_table = database_query = database_host = database_port = None
+            mqtt_topics = mqtt_fields = None
+            mongodb_sort = mongodb_project = None
+            json_fields = json_prefix = json_mode = None
+            database_type_str = None
+
+        elif is_json_content:
+
+            # perform check
+
+            if json_fields is None or url is None or ignore_security_certificates is None or is_single_json_obj is None:
+                raise DeepintBaseError(code='BAD_PARAMETERS', message='If a JSON based source is beign created, the url, ignore_security_certificates, is_single_json_obj and json_fields are mandatory')
+
+            # preprocess parameters
+
+            parser = 'json'
+            json_mode = 'single' if is_single_json_obj else 'default'
+            source_type_str = source_type.name if source_type in [SourceType.s3 or SourceType.ckan] else 'url/any'
+            http_headers = ' '.join([f'{k}={v}' for k, v in http_headers.items()]) if http_headers is not None else None
+
+            # make None not used parameters
+
+            separator = quotes = has_csv_header = None
+            database_name = database_user = database_password = database_table = database_query = database_host = database_port = None
+            mqtt_topics = mqtt_fields = None
+            mongodb_sort = mongodb_project = None
+            database_type_str = None
+
+        elif source_type == SourceType.mqtt:
+
+            # perform check
+
+            if mqtt_topics is None or mqtt_fields is None:
+                raise DeepintBaseError('BAD_PARAMETERS', 'If a MQTT based source is beign created, the mqtt_fields and mqtt_topics are mandatory')
+
+            # preprocess parameters
+
+            source_type_str = 'mqtt'
+            mqtt_topics = ','.join(mqtt_topics) if mqtt_topics is not None else mqtt_topics
+
+            # make None not used parameters
+
+            parser = separator = quotes = has_csv_header = None
+            database_name = database_user = database_password = database_table = database_query = database_host = database_port = None
+            mongodb_sort = mongodb_project = None
+            json_fields = json_prefix = json_mode = None
+            database_type_str = None
+
+        # if source type is not allowed notify
+        if source_type_str is None:
+            raise DeepintBaseError(code='BAD_SOURCE_TYPE', message='The provided source type is not suitable for this method.')
+
+        # preprocess parameters
+
+        stored_data_parameters_sorting = 'desc' if stored_data_parameters_sorting_desc else 'asc'
+
+        # request
+        path = f'/api/v1/workspace/{self.workspace.info.workspace_id}/sources/other'
+        headers = {'x-deepint-organization': self.workspace.organization_id}
+        parameters = {
+            "name": name, "description": description, "type": source_type_str, "encrypted": is_encrypted, "shuffled": is_shuffled, "indexed": is_indexed, "dyn_enabled": auto_update, "dyn_delay": auto_update_period, "dyn_replace": replace_on_update, "dyn_pk": pk_for_update, "dyn_update_mode": update_duplicates, "separator": separator, "quotes": quotes, "csv_header": has_csv_header, "json_fields": json_fields, "json_prefix": json_prefix, "json_mode": json_mode, "date_format": date_format, "url": url, "parser": parser, "http_headers": http_headers, "rejectUnauthorized": ignore_security_certificates, "sdp_enabled": enable_store_data_parameters, "sdp_name": stored_data_parameters_name, "sdp_dir": stored_data_parameters_sorting, "database": database_name, "user": database_user, "password": database_password, "table": database_table, "query": database_query, "sort": mongodb_sort, "project": mongodb_project, "limit": database_query_limit, "db": database_type_str, "host": database_host, "port": database_port, "topics": mqtt_topics, "fields_expected": mqtt_fields
+        }
+
+        response = handle_request(method='POST', path=path, headers=headers, credentials=self.workspace.credentials, parameters=parameters)
+
+        # map results
+        task = Task.build(task_id=response['task_id'], workspace_id=self.workspace.info.workspace_id,
+                          organization_id=self.workspace.organization_id, credentials=self.workspace.credentials)
+
+        if wait_for_creation:
+            task.resolve()
+            task_result = task.fetch_result()
+            new_source = Source.build(source_id=task_result['source'], workspace_id=self.workspace.info.workspace_id,
+                                      organization_id=self.workspace.organization_id, credentials=self.workspace.credentials)
+
+            # update local state
+            self._sources = self._sources if self._sources is not None else []
+            self._sources.append(new_source)
+
+            return new_source
+        else:
+            return task
 
     def create_and_initialize(self, name: str, description: str, data: pd.DataFrame,
                               date_formats: Dict[str, str] = None, wait_for_initialization: bool = True) -> Source:
@@ -699,7 +834,7 @@ class WorkspaceSources:
 
         Args:
             name: new source's name.
-            descrpition: new source's description.
+            description: new source's description.
             data: data to in initialize the source. The source's feature names and data types are extracted from the given DataFrame.
             date_formats: dicionary contianing the association between feature (column name) and date format like the ones specified
                 in [#/date_formats]. Is optional to provide value for any column, but if not provided will be considered as
@@ -1572,7 +1707,7 @@ class Workspace:
 
         Args:
             name: workspace's name. If not provided the workspace's name stored in the :obj:`deepint.core.workspace.Workspace.workspace_info` attribute is taken.
-            descrpition: workspace's description. If not provided the workspace's description stored in the :obj:`deepint.core.workspace.Workspace.workspace_info` attribute is taken.
+            description: workspace's description. If not provided the workspace's description stored in the :obj:`deepint.core.workspace.Workspace.workspace_info` attribute is taken.
         """
 
         # check parameters
