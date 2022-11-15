@@ -36,15 +36,17 @@ class SourceType(enum.Enum):
     file_sql = 9
     file_sqlite = 10
     url_csv = 11
-    ckan = 12
-    s3 = 13
-    mqtt = 14
-    mongo = 15
-    influx = 16
-    empty = 17
-    derived = 18
-    external = 19
-    rt = 20
+    url_json = 12
+    ckan = 13
+    s3 = 14
+    mqtt = 15
+    mongo = 16
+    influx = 17
+    empty = 18
+    derived = 19
+    external = 20
+    rt = 21
+    unknown = 22
 
     @classmethod
     def from_string(cls, _str: str) -> 'SourceType':
