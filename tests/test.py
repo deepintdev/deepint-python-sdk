@@ -279,13 +279,15 @@ def test_source_CRUD():
 
     source.delete()
 
-    # create autoupdated
+    # create autoupdated and test configuration
     src_name = serve_name(TEST_SRC_NAME)
     auto_updated_source = ws.sources.create_autoupdated(
         name=src_name, description=TEST_WS_DESC, source_type=SourceType.url_json, url='https://app.deepint.net/static/sources/iris.json', json_fields=["sepalLength", "sepalWidth", "petalLength", "petalWidth", "species"], json_prefix=None, http_headers=None, ignore_security_certificates=True, is_single_json_obj=False, wait_for_creation=True
     )
 
-    # TODO: autoupdate config and update with the other source
+    auto_updated_source.update_actualization_config(auto_update=False)
+    configuration = auto_updated_source.fetch_actualization_config()
+    assert(configuration['enabled'] == False)
 
     auto_updated_source.delete()
 
@@ -567,6 +569,11 @@ def test_visualization_CRUD():
                                    source=source.info.source_id, configuration={})
     new_vis = vis.clone()
     assert(vis != new_vis)
+    new_vis.delete()
+
+    # create token
+    url, token = vis.fetch_iframe_token()
+    assert(token in url)
 
     # delete visualization
     vis.delete()
@@ -608,8 +615,13 @@ def test_dashboard_CRUD():
                                 share_opt=" ", ga_id=" ", restricted=True, configuration={})
     new_dash = dash.clone()
     assert(dash != new_dash)
+    new_dash.delete()
 
-    # delete visualization
+    # create token
+    url, token = dash.fetch_iframe_token()
+    assert(token in url)
+
+    # delete dashboard
     dash.delete()
 
     # delete workspace
@@ -726,15 +738,15 @@ def cleanup(request):
 
 if __name__ == '__main__':
 
-    test_credentials_load()
-    test_organization_CRUD()
-    test_workspace_CRUD()
-    test_source_CRUD()
-    test_real_time_source_CRUD()
-    test_external_source_CRUD()
-    test_task_CRUD()
-    test_alert_CRUD()
-    test_model_CRUD()
+    # test_credentials_load()
+    # test_organization_CRUD()
+    # test_workspace_CRUD()
+    # test_source_CRUD()
+    # test_real_time_source_CRUD()
+    # test_external_source_CRUD()
+    # test_task_CRUD()
+    # test_alert_CRUD()
+    # test_model_CRUD()
     test_visualization_CRUD()
     test_dashboard_CRUD()
-    test_url_parser()
+    # test_url_parser()

@@ -641,15 +641,17 @@ class WorkspaceSources:
         return new_source
 
     def create_autoupdated(self, name: str, description: str, source_type: SourceType, is_json_content: bool = False, is_csv_content: bool = False, is_encrypted: bool = False, is_shuffled: bool = False, is_indexed: bool = True, auto_update: bool = True, auto_update_period: int = 3600000, replace_on_update: bool = True, pk_for_update: str = None, update_duplicates: bool = True, separator: str = ',', quotes: str = '"', has_csv_header: bool = True, json_fields: List[str] = None, json_prefix: str = None, is_single_json_obj: bool = False, date_format: str = None, url: str = None, http_headers: Dict[str, str] = None, ignore_security_certificates: bool = True, enable_store_data_parameters: bool = False, stored_data_parameters_name: str = None, stored_data_parameters_sorting_desc: bool = True, database_name: str = None, database_user: str = None, database_password: str = None, database_table: str = None, database_query: str = None, mongodb_sort: Dict[str, Any] = None, mongodb_project: str = None, database_query_limit: int = None, database_host: str = None,
-                           database_port: str = None, topics: List[str] = None, fields_expected: List[Dict[str, str]] = None, wait_for_creation: bool = True) -> Source:
-        """Creates a Real Time source in current workspace.
+                           database_port: str = None, mqtt_topics: List[str] = None, mqtt_fields: List[Dict[str, str]] = None, wait_for_creation: bool = True) -> Source:
+        """Creates an Autoupdated source in current workspace.
 
         Before creation, the source is loaded and stored locally in the internal list of sources in the current instance.
 
         Args:
             name: new source's name.
             description: new source's description.
-            source_type: AutoUpdatedSourceType
+            source_type: type of source to create.
+            is_json_content: set to true if the data to ingest is in JSON format.
+            is_csv_content: set to true if the data to ingest is in CSV format.
             is_encrypted: true to encrypt the data source
             is_shuffled: true to shuffle instances
             is_indexed: True to index the fields
@@ -682,7 +684,7 @@ class WorkspaceSources:
             database_query_limit: Limit of results per Deep Intelligent data retrieval query against source.
             host: Database host
             port: Port number
-            topics: For MQTT, list of topics split by commas.
+            mqtt_topics: For MQTT, list of topics split by commas.
             mqtt_fields: List of expected fields for MQTT. Read Deep Intelligence advanced documentation for more information.
             wait_for_creation: if set to true, it waits until the source is created and a Source is returned. Otherwise it returns a :obj:`deepint.core.Task`, that when resolved, the new source id will be returned and the source will not be added to the local state, beign neccesary to update it manually with the method :obj:`deepint.core.WorkspaceSources.load`.
 
@@ -1819,11 +1821,6 @@ class Workspace:
         new_workspace = Workspace.build(organization_id=self.organization_id, workspace_id=response['workspace_id'],
                                         credentials=self.credentials)
         return new_workspace
-
-    def fetch_iframe_token(self):
-        """Future implementation of /api/v1/workspace/workspaceid/iframe
-        """
-        raise Exception('Not implemented Error')
 
     def to_dict(self) -> Dict[str, Any]:
         """Builds a dictionary containing the information stored in current object.

@@ -805,10 +805,14 @@ class Source:
         src.features.load()
 
         # build the other source types classes if neccesary
+        auto_updated_source_type = [SourceType.mysql, SourceType.ms_sql, SourceType.oracle, SourceType.pg, SourceType.url_parameters, SourceType.url_sql, SourceType.url_sqlite, SourceType.file_csv, SourceType.file_parameters, SourceType.file_sql, SourceType.file_sqlite, SourceType.url_csv, SourceType.url_json, SourceType.ckan, SourceType.s3, SourceType.mqtt, SourceType.mongo, SourceType.influx]
+
         if src.info.source_type == SourceType.external:
             src = ExternalSource.build(src)
         elif src.info.source_type == SourceType.rt:
             src = RealTimeSource.build(src)
+        elif src.info.source_type in auto_updated_source_type:
+            src = AutoUpdatedSource.build(src)
 
         return src
 
@@ -927,16 +931,6 @@ class Source:
         new_source = Source.build(organization_id=self.organization_id, workspace_id=self.workspace_id,
                                                 source_id=response['source_id'], credentials=self.credentials)
         return new_source
-
-    def fetch_actualization_config(self):
-        """Future implementation of /api/v1/workspace/<workspaceid>/sources/<sourceid>/autoupdate
-        """
-        raise Exception('Not implemented Error')
-
-    def update_actualization_config(self):
-        """Future implementation of /api/v1/workspace/<workspaceid>/sources/<sourceid>/autoupdate
-        """
-        raise Exception('Not implemented Error')
 
     def to_dict(self) -> Dict[str, Any]:
         """Builds a dictionary containing the information stored in current object.
@@ -1119,8 +1113,6 @@ class ExternalSource(Source):
         features: :obj:`deepint.core.source.SourceFeatures` to operate with source's features.
         credentials: credentials to authenticate with Deep Intelligence API and be allowed to perform operations over the source. If
                  not provided, the credentials are generated with the :obj:`deepint.auth.credentials.Credentials.build`.
-        public_key: External source public key.
-        secret_key: External source secret  key.
     """
 
     @classmethod
@@ -1203,3 +1195,175 @@ class ExternalSourceInstances(SourceInstances):
         """
 
         raise DeepintBaseError(code='OPERATION_NOT_ALLOWED', message='An external source can not be updated throught Deep Intelligence. The update must be performed internally.')
+
+
+class AutoUpdatedSource(Source):
+    """Operates over a Deep Intelligence autoupdated source.
+
+    Note: This class should not be instanced directly, and it's recommended to use the :obj:`deepint.core.source.Source.build`
+    or :obj:`deepint.core.source.Source.from_url` methods.
+
+    Attributes:
+        organization_id: organization where source is located.
+        workspace_id: workspace where source is located.
+        info: :obj:`deepint.core.source.SourceInfo` to operate with source's information.
+        instances: :obj:`deepint.core.source.SourceInstances` to operate with source's instances.
+        features: :obj:`deepint.core.source.SourceFeatures` to operate with source's features.
+        credentials: credentials to authenticate with Deep Intelligence API and be allowed to perform operations over the source. If
+                 not provided, the credentials are generated with the :obj:`deepint.auth.credentials.Credentials.build`.
+    """
+
+    @classmethod
+    def build(cls, source: Source) -> 'AutoUpdatedSource':
+        """Builds an External source from an :obj:`deepint.core.source.Source`
+
+        This allows to use the External sources extra funcionality.
+
+        Args:
+            source: original source.
+
+        Returns:
+            the source build from the given source and credentials.
+        """
+
+        autoupdated_source = cls(organization_id=source.organization_id, workspace_id=source.workspace_id, credentials=source.credentials, info=source.info, features=source.features.fetch_all(force_reload=True))
+
+        return autoupdated_source
+
+    def fetch_actualization_config(self) -> Dict[str, Any]:
+        """Retrieves autoupdate configuration.
+
+        Returns:
+            a dictionary containing the autoupdate configuration
+        """
+
+        # request
+        path = f'/api/v1/workspace/{self.workspace_id}/source/{self.info.source_id}/autoupdate'
+        headers = {'x-deepint-organization': self.organization_id}
+        response = handle_request(method='GET', path=path, headers=headers, credentials=self.credentials)
+
+        # fecth results
+        autoupdate_config = response['updateConfig']
+
+        return autoupdate_config
+
+    def update_actualization_config(self, is_json_content: bool = None, is_csv_content: bool = None, auto_update: bool = None, auto_update_period: int = None, replace_on_update: bool = None, pk_for_update: str = None, update_duplicates: bool = None, separator: str = None, quotes: str = None, has_csv_header: bool = None, json_fields: List[str] = None, json_prefix: str = None, is_single_json_obj: bool = None, date_format: str = None, url: str = None, http_headers: Dict[str, str] = None, ignore_security_certificates: bool = None, enable_store_data_parameters: bool = None, stored_data_parameters_name: str = None, stored_data_parameters_sorting_desc: bool = None, database_name: str = None, database_user: str = None, database_password: str = None, database_table: str = None, database_query: str = None, mongodb_sort: Dict[str, Any] = None, mongodb_project: str = None, database_query_limit: int = None, database_host: str = None, database_port: str = None, mqtt_topics: List[str] = None, mqtt_fields: List[Dict[str, str]] = None, database_type: SourceType = None) -> None:
+        """Updates the auto udpate source configuration.
+
+        Note: the not providen configuration, is taken from the current source configuration, fetched from Deep Intelligence.
+
+        Args:
+            auto_update: set to true to enable auto update
+            auto_update_period: auto update delay in milliseconds. Minimum is 5 minutes.
+            replace_on_update: set to true to replace the entire data set with each update. False to append the data.
+            pk_for_update: Name of the primary key field. In order to check for duplicates when appending.
+            update_duplicates: Set to true to update existing rows (by primary key). Set to false to skip duplicate rows. If you set dyn_replace to true. This option does not have any effect.
+            separator: separator character for csv files
+            quotes: quotes character for csv files.
+            has_csv_header: Set to false if the csv files does not have a header.
+            json_fields: List of fileds to get, in order, for json files or mongo databases.
+            json_prefix: Prefix to tell the engine where the data is in the JSON file. Use dots to split levels.
+            is_single_json_obj: Set to true in case there is a single instance in the JSON.
+            date_format: Date format in the CSV of JSON file. By default is the ISO format. This uses the Moment.js formats.
+            url: URL for url/any and ckan source types. In case of S3. This is the URI of the object inside the bucket. For mongo and influx, this is the connection URL.
+            is_csv_content: Set to True to indicate that is a CSV content. Otherwise the content will be considered as JSON.
+            http_headers: Custom headers to send by Deep Intelligence for requesting the data. example: "example: Header1: Value1 Header2: Value2"
+            ignore_security_certificates:   Set to true to ignore invalid certificates for HTTPs
+            enable_store_data_parameters: Set to true to enable stored data parameter in the Query. Any instances of ${SDP} will be replaced.
+            stored_data_parameters_name: Name of the field to use for SDP.
+            stored_data_parameters_sorting: Sorting direction to calc the SDP. Must be asc or desc.
+            database_name: Name of the database or the S3 bucket.
+            database_user: User / Access key ID
+            database_password: Password / Secret key
+            database_table: Name of the table / collection
+            database_query: Database Query. For mongo, this is a JSON.
+            database_type: the type of database for relational database.
+            mongodb_sort: For MongoDB. Sorting
+            mongodb_project: MongoDB project.
+            database_query_limit: Limit of results per Deep Intelligent data retrieval query against source.
+            database_host: Database host
+            database_port: Port number
+            mqtt_topics: For MQTT, list of topics split by commas.
+            mqtt_fields: List of expected fields for MQTT. Read Deep Intelligence advanced documentation for more information.
+        """
+
+        # create calculated parameters
+
+        if is_csv_content is True and is_json_content is True:
+            raise DeepintBaseError(code='BAD_PARAMETERS', message='Unable to update the source if is_csv_content and is_json_content is True at same time.')
+
+        if is_json_content is not None or is_csv_content is not None:
+            parser = 'csv' if is_csv_content is not None and is_csv_content is True else 'json'
+        else:
+            parser = None
+
+        if is_single_json_obj is not None:
+            json_mode = 'single' if is_single_json_obj is True else 'default'
+        else:
+            json_mode = None
+
+        if stored_data_parameters_sorting_desc is not None:
+            stored_data_parameters_sorting = 'desc' if stored_data_parameters_sorting_desc else 'asc'
+        else:
+            stored_data_parameters_sorting = None
+
+        # apply previous processings
+
+        if http_headers is not None:
+            http_headers = ' '.join([f'{k}={v}' for k, v in http_headers.items()]) if http_headers is not None else None
+
+        if mqtt_topics is not None:
+            mqtt_topics = ','.join(mqtt_topics) if mqtt_topics is not None else mqtt_topics
+
+        if database_type is not None:
+            if database_type not in [SourceType.mysql, SourceType.pg, SourceType.oracle, SourceType.ms_sql, SourceType.mysql]:
+                raise DeepintBaseError(code='OPERATION_NOT_ALLOWED', message='The database type providen must be a relational databse such as mysql, pg, oracle, ms_sql or mysql.')
+            else:
+                database_type = database_type.name
+
+        # fech current configuration and fill not providen parameters
+
+        current_config = self.fetch_actualization_config()
+        update_config = current_config['configuration']
+
+        auto_update = auto_update if auto_update is not None else (current_config['enabled'] if 'enabled' in current_config else None)
+        auto_update_period = auto_update_period if auto_update_period is not None else (current_config['delay'] if 'delay' in current_config else None)
+        replace_on_update = replace_on_update if replace_on_update is not None else (current_config['replace'] if 'replace' in current_config else None)
+        pk_for_update = pk_for_update if pk_for_update is not None else (current_config['pk'] if 'pk' in current_config else None)
+        update_duplicates = update_duplicates if update_duplicates is not None else (current_config['updateMode'] if 'updateMode' in current_config else None)
+        separator = separator if separator is not None else (update_config['separator'] if 'separator' in current_config else None)
+        quotes = quotes if quotes is not None else (update_config['quotes'] if 'quotes' in current_config else None)
+        has_csv_header = has_csv_header if has_csv_header is not None else ((not update_config['noheader']) if 'noheader' in update_config else None)
+        json_fields = json_fields if json_fields is not None else (update_config['json_fields'] if 'json_fields' in update_config else None)
+        json_prefix = json_prefix if json_prefix is not None else (update_config['json_prefix'] if 'json_prefix' in update_config else None)
+        json_mode = json_mode if json_mode is not None else (update_config['json_mode'] if 'json_mode' in update_config else None)
+        date_format = date_format if date_format is not None else (update_config['date_format'] if 'date_format' in update_config else None)
+        url = url if url is not None else (update_config['url'] if 'url' in update_config else None)
+        parser = parser if parser is not None else (update_config['parser'] if 'parser' in update_config else None)
+        http_headers = http_headers if http_headers is not None else (update_config['http_headers'] if 'http_headers' in update_config else None)
+        ignore_security_certificates = ignore_security_certificates if ignore_security_certificates is not None else (update_config['rejectUnauthorized'] if 'rejectUnauthorized' in update_config else None)
+        enable_store_data_parameters = enable_store_data_parameters if enable_store_data_parameters is not None else (update_config['sdp_enabled'] if 'sdp_enabled' in update_config else None)
+        stored_data_parameters_name = stored_data_parameters_name if stored_data_parameters_name is not None else (update_config['sdp_name'] if 'sdp_name' in update_config else None)
+        stored_data_parameters_sorting = stored_data_parameters_sorting if stored_data_parameters_sorting is not None else (update_config['sdp_dir'] if 'sdp_dir' in update_config else None)
+        database_name = database_name if database_name is not None else (update_config['database'] if 'database' in update_config else None)
+        database_user = database_user if database_user is not None else (update_config['user'] if 'user' in update_config else None)
+        database_password = database_password if database_password is not None else (update_config['password'] if 'password' in update_config else None)
+        database_table = database_table if database_table is not None else (update_config['table'] if 'table' in update_config else None)
+        database_query = database_query if database_query is not None else (update_config['query'] if 'query' in update_config else None)
+        mongodb_sort = mongodb_sort if mongodb_sort is not None else (update_config['sort'] if 'sort' in update_config else None)
+        mongodb_project = mongodb_project if mongodb_project is not None else (update_config['project'] if 'project' in update_config else None)
+        database_query_limit = database_query_limit if database_query_limit is not None else (update_config['limit'] if 'limit' in update_config else None)
+        database_type = database_type if database_type is not None else (update_config['db'] if 'db' in update_config else None)
+        database_host = database_host if database_host is not None else (update_config['host'] if 'host' in update_config else None)
+        database_port = database_port if database_port is not None else (update_config['port'] if 'port' in update_config else None)
+        mqtt_topics = mqtt_topics if mqtt_topics is not None else (update_config['topics'] if 'topics' in update_config else None)
+        mqtt_fields = mqtt_fields if mqtt_fields is not None else (update_config['fields_expected'] if 'fields_expected' in update_config else None)
+
+        # request
+        path = f'/api/v1/workspace/{self.workspace_id}/source/{self.info.source_id}/autoupdate'
+        headers = {'x-deepint-organization': self.organization_id}
+        parameters = {
+            "dyn_enabled": auto_update, "dyn_delay": auto_update_period, "dyn_replace": replace_on_update, "dyn_update_mode": update_duplicates, "dyn_pk": pk_for_update, "separator": separator, "quotes": quotes, "noheader": not has_csv_header, "json_prefix": json_prefix, "json_mode": json_mode, "json_fields": json_fields, "date_format": date_format, "url": url, "parser": parser, "http_headers": http_headers, "rejectUnauthorized": ignore_security_certificates, "sdp_enabled": enable_store_data_parameters, "sdp_name": stored_data_parameters_name, "sdp_dir": stored_data_parameters_sorting, "database": database_name, "user": database_user, "password": database_password, "table": database_table, "query": database_query, "sort": mongodb_sort, "project": mongodb_project, "db": database_type, "host": database_host, "limit": database_query_limit, "port": database_port, "topics": mqtt_topics, "fields_expected": mqtt_fields
+        }
+
+        _ = handle_request(method='POST', path=path, headers=headers, parameters=parameters, credentials=self.credentials)

@@ -6,7 +6,7 @@
 
 import warnings
 from datetime import datetime
-from typing import Any, Dict
+from typing import Any, Dict, List, Tuple
 
 from ..auth import Credentials
 from ..util import handle_request, parse_date, parse_url
@@ -315,6 +315,28 @@ class Visualization:
         headers = {'x-deepint-organization': self.organization_id}
         handle_request(method='DELETE', path=path,
                        headers=headers, credentials=self.credentials)
+
+    def fetch_iframe_token(self, filters: List[Dict[str, Any]] = None) -> Tuple[str, str]:
+        """Creates iframe token for the visualization. Requires a secret to be set.
+
+        Args:
+            filters: list of filters to apply. Please, check the (advanced documentation)[https://app.deepint.net/api/v1/documentation/#/workspaces/post_api_v1_workspace__workspaceId__iframe] to learn more about it.
+
+        Returns:
+            the url and token of the visualization token
+        """
+
+        # request visualization clone
+        path = f'/api/v1/workspace/{self.workspace_id}/iframe'
+        headers = {'x-deepint-organization': self.organization_id}
+        parameters = {'type': 'visualization', 'id': self.info.visualization_id, 'filters': filters}
+        response = handle_request(method='POST', path=path, parameters=parameters, headers=headers, credentials=self.credentials)
+
+        # fetch response data
+        url = response['url']
+        token = response['token']
+
+        return url, token
 
     def to_dict(self) -> Dict[str, Any]:
         """Builds a dictionary containing the information stored in the current object.
