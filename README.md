@@ -188,9 +188,7 @@ ws.delete()
 
 ```python3
 import pandas as pd
-from deepint import Organization, Source, Task
-
-ws_id = '03f695f2-8b6a-4b7d-9f66-e2479f8025a4'
+from deepint import Organization
 
 org = Organization.build(organization_id="3a874c05-26d1-4b8c-894d-caf90e40078b")
 ws = org.workspaces.fetch(workspace_id='example')
@@ -246,7 +244,6 @@ new_source = source.clone()
 new_source.delete()
 
 #  create derived source
-
 derived_source = ws.sources.create_derived(name='derived_test', description='desc', derived_type=DerivedSourceType.filter, origin_source_id=source.info.source_id, origin_source_b_id=None, query={}, features=source.features.fetch_all(), feature_a=None, feature_b=None, is_encrypted=False, is_shuffled=False, wait_for_creation=True)
 
 # create autoupdated and test configuration
@@ -263,9 +260,7 @@ configuration = auto_updated_source.fetch_actualization_config()
 
 ```python3
 import pandas as pd
-from deepint import Organization, Source, Task
-
-ws_id = '03f695f2-8b6a-4b7d-9f66-e2479f8025a4'
+from deepint import Organization
 
 org = Organization.build(organization_id="3a874c05-26d1-4b8c-894d-caf90e40078b")
 ws = org.workspaces.fetch(workspace_id='example')
@@ -284,7 +279,13 @@ rt_source.update_connection(max_age=10, regenerate_password=True)
 connection_info = rt_source.fetch_connection()
 
 # update instances
-data = pd.DataFrame('example.csv')
+data = [{
+    "sepalLength": 4.6,
+    "sepalWidth": 3.2,
+    "petalLength": 1.4,
+    "petalWidth": 0.2,
+    "species": "setosa"
+}]    
 rt_source.instances.update(data=data)
 
 # retrieve instances
@@ -300,9 +301,7 @@ rt_source.instances.clear_queued_instances(from_time=from_time, to_time=to_time)
 
 ```python3
 import pandas as pd
-from deepint import Organization, Source, Task
-
-ws_id = '03f695f2-8b6a-4b7d-9f66-e2479f8025a4'
+from deepint import Organization
 
 org = Organization.build(organization_id="3a874c05-26d1-4b8c-894d-caf90e40078b")
 ws = org.workspaces.fetch(workspace_id='example')
@@ -353,12 +352,12 @@ evaluation = model.predictions.evaluation()
 
 # predict one instance
 data_one_instance = data.head(n=1)
-del data_one_instance['country']
+del data_one_instance['country'] # delete target feature
 prediction_result = model.predictions.predict(data_one_instance)
 
 # predict batch
 data_some_instances = data.head(n=25)
-del data_some_instances['name']
+del data_some_instances['name'] # delete target feature
 prediction_result = model.predictions.predict_batch(data_some_instances)
 
 # predict with variaions
@@ -489,6 +488,4 @@ ws = org.workspaces.create(name='example', description='example')
 
 # perform call to /api/v1/who
 response = org.endpoint.call(http_operation='GET', path='/api/v1/who', headers=None, parameters=None, is_paginated=False)
-assert(response['user_id'] == org.account['user_id'])
-
 ```
