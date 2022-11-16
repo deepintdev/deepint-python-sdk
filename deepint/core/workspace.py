@@ -425,6 +425,154 @@ class WorkspaceDashboards:
             yield from self._dashboards
 
 
+class WorkspaceEmails:
+    """Operates over the emails of a concrete workspace.
+
+    Note: This class should not be instanced, and only be used within an :obj:`deepint.core.workspace.Workspace`.
+
+    Attributes:
+        workspace: the workspace with which to operate with its visualizations.
+    """
+
+    def __init__(self, workspace: 'Workspace', emails: Dict[str, Dict[str, str]]):
+
+        if workspace is not None and not isinstance(workspace, Workspace):
+            raise ValueError(f'workspace must be {Workspace.__class__}')
+
+        if emails is not None and not isinstance(emails, list):
+            raise ValueError('emails must be a list of dict')
+
+        if emails is not None:
+            for e in emails:
+                if e is not None and not isinstance(e, dict):
+                    raise ValueError('emails must be a list of dict')
+
+        self.workspace = workspace
+        self._emails = emails
+
+    def create(self, email: str) -> Dict[str, str]:
+        """Adds an email to current workspace.
+
+        Args:
+            email: the email to add to workspace
+
+        Returns:
+            The email object with the Deep Intelligence email information
+        """
+
+        path = f'/api/v1/workspace/{self.workspace.info.workspace_id}/emails'
+        parameters = {'email': email}
+        headers = {'x-deepint-organization': self.workspace.organization_id}
+        response = handle_request(method='POST', path=path, headers=headers, parameters=parameters, credentials=self.workspace.credentials)
+
+        # map results
+        new_email = {'email': email, 'email_id': response['id'], 'is_validated': False}
+
+        # update local state
+        self._emails = {} if self._emails is None else self._emails
+        self._emails[email] = new_email
+
+        return new_email
+
+    def load(self) -> None:
+        """Loads a workspace's emails.
+
+        If the emails were already loaded, this ones are replace by the new ones after retrieval.
+        """
+
+        # request
+        path = f'/api/v1/workspace/{self.workspace.info.workspace_id}/emails'
+        headers = {'x-deepint-organization': self.workspace.organization_id}
+        response = handle_request(method='GET', path=path, headers=headers, credentials=self.workspace.credentials)
+
+        # map results
+        self._emails = {e['email']: {'email': e['email'], 'email_id': e['id'], 'is_validated': e['validated']} for e in response}
+
+    def delete(self, email: str) -> None:
+        """Deletes an email from workspace.
+
+        Note: Also updates local state
+        """
+
+        if email not in self._emails or self._emails is None:
+            self.load()
+
+        if email not in self._emails:
+            raise DeepintBaseError(code='EMAIL_NOT_FOUND', message='The providen email was not found in the workspace emails. Please, check that is registered.')
+
+        email_id = self._emails[email]['email_id']
+
+        # request
+        path = f'/api/v1/workspace/{self.workspace.info.workspace_id}/emails/{email_id}'
+        headers = {'x-deepint-organization': self.workspace.organization_id}
+        _ = handle_request(method='DELETE', path=path, headers=headers, credentials=self.workspace.credentials)
+
+        # update local state
+        del self._emails[email]
+
+    def fetch(self, email_id: str = None, email: str = None, force_reload: bool = False) -> Optional[Dict[str, str]]:
+        """Search for an email in the workspace.
+
+        The first time is invoked, retrieve emails directly from deepint.net API. However,
+        if there is stored emails and the force_reload option is not specified, only iterates in local
+        emails. In other case, it request the emails to deepint.net API and iterates over it.
+
+        Note: if no email or id is provided, the returned value is None.
+
+        Args:
+            email_id: email's id to search by.
+            email: emails's name to search by.
+            force_reload: if set to True, emails are reloaded before the search with the
+                :obj:`deepint.core.workspace.WorkspaceEmails.load` method.
+
+        Returns:
+            Retrieved emails if found, and in other case None.
+        """
+
+        # if set to true reload
+        if force_reload or self._emails is None:
+            self.load()
+
+        # check parameters
+        if email_id is None and email is None:
+            return None
+
+        # search by given attributes
+        if email is not None and email in self._emails:
+            selected_email = self._emails[email]
+            return selected_email
+
+        if email_id is not None:
+            for e in self._emails:
+                if e['email_id'] == email_id:
+                    return e
+
+        return None
+
+    def fetch_all(self, force_reload: bool = False) -> List[Dict[str, str]]:
+        """Retrieves all workspace's emails.
+
+        The first time is invoked, retrieve emails directly from deepint.net API. However,
+        if there is stored emails and the force_reload option is not specified, only iterates in local
+        emails. In other case, it request the emails to deepint.net API and iterates over it.
+
+        Args:
+            force_reload: if set to True, emails are reloaded before the search with the
+                :obj:`deepint.core.workspace.WorkspaceEmails.load` method.
+
+        Returns:
+            the workspace's emails.
+        """
+
+        # if set to true reload
+        if force_reload or self._emails is None:
+            self.load()
+
+        cloned_emails = [{k: v for k, v in e.items()} for e in self._emails.values()]
+
+        return cloned_emails
+
+
 class WorkspaceSources:
     """Operates over the sources of a concrete workspace.
 
@@ -1523,13 +1671,13 @@ class Workspace:
         sources: :obj:`deepint.core.workspace.WorkspaceSources` to operate with workspace's sources.
         dashboards: :obj:`deepint.core.workspace.WorkspaceDashboards` to operate with workspace's dashboards.
         visualizations: :obj:`deepint.core.workspace.WorkspaceVisualizations` to operate with workspace's visualizations.
+        emails: :obj:`deepint.core.workspace.WorkspaceEmails` to operate with workspace's emails.
         credentials: credentials to authenticate with Deep Intelligence API and be allowed to perform operations over the workspace. If
                  not provided, the credentials are generated with the :obj:`deepint.auth.credentials.Credentials.build`.
     """
 
     def __init__(self, organization_id: str, credentials: Credentials, info: WorkspaceInfo, sources: List[Source], models: List[Model],
-                 tasks: List[Task], alerts: List[Alert], visualizations: List[Visualization],
-                 dashboards: List[Dashboard]) -> None:
+                 tasks: List[Task], alerts: List[Alert], visualizations: List[Visualization], dashboards: List[Dashboard], emails: List[Dict[str, str]]) -> None:
 
         if organization_id is not None and not isinstance(organization_id, str):
             raise ValueError('organization_id must be str')
@@ -1587,13 +1735,21 @@ class Workspace:
 
         if dashboards is not None and not isinstance(dashboards, list):
             raise ValueError(
-                f'sources must be a list of {Dashboard.__class__}')
+                f'dashboards must be a list of {Dashboard.__class__}')
 
         if dashboards is not None:
             for d in dashboards:
                 if d is not None and not isinstance(d, Dashboard):
                     raise ValueError(
                         f'dashboards must be a list of {Dashboard.__class__}')
+
+        if emails is not None and not isinstance(emails, list):
+            raise ValueError('emails must be a list of dict')
+
+        if emails is not None:
+            for e in emails:
+                if e is not None and not isinstance(e, dict):
+                    raise ValueError('emails must be a list of dict')
 
         self.organization_id = organization_id
         self.info = info
@@ -1604,6 +1760,7 @@ class Workspace:
         self.sources = WorkspaceSources(self, sources)
         self.dashboards = WorkspaceDashboards(self, dashboards)
         self.visualizations = WorkspaceVisualizations(self, visualizations)
+        self.emails = WorkspaceEmails(self, emails)
 
     def __str__(self):
         return f'<Workspace organization_id={self.organization_id} workspace={self.info.workspace_id} {self.info}>'
@@ -1636,7 +1793,7 @@ class Workspace:
                              models_count=None,
                              size_bytes=None)
         ws = cls(organization_id=organization_id, credentials=credentials, info=info, sources=None, models=None,
-                 tasks=None, alerts=None, visualizations=None, dashboards=None)
+                 tasks=None, alerts=None, visualizations=None, dashboards=None, emails=None)
 
         ws.load()
         ws.tasks.load()
@@ -1645,6 +1802,7 @@ class Workspace:
         ws.sources.load()
         ws.dashboards.load()
         ws.visualizations.load()
+        ws.emails.load()
 
         return ws
 
@@ -1834,4 +1992,5 @@ class Workspace:
                 "alerts": [x.to_dict() for x in self.alerts.fetch_all()],
                 "sources": [x.to_dict() for x in self.sources.fetch_all()],
                 "dashboards": [x.to_dict() for x in self.dashboards.fetch_all()],
-                "visualizations": [x.to_dict() for x in self.visualizations.fetch_all()]}
+                "visualizations": [x.to_dict() for x in self.visualizations.fetch_all()],
+                "emails": self.emails.fetch_all()}

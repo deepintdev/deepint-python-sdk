@@ -27,7 +27,7 @@ class VisualizationInfo:
         visualization_type: visualization's type
         public: if false, visualization only accesible for Organization's users
         source_id: source's id with the info for the visualization
-        configuration:
+        configuration: advanced configuration
     """
 
     def __init__(self, visualization_id: str, created: datetime, last_modified: datetime,

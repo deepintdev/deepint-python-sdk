@@ -7,7 +7,7 @@ from typing import Any, Dict, Generator, List, Optional
 
 from ..auth import Credentials
 from ..error import DeepintBaseError
-from ..util import handle_request, parse_url
+from ..util import CustomEndpointCall, handle_request, parse_url
 from .task import Task
 from .workspace import Workspace
 
@@ -242,6 +242,7 @@ class Organization:
         account: :obj:`dict` containing information about the providen token, like permissions and associated account details like id or name.
         credentials: credentials to authenticate with Deep Intelligence API and be allowed to perform operations over the task. If
                  not provided, the credentials are generated with the :obj:`deepint.auth.credentials.Credentials.build`.
+        endpoint: objet to call a custom endpoint of Deep Intelligence.
     """
 
     def __init__(self, organization_id: str, credentials: Credentials, workspaces: List[Workspace], account: Dict[Any, Any]) -> None:
@@ -267,6 +268,7 @@ class Organization:
         self.credentials = credentials
         self.organization_id = organization_id
         self.workspaces = OrganizationWorkspaces(self, workspaces)
+        self.endpoint = CustomEndpointCall(organization_id=organization_id, credentials=credentials)
 
     def __str__(self):
         return f'<Organization organization_id={self.organization_id} account={self.account}>'

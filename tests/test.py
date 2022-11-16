@@ -29,6 +29,7 @@ try:
         content = json.loads(raw_content)
     TEST_CSV = content.get("TEST_CSV")
     TEST_CSV2 = content.get("TEST_CSV2")
+    TEST_EMAIL = content.get("TEST_EMAIL")
     DEEPINT_TOKEN = content.get("DEEPINT_TOKEN")
     DEEPINT_ORGANIZATION = content.get("DEEPINT_ORGANIZATION")
     TEST_EXTERNAL_SOURCE_URL = content.get("TEST_EXTERNAL_SOURCE_URL")
@@ -40,6 +41,9 @@ if TEST_CSV is None:
 
 if TEST_CSV2 is None:
     TEST_CSV2 = 'https://people.sc.fsu.edu/~jburkardt/data/csv/letter_frequency.csv'
+
+if TEST_EMAIL is None:
+    TEST_EMAIL = 'test@deepint.net'
 
 if DEEPINT_TOKEN is None:
     DEEPINT_TOKEN = os.environ.get('DEEPINT_TOKEN')
@@ -628,6 +632,35 @@ def test_dashboard_CRUD():
     ws.delete()
 
 
+def test_emails_CRUD():
+
+    # create organization and workspace
+    org = Organization.build(organization_id=DEEPINT_ORGANIZATION)
+    workspace = org.workspaces.create(name=serve_name(TEST_WS_NAME), description=TEST_WS_DESC)
+
+    # check fetch method
+    assert(not workspace.emails.fetch_all())
+
+    # create email
+    new_email = workspace.emails.create(email=TEST_EMAIL)
+    assert(new_email['email'] == TEST_EMAIL)
+    assert(new_email['is_validated'] == False)
+
+    # check fetch all
+    emails = workspace.emails.fetch_all(force_reload=True)
+    assert(len(emails) == 1)
+    assert(workspace.emails.fetch(email=TEST_EMAIL) is not None)
+
+    # check delete
+    workspace.emails.delete(email=TEST_EMAIL)
+    try:
+        workspace.emails.delete(email=TEST_EMAIL)
+        assert False
+    except DeepintBaseError:
+        assert True
+    assert(workspace.emails.fetch(email=TEST_EMAIL) is None)
+
+
 def test_url_parser():
 
     # load organization and create workspace, source and alert
@@ -728,6 +761,20 @@ def test_url_parser():
     ws.delete()
 
 
+def test_custom_endpoint():
+
+    # build organization
+    org = Organization.build(organization_id=DEEPINT_ORGANIZATION)
+
+    # prepare parameters
+    http_operation = 'GET'
+    path = '/api/v1/who'
+
+    # perform call
+    response = org.endpoint.call(http_operation=http_operation, path=path, headers=None, parameters=None, is_paginated=False)
+    assert(response['user_id'] == org.account['user_id'])
+
+
 @pytest.fixture(scope="session", autouse=True)
 def cleanup(request):
     def clean_organization():
@@ -738,15 +785,17 @@ def cleanup(request):
 
 if __name__ == '__main__':
 
-    # test_credentials_load()
-    # test_organization_CRUD()
-    # test_workspace_CRUD()
-    # test_source_CRUD()
-    # test_real_time_source_CRUD()
-    # test_external_source_CRUD()
-    # test_task_CRUD()
-    # test_alert_CRUD()
-    # test_model_CRUD()
+    test_credentials_load()
+    test_organization_CRUD()
+    test_workspace_CRUD()
+    test_source_CRUD()
+    test_real_time_source_CRUD()
+    test_external_source_CRUD()
+    test_task_CRUD()
+    test_alert_CRUD()
+    test_model_CRUD()
     test_visualization_CRUD()
     test_dashboard_CRUD()
-    # test_url_parser()
+    test_emails_CRUD()
+    test_url_parser()
+    test_custom_endpoint()
