@@ -1,7 +1,7 @@
 deepint.util
 ===============
 
-.. automodule:: deepint.uril
+.. automodule:: deepint.util
    :special-members:
    :exclude-members:
    :members:
