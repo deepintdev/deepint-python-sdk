@@ -18,6 +18,7 @@ from deepint import *
 
 TEST_CSV = None
 TEST_CSV2 = None
+TEST_EMAIL = None
 DEEPINT_TOKEN = None
 DEEPINT_ORGANIZATION = None
 TEST_EXTERNAL_SOURCE_URL = None
