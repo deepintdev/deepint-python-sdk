@@ -243,7 +243,92 @@ source1.delete()
 new_source = source.clone()
 
 # delete source
-source.delete()
+new_source.delete()
+
+#  create derived source
+
+derived_source = ws.sources.create_derived(name='derived_test', description='desc', derived_type=DerivedSourceType.filter, origin_source_id=source.info.source_id, origin_source_b_id=None, query={}, features=source.features.fetch_all(), feature_a=None, feature_b=None, is_encrypted=False, is_shuffled=False, wait_for_creation=True)
+
+# create autoupdated and test configuration
+auto_updated_source = ws.sources.create_autoupdated(
+    name='autoupdated', description='desc', source_type=SourceType.url_json, url='https://app.deepint.net/static/sources/iris.json', json_fields=["sepalLength", "sepalWidth", "petalLength", "petalWidth", "species"], json_prefix=None, http_headers=None, ignore_security_certificates=True, is_single_json_obj=False, wait_for_creation=True
+)
+
+# fetch and update the autoupdate configuration
+auto_updated_source.update_actualization_config(auto_update=False)
+configuration = auto_updated_source.fetch_actualization_config()
+```
+
+###### Use Real Time Sources
+
+```python3
+import pandas as pd
+from deepint import Organization, Source, Task
+
+ws_id = '03f695f2-8b6a-4b7d-9f66-e2479f8025a4'
+
+org = Organization.build(organization_id="3a874c05-26d1-4b8c-894d-caf90e40078b")
+ws = org.workspaces.fetch(workspace_id='example')
+
+# create real time source
+features = [SourceFeature.from_dict(f) for f in [
+
+    {"index": 0, "name": "sepalLength", "type": "numeric", "dateFormat": "", "indexed": True}, {"index": 1, "name": "sepalWidth", "type": "numeric", "dateFormat": "", "indexed": True}, {"index": 2, "name": "petalLength", "type": "numeric", "dateFormat": "", "indexed": True}, {"index": 3, "name": "petalWidth", "type": "numeric", "dateFormat": "", "indexed": True}, {"index": 4, "name": "species", "type": "nominal", "dateFormat": "", "indexed": True}
+]]
+rt_source = ws.sources.create_real_time(name='test', description='desc', features=features)
+
+# update connection
+rt_source.update_connection(max_age=10, regenerate_password=True)
+
+# retrieve connection
+connection_info = rt_source.fetch_connection()
+
+# update instances
+data = pd.DataFrame('example.csv')
+rt_source.instances.update(data=data)
+
+# retrieve instances
+instances = rt_source.instances.fetch()
+
+# clear queued instances during last 5 minutes
+to_time = datetime.now()
+from_time = datetime.now() - timedelta(minutes=5)
+rt_source.instances.clear_queued_instances(from_time=from_time, to_time=to_time)
+```
+
+###### Use External sources
+
+```python3
+import pandas as pd
+from deepint import Organization, Source, Task
+
+ws_id = '03f695f2-8b6a-4b7d-9f66-e2479f8025a4'
+
+org = Organization.build(organization_id="3a874c05-26d1-4b8c-894d-caf90e40078b")
+ws = org.workspaces.fetch(workspace_id='example')
+
+# create source
+src_name = serve_name(TEST_SRC_NAME)
+features = [SourceFeature.from_dict(f) for f in [
+
+    {"index": 0, "name": "sepalLength", "type": "numeric", "dateFormat": "", "indexed": True}, {"index": 1, "name": "sepalWidth", "type": "numeric", "dateFormat": "", "indexed": True}, {"index": 2, "name": "petalLength", "type": "numeric", "dateFormat": "", "indexed": True}, {"index": 3, "name": "petalWidth", "type": "numeric", "dateFormat": "", "indexed": True}, {"index": 4, "name": "species", "type": "nominal", "dateFormat": "", "indexed": True}
+]]
+external_source = ws.sources.create_external(name='test', description='desc', url='https://mysource:443/example?pub=03f695f2-8b6a-4b7d-9f66-e2479f8025a4&secret=3a874c05-26d1-4b8c-894d-caf90e40078b', features=features)
+
+# update instances
+data = [{
+    "sepalLength": 4.6,
+    "sepalWidth": 3.2,
+    "petalLength": 1.4,
+    "petalWidth": 0.2,
+    "species": "setosa"
+}]
+data = pd.DataFrame(data=data)
+external_source.instances.update(data=data)
+
+# connection update and retrieval
+external_source.update_connection(url='https://mynewurl:443/example?pub=03f695f2-8b6a-4b7d-9f66-e2479f8025a4&secret=3a874c05-26d1-4b8c-894d-caf90e40078b')
+connection_url = external_source.fetch_connection()
 ```
 
 ##### Use models
@@ -339,6 +424,9 @@ vis.update(name='example2', description='example2', source='source_id')
 # clone visualization
 new_vis = vis.clone()
 
+# extract token for iframe access
+url, token = vis.fetch_iframe_token()
+
 # delete visualization
 vis.delete()
 ```
@@ -358,9 +446,49 @@ dash = ws.dashboards.create(name='example', description='example', privacy='publ
 # update dashboard
 dash.update(name='example2', description='example2')
 
-
 # clone dashboard
 new_dash = dash.clone()
+
+# extract token for iframe access
+url, token = dash.fetch_iframe_token()
+
 # delete dashboard
 dash.delete()
+```
+
+##### Use emails
+
+```python3
+from deepint import Organization
+
+# load organization and create workspace
+org = Organization.build(organization_id='e612d27d-9c81-479f-a35f-85cac80c0718')
+ws = org.workspaces.create(name='example', description='example')
+
+# create email
+new_email = workspace.emails.create(email='test@test.com')
+
+# fetch single
+test_email_info = workspace.emails.fetch(email='test@test.com')
+
+# fetch all emails
+emails = workspace.emails.fetch_all(force_reload=True)
+
+# delete email
+workspace.emails.delete(email=TEST_EMAIL)
+```
+
+#### Use custom endpoint
+
+```python3
+from deepint import Organization
+
+# load organization and create workspace
+org = Organization.build(organization_id='e612d27d-9c81-479f-a35f-85cac80c0718')
+ws = org.workspaces.create(name='example', description='example')
+
+# perform call to /api/v1/who
+response = org.endpoint.call(http_operation='GET', path='/api/v1/who', headers=None, parameters=None, is_paginated=False)
+assert(response['user_id'] == org.account['user_id'])
+
 ```

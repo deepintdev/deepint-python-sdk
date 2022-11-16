@@ -13,6 +13,10 @@ Source
    :exclude-members:
    :members:
 
+.. autoclass:: deepint.core.AutoUpdatedSource
+   :exclude-members:
+   :members:
+
 .. autoclass:: deepint.core.SourceType
    :exclude-members:
    :members:

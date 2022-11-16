@@ -1,6 +1,6 @@
 #!usr/bin/python
 
-# Copyright 2021 Deep Intelligence
+# Copyright 2023 Deep Intelligence
 # See LICENSE for details.
 
 from .alert import Alert, AlertType

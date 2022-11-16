@@ -20,7 +20,7 @@
 # -- Project information -----------------------------------------------------
 
 project = 'Deep Intelligence SDK for Python'
-copyright = '2021 Deep Intelligence'
+copyright = '2023 Deep Intelligence'
 author = 'Deep Intelligence'
 
 # The full version, including alpha/beta/rc tags
