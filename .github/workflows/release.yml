@@ -28,8 +28,8 @@ jobs:
       run: twine upload --skip-existing dist/*
 
   codecov:
-    needs: [pypi]
     runs-on: ubuntu-latest
+    steps:
     - name: downloading last version
       uses: actions/checkout@v1
     - name: setting up python 3.9
