@@ -28,12 +28,12 @@ try:
     with open(TEST_CREDENTIALS_FILE, 'r') as f:
         raw_content = f.read()
         content = json.loads(raw_content)
-    TEST_CSV = content.get("TEST_CSV")
-    TEST_CSV2 = content.get("TEST_CSV2")
-    TEST_EMAIL = content.get("TEST_EMAIL")
-    DEEPINT_TOKEN = content.get("DEEPINT_TOKEN")
-    DEEPINT_ORGANIZATION = content.get("DEEPINT_ORGANIZATION")
-    TEST_EXTERNAL_SOURCE_URL = content.get("TEST_EXTERNAL_SOURCE_URL")
+        TEST_CSV = content.get("TEST_CSV")
+        TEST_CSV2 = content.get("TEST_CSV2")
+        TEST_EMAIL = content.get("TEST_EMAIL")
+        DEEPINT_TOKEN = content.get("DEEPINT_TOKEN")
+        DEEPINT_ORGANIZATION = content.get("DEEPINT_ORGANIZATION")
+        TEST_EXTERNAL_SOURCE_URL = content.get("TEST_EXTERNAL_SOURCE_URL")
 except:
     print(f'If you are in a local enviroment, you can load your test credentials from the \'{TEST_CREDENTIALS_FILE}\' file.')
 
@@ -176,10 +176,6 @@ def test_workspace_CRUD():
     ws = org.workspaces.create(name=ws_name, description=TEST_WS_DESC)
     new_ws = ws.clone()
     assert(ws != new_ws)
-
-    # TODO: crud emails
-
-    # TODO: fetch_iframe_token
 
     # create if not exists
     ws_name = serve_name(TEST_WS_NAME)
