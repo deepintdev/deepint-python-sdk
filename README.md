@@ -1,3 +1,4 @@
+[![codecov](https://codecov.io/gh/deepintdev/deepint-python-sdk/branch/master/graph/badge.svg?token=QNAP7Y8CT1)](https://codecov.io/gh/deepintdev/deepint-python-sdk)
 # DeepIntelligence SDK for Python
 
 <p align="center">
