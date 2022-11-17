@@ -6,7 +6,7 @@ on:
 
 jobs:
 
-  release-pypi:
+  pypi:
     runs-on: ubuntu-latest
     steps:
     - name: download last changes
@@ -27,7 +27,8 @@ jobs:
         TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
       run: twine upload --skip-existing dist/*
 
-  release-codecov:
+  codecov:
+    needs: [pypi]
     runs-on: ubuntu-latest
     - name: downloading last version
       uses: actions/checkout@v1
