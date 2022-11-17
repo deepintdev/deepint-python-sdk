@@ -23,7 +23,7 @@ def requirements(filename):
 
 setup(
     name='deepint',
-    version='1.4.0',
+    version='1.4.1',
     packages=find_packages(),
     url='https://deepint.net/',
     download_url='https://github.com/deepintdev/deepint-python-SDK/archive/master.zip',
