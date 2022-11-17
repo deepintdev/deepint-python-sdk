@@ -1,9 +1,17 @@
-[![codecov](https://codecov.io/gh/deepintdev/deepint-python-sdk/branch/master/graph/badge.svg?token=QNAP7Y8CT1)](https://codecov.io/gh/deepintdev/deepint-python-sdk)
+
 # DeepIntelligence SDK for Python
 
 <p align="center">
  <img src="https://deepint.net/sites/default/files/logo2.svg" align="center" width=300 height=300>
 </p>
+
+[![codecov](https://codecov.io/gh/deepintdev/deepint-python-sdk/branch/master/graph/badge.svg?token=QNAP7Y8CT1)](https://codecov.io/gh/deepintdev/deepint-python-sdk)
+[![Python Version](https://img.shields.io/pypi/pyversions/deepint.svg)](https://pypi.org/project/deepint/)
+[![PyPI Version](https://img.shields.io/pypi/v/deepint.svg)](https://pypi.org/project/deepint/)
+[![Package Status](https://img.shields.io/pypi/status/deepint.svg)](https://pypi.org/project/deepint/)
+[![Build Status](https://github.com/deepintdev/deepint-python-sdk/workflows/CI/badge.svg)](https://github.com/deepintdev/deepint-python-sdk/actions?query=workflow%3Aci)
+[![Documentation Status](https://readthedocs.org/projects/deepint-python-sdk/badge/?version=latest)](https://deepint-python-sdk.readthedocs.io)
+
 
 ##### DeepIntelligence SDK
 deepint is a python package to work with <a href="https://deepint.net/" target="_blank" >DeepIntelligence<a> in a more easy and intuitive way, allowing the programmer to develop in a fast way the data, analisys and visualization flows.
