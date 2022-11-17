@@ -22,10 +22,9 @@ jobs:
     - name: build package wheel
       run: python setup.py sdist bdist_wheel
     - name: release on pipy
-      env:
-        TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
-        TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
-      run: twine upload --skip-existing dist/*
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        password: ${{ secrets.PYPI_API_TOKEN }}
 
   codecov:
     runs-on: ubuntu-latest
