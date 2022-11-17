@@ -17,7 +17,7 @@ from deepint import *
 # create test credentials
 
 TEST_CSV = os.environ.get('TEST_CSV')
-TEST_CSV2 = os.environ.get('TEST_CSV2')
+TEST_JSON = os.environ.get('TEST_JSON')
 TEST_EMAIL = os.environ.get('TEST_EMAIL')
 DEEPINT_TOKEN = os.environ.get('DEEPINT_TOKEN')
 DEEPINT_ORGANIZATION = os.environ.get('DEEPINT_ORGANIZATION')
@@ -36,7 +36,7 @@ try:
 
         # load
         TEST_CSV = content.get("TEST_CSV") if TEST_CSV is None else TEST_CSV
-        TEST_CSV2 = content.get("TEST_CSV2") if TEST_CSV2 is None else TEST_CSV2
+        TEST_JSON = content.get("TEST_JSON") if TEST_JSON is None else TEST_JSON
         TEST_EMAIL = content.get("TEST_EMAIL") if TEST_EMAIL is None else TEST_EMAIL
         DEEPINT_TOKEN = content.get("DEEPINT_TOKEN") if DEEPINT_TOKEN is None else DEEPINT_TOKEN
         DEEPINT_ORGANIZATION = content.get("DEEPINT_ORGANIZATION") if DEEPINT_ORGANIZATION is None else DEEPINT_ORGANIZATION
@@ -252,7 +252,7 @@ def test_source_CRUD():
     source.delete()
 
     # create if not exists (with initialization and update)
-    data2 = pd.read_csv(TEST_CSV2)
+    data2 = pd.read_json(TEST_JSON)
     src_name = serve_name(TEST_SRC_NAME)
     source = ws.sources.create_else_update(src_name, data)
     source1 = ws.sources.create_else_update(src_name, data2, replace=True)
@@ -275,7 +275,7 @@ def test_source_CRUD():
     # create autoupdated and test configuration
     src_name = serve_name(TEST_SRC_NAME)
     auto_updated_source = ws.sources.create_autoupdated(
-        name=src_name, description=TEST_WS_DESC, source_type=SourceType.url_json, url='https://app.deepint.net/static/sources/iris.json', json_fields=["sepalLength", "sepalWidth", "petalLength", "petalWidth", "species"], json_prefix=None, http_headers=None, ignore_security_certificates=True, is_single_json_obj=False, wait_for_creation=True
+        name=src_name, description=TEST_WS_DESC, source_type=SourceType.url_json, url=TEST_JSON, json_fields=["sepalLength", "sepalWidth", "petalLength", "petalWidth", "species"], json_prefix=None, http_headers=None, ignore_security_certificates=True, is_single_json_obj=False, wait_for_creation=True
     )
 
     auto_updated_source.update_actualization_config(auto_update=False)

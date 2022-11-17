@@ -46,7 +46,7 @@ jobs:
     - name: run CI tests
       env:
         TEST_CSV: ${{ secrets.TEST_CSV }}
-        TEST_CSV2: ${{ secrets.TEST_CSV2 }}
+        TEST_JSON: ${{ secrets.TEST_JSON }}
         TEST_EMAIL: ${{ secrets.TEST_EMAIL }}
         DEEPINT_TOKEN: ${{ secrets.DEEPINT_TOKEN }}
         DEEPINT_ORGANIZATION: ${{ secrets.DEEPINT_ORGANIZATION }}
