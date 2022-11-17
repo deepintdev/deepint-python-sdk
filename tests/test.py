@@ -16,44 +16,39 @@ from deepint import *
 
 # create test credentials
 
-TEST_CSV = None
-TEST_CSV2 = None
-TEST_EMAIL = None
-DEEPINT_TOKEN = None
-DEEPINT_ORGANIZATION = None
-TEST_EXTERNAL_SOURCE_URL = None
-TEST_CREDENTIALS_FILE = 'test_config.json'
+TEST_CSV = os.environ.get('TEST_CSV')
+TEST_CSV2 = os.environ.get('TEST_CSV2')
+TEST_EMAIL = os.environ.get('TEST_EMAIL')
+DEEPINT_TOKEN = os.environ.get('DEEPINT_TOKEN')
+DEEPINT_ORGANIZATION = os.environ.get('DEEPINT_ORGANIZATION')
+TEST_EXTERNAL_SOURCE_URL = os.environ.get('TEST_EXTERNAL_SOURCE_URL')
+
 
 try:
+
+    TEST_CREDENTIALS_FILE = 'test_config.json'
+
     with open(TEST_CREDENTIALS_FILE, 'r') as f:
+
+        # read content
         raw_content = f.read()
         content = json.loads(raw_content)
-        TEST_CSV = content.get("TEST_CSV")
-        TEST_CSV2 = content.get("TEST_CSV2")
-        TEST_EMAIL = content.get("TEST_EMAIL")
-        DEEPINT_TOKEN = content.get("DEEPINT_TOKEN")
-        DEEPINT_ORGANIZATION = content.get("DEEPINT_ORGANIZATION")
-        TEST_EXTERNAL_SOURCE_URL = content.get("TEST_EXTERNAL_SOURCE_URL")
+
+        # load
+        TEST_CSV = content.get("TEST_CSV") if TEST_CSV is None else TEST_CSV
+        TEST_CSV2 = content.get("TEST_CSV2") if TEST_CSV2 is None else TEST_CSV2
+        TEST_EMAIL = content.get("TEST_EMAIL") if TEST_EMAIL is None else TEST_EMAIL
+        DEEPINT_TOKEN = content.get("DEEPINT_TOKEN") if DEEPINT_TOKEN is None else DEEPINT_TOKEN
+        DEEPINT_ORGANIZATION = content.get("DEEPINT_ORGANIZATION") if DEEPINT_ORGANIZATION is None else DEEPINT_ORGANIZATION
+        TEST_EXTERNAL_SOURCE_URL = content.get("TEST_EXTERNAL_SOURCE_URL") if TEST_EXTERNAL_SOURCE_URL is None else TEST_EXTERNAL_SOURCE_URL
+
+        # credentials load
+        os.environ["DEEPINT_TOKEN"] = DEEPINT_TOKEN
+        os.environ["DEEPINT_ORGANIZATION"] = DEEPINT_ORGANIZATION
+
 except:
     print(f'If you are in a local enviroment, you can load your test credentials from the \'{TEST_CREDENTIALS_FILE}\' file.')
 
-if TEST_CSV is None:
-    TEST_CSV = 'https://people.sc.fsu.edu/~jburkardt/data/csv/letter_frequency.csv'
-
-if TEST_CSV2 is None:
-    TEST_CSV2 = 'https://people.sc.fsu.edu/~jburkardt/data/csv/letter_frequency.csv'
-
-if TEST_EMAIL is None:
-    TEST_EMAIL = 'test@deepint.net'
-
-if DEEPINT_TOKEN is None:
-    DEEPINT_TOKEN = os.environ.get('DEEPINT_TOKEN')
-
-if DEEPINT_ORGANIZATION is None:
-    DEEPINT_ORGANIZATION = os.environ.get('DEEPINT_ORGANIZATION')
-
-if TEST_EXTERNAL_SOURCE_URL is None:
-    TEST_EXTERNAL_SOURCE_URL = os.environ.get('TEST_EXTERNAL_SOURCE_URL')
 
 # objects names
 PYTHON_VERSION_NAME = platform.python_version()
@@ -71,13 +66,9 @@ TEST_VISUALIZATION_DESC = f'{PYTHON_VERSION_NAME}_Automated python SDK test visu
 TEST_DASHBOARD_NAME = f'{PYTHON_VERSION_NAME}_automated_python_sdk_test_dashboard'
 TEST_DASHBOARD_DESC = f'{PYTHON_VERSION_NAME}_Automated python SDK test dashboard'
 
-# credentials load
-os.environ["DEEPINT_TOKEN"] = DEEPINT_TOKEN
-os.environ["DEEPINT_ORGANIZATION"] = DEEPINT_ORGANIZATION
-
 
 def serve_name(object_type):
-    return f'{object_type}_{uuid.uuid4()}'[:70]
+    return f'{object_type}_{uuid.uuid4()}'[:30]
 
 
 def test_credentials_load():

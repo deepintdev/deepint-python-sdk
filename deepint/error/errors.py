@@ -43,7 +43,7 @@ class DeepintHTTPError(DeepintBaseError):
     """
 
     def __init__(self, code: str, message: str, method: str, url: str) -> None:
-        full_message = f'Error on HTTP {method} {url}. {message}'
+        full_message = f'Error on HTTP {method} {url}: {message}'
         super().__init__(code=code, message=full_message)
 
 
