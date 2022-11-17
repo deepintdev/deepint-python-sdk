@@ -5,7 +5,8 @@ on:
     branches: master
 
 jobs:
-  release:
+
+  release-pypi:
     runs-on: ubuntu-latest
     steps:
     - name: download last changes
@@ -25,3 +26,67 @@ jobs:
         TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
         TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
       run: twine upload --skip-existing dist/*
+
+  release-codecov:
+    runs-on: ubuntu-latest
+    - name: downloading last version
+      uses: actions/checkout@v1
+    - name: setting up python 3.9
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.9
+    - name: upgrade pip
+      run: python -m pip install --upgrade pip
+    - name: install package dependencies
+      run: pip install .
+    - name: install test dependencies
+      run: pip install .[tests]
+    - name: generate codecov report
+      run: python -m pytest test.py --cov=./ --cov-report=xml; codecov
+      working-directory: tests
+      env:
+        TEST_CSV: ${{ secrets.TEST_CSV }}
+        TEST_JSON: ${{ secrets.TEST_JSON }}
+        TEST_EMAIL: ${{ secrets.TEST_EMAIL }}
+        DEEPINT_TOKEN: ${{ secrets.DEEPINT_TOKEN }}
+        DEEPINT_ORGANIZATION: ${{ secrets.DEEPINT_ORGANIZATION }}
+        TEST_EXTERNAL_SOURCE_URL: ${{ secrets.TEST_EXTERNAL_SOURCE_URL }}
+    - name: upload coverage
+      uses: codecov/codecov-action@v3.1.0
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        directory: ./coverage/reports/
+        env_vars: OS,PYTHON
+        files: ./coverage.xml
+        flags: tests
+
+
+
+  generate-report:
+    - name: install test 
+  - name: Generate Report
+    run: |
+      pip install codecov
+      pip install pytest-cov
+      
+      
+
+   
+
+    strategy:
+      max-parallel: 1
+      matrix:
+        python-version: [3.7, 3.8, 3.9, 3.10]
+    steps:
+   
+    - name: setting up python ${{ matrix.python-version }}
+      uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: upgrade pip
+      run: python -m pip install --upgrade pip
+    - name: install package dependencies
+      run: pip install .
+    - name: install test dependencies
+      run: pip install .[tests]
+    - name: run CI tests
