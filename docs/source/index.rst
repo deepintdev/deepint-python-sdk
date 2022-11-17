@@ -58,4 +58,4 @@ Indices and tables
 
 Disclaimer 
 ------------
-Deep Intelligence SDK for Python © Copyright 2021 by Deep Intelligence. All rights reserved.
+Deep Intelligence SDK for Python © Copyright 2023 by Deep Intelligence. All rights reserved.

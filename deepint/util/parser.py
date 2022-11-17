@@ -1,10 +1,11 @@
 #!usr/bin/python
 
-# Copyright 2021 Deep Intelligence
+# Copyright 2023 Deep Intelligence
 # See LICENSE for details.
 
 from datetime import datetime
 from urllib.parse import urlparse
+
 from dateutil.parser import parse as python_date_parser
 
 
@@ -56,7 +57,7 @@ def parse_url(url):
 
             elif path_pieces[arg] == 'dashboard':
                 ids['dashboard_id'] = path_pieces[arg + 1]
-                
+
             elif path_pieces[arg] == 'visualization':
                 ids['visualization_id'] = path_pieces[arg + 1]
 
@@ -65,13 +66,14 @@ def parse_url(url):
         for arg in range(len(path_pieces)):
             if path_pieces[arg] == 'o':
                 ids['organization_id'] = path_pieces[arg + 1]
-            
+
         # extract from args
         query_pieces = {}
 
         for arg in pieces.query.split('&'):
             arg_pieces = arg.split('=')
-            query_pieces[arg_pieces[0]] = arg_pieces[1] if len(arg_pieces) > 1 else None
+            query_pieces[arg_pieces[0]] = arg_pieces[1] if len(
+                arg_pieces) > 1 else None
 
         if 'ws' in query_pieces:
             ids['workspace_id'] = query_pieces['ws']

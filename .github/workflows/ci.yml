@@ -2,9 +2,10 @@ name: CI
 
 on:
   push:
-    branches: [dev, master]
+    branches: [dev]
 
 jobs:
+  
   ci-docs:
     runs-on: ubuntu-latest
     steps:
@@ -22,12 +23,13 @@ jobs:
       run: pip install .[docs]
     - name: run doc tests
       run: cd docs; make html
+  
   ci-test:
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 1
       matrix:
-        python-version: [3.7, 3.8, 3.9, 3.10]
+        python-version: [3.7, 3.8, 3.9]
     steps:
     - name: downloading last version
       uses: actions/checkout@v1
@@ -44,7 +46,10 @@ jobs:
     - name: run CI tests
       env:
         TEST_CSV: ${{ secrets.TEST_CSV }}
+        TEST_JSON: ${{ secrets.TEST_JSON }}
+        TEST_EMAIL: ${{ secrets.TEST_EMAIL }}
         DEEPINT_TOKEN: ${{ secrets.DEEPINT_TOKEN }}
         DEEPINT_ORGANIZATION: ${{ secrets.DEEPINT_ORGANIZATION }}
+        TEST_EXTERNAL_SOURCE_URL: ${{ secrets.TEST_EXTERNAL_SOURCE_URL }}
       working-directory: tests
       run: python -m pytest test.py

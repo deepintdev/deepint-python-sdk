@@ -1,10 +1,11 @@
 #!usr/bin/python
 
-# Copyright 2021 Deep Intelligence
+# Copyright 2023 Deep Intelligence
 # See LICENSE for details.
 
 import io
-from setuptools import setup, find_packages
+
+from setuptools import find_packages, setup
 
 
 def readme():
@@ -22,7 +23,7 @@ def requirements(filename):
 
 setup(
     name='deepint',
-    version='1.3.6',
+    version='1.4.0',
     packages=find_packages(),
     url='https://deepint.net/',
     download_url='https://github.com/deepintdev/deepint-python-SDK/archive/master.zip',

@@ -1,18 +1,19 @@
 #!usr/bin/python
 
-# Copyright 2021 Deep Intelligence
+# Copyright 2023 Deep Intelligence
 # See LICENSE for details.
 
-import os
 import configparser
+import os
+
 from ..error import DeepintCredentialsError
 
 
 class Credentials:
     """Loads credentials (token), and manages it during runtime.
-    
-    This class must not be instantiated directly, but the :obj:`deepint_sdk.auth.Credentials.build` 
-    method must be used. Due to this fact, for details on how to provide the access token, see the 
+
+    This class must not be instantiated directly, but the :obj:`deepint_sdk.auth.Credentials.build`
+    method must be used. Due to this fact, for details on how to provide the access token, see the
     :obj:`deepint_sdk.auth.Credentials.build` method.
 
     Attributes:
@@ -20,21 +21,28 @@ class Credentials:
         instance : Host to connect with. By default is the hostname of the SaaS instance, however if you are working with an on-premise instance, this must be specified.
     """
 
-    def __init__(self, token: str, instance:str = 'app.deepint.net') -> None:
+    def __init__(self, token: str, instance: str = 'app.deepint.net') -> None:
+
+        if not isinstance(token, str):
+            raise ValueError('token must be str')
+
+        if not isinstance(instance, str):
+            raise ValueError('instance must be str')
+
         self.token = token
         self.instance = instance
 
     @classmethod
     def build(cls, token: str = None, instance: str = 'app.deepint.net') -> 'Credentials':
         """Instances a :obj:`deepint_sdk.auth.Credentials` with one of the provided methods.
-        
+
         The priority of credentials loading is the following:
             - if the credentials are provided as a parameter, this one is used.
             - then the credentials are tried to be extracted from the environment variable ```DEEPINT_TOKEN``` and ```DEEPINT_INSTANCE```.
             - then the credentials are tried to be extracted from the file ```~/.deepint.ini``` located in the user's directory.
 
         If the token is not provided in any of these ways, an :obj:`deepint_sdk.error.DeepintCredentialsError` will be thrown.
-        
+
         Example:
             [DEFAULT]
             token=a token
@@ -64,20 +72,20 @@ class Credentials:
     @classmethod
     def _load_env(cls) -> tuple:
         """Loads the credentials values from the environment variables ```DEEPINT_TOKEN``` and ```DEEPINT_INSTANCE```
-        
+
         Returns:
-            The value of the ```DEEPINT_TOKEN``` and ```DEEPINT_INSTANCE``` environment variables. If the any of the 
-            variables is not declared in environment, the retrieved value will be None, otherwise will be the 
+            The value of the ```DEEPINT_TOKEN``` and ```DEEPINT_INSTANCE``` environment variables. If the any of the
+            variables is not declared in environment, the retrieved value will be None, otherwise will be the
             value stored in that variable. Excepting the ```DEEPINT_INSTANCE``` variable that will be the SaaS instance
             hostname, app.deepint.net.
         """
 
-        return os.environ.get('DEEPINT_TOKEN', None), os.environ.get('DEEPINT_INSTANCE', 'app.deepint.net') 
+        return os.environ.get('DEEPINT_TOKEN', None), os.environ.get('DEEPINT_INSTANCE', 'app.deepint.net')
 
     @classmethod
     def _load_home_file(cls) -> tuple:
         """Loads the credentials values from the file located in the user's home directory.
-        
+
         The file loaded is the one located in ```~/.deepint.ini```, and must be a .ini file with the following format:
 
         Example:
@@ -112,7 +120,7 @@ class Credentials:
 
     def update_credentials(self, token: str, instance: str) -> None:
         """Updates the token value.
-        
+
         Alternative of updating directly the token value accessing the attribute :obj:`deepint_sdk.auth.Credentials.token`.
 
         Args:
