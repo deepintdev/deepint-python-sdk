@@ -2,9 +2,10 @@ name: CI
 
 on:
   push:
-    branches: [dev, master]
+    branches: [dev]
 
 jobs:
+  
   ci-docs:
     runs-on: ubuntu-latest
     steps:
@@ -22,6 +23,7 @@ jobs:
       run: pip install .[docs]
     - name: run doc tests
       run: cd docs; make html
+  
   ci-test:
     runs-on: ubuntu-latest
     strategy:
@@ -44,7 +46,10 @@ jobs:
     - name: run CI tests
       env:
         TEST_CSV: ${{ secrets.TEST_CSV }}
+        TEST_CSV2: ${{ secrets.TEST_CSV2 }}
+        TEST_EMAIL: ${{ secrets.TEST_EMAIL }}
         DEEPINT_TOKEN: ${{ secrets.DEEPINT_TOKEN }}
         DEEPINT_ORGANIZATION: ${{ secrets.DEEPINT_ORGANIZATION }}
+        TEST_EXTERNAL_SOURCE_URL: ${{ secrets.TEST_EXTERNAL_SOURCE_URL }}
       working-directory: tests
       run: python -m pytest test.py
