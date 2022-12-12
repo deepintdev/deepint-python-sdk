@@ -206,21 +206,6 @@ class SourceFeature:
         if computed is not None and not isinstance(computed, bool):
             raise ValueError('computed must be bool')
 
-        if null_count is not None and not isinstance(null_count, int):
-            raise ValueError('null_count must be int')
-
-        if min_value is not None and (not isinstance(min_value, int) and not isinstance(min_value, float)):
-            raise ValueError('min_value must be int or float')
-
-        if max_value is not None and (not isinstance(max_value, int) and not isinstance(max_value, float)):
-            raise ValueError('max_value must be int or float')
-
-        if mean_value is not None and (not isinstance(mean_value, int) and not isinstance(mean_value, float)):
-            raise ValueError('mean_value must be int or float')
-
-        if deviation is not None and (not isinstance(deviation, int) and not isinstance(deviation, float)):
-            raise ValueError('deviation must be int or float')
-
         if mapped_to is not None and not isinstance(mapped_to, int):
             raise ValueError('mapped_to must be int')
 
