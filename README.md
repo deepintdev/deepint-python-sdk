@@ -167,7 +167,7 @@ source = ws.sources.create_and_initialize(name='exampe', description='exampe', d
 from deepint import Organization, Credentials
 
 # load organization
-credentials = Credentials.build(token='3e6913ad-49f4-4fed-a50d-1ab703716a75')
+credentials = Credentials.build(token='<your-token>')
 org = Organization.build(organization_id='dfdb7d08-18ce-4b5a-b082-0afa0f557d31', credentials=credentials)
     
 # create workspace

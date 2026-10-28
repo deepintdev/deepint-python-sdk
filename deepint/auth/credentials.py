@@ -19,9 +19,10 @@ INSTANCE_ENV_VARS = ('AIRCORE_INSTANCE', 'DEEPINT_INSTANCE')
 
 
 def _first_env(names):
+    """Value of the first variable that is set and not empty (an empty AIRCORE_* variable must not hide a DEEPINT_* one)."""
     for name in names:
         value = os.environ.get(name)
-        if value is not None:
+        if value:
             return value
     return None
 
@@ -50,7 +51,7 @@ class Credentials:
         self.instance = instance
 
     @classmethod
-    def build(cls, token: str = None, instance: str = DEFAULT_INSTANCE) -> 'Credentials':
+    def build(cls, token: str = None, instance: str = None) -> 'Credentials':
         """Instances a :obj:`deepint_sdk.auth.Credentials` with one of the provided methods.
 
         The priority of credentials loading is the following:
@@ -74,14 +75,22 @@ class Credentials:
             An instanced credentials object.
         """
 
-        if token is None or instance is None:
+        if token is None:
             for f in [cls._load_env, cls._load_home_file]:
-                token, instance = f()
-                if token is not None and instance is not None:
+                loaded_token, loaded_instance = f()
+                if loaded_token is not None:
+                    token = loaded_token
+                    if instance is None:
+                        instance = loaded_instance
                     break
 
         if token is None:
             raise DeepintCredentialsError()
+
+        # A token given as a parameter still honours the configured instance (environment or ~/.deepint.ini), so
+        # that applications can keep pointing at their instance (for example app.deepint.net)
+        if instance is None:
+            instance = _first_env(INSTANCE_ENV_VARS) or cls._load_home_file()[1] or DEFAULT_INSTANCE
 
         cred = Credentials(token=token, instance=instance)
 

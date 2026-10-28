@@ -8,6 +8,8 @@ The Deep Intelligence platform is now called AIR-Core and is served at https://a
 
 ### Changed
 - The default instance is now `app.air-core.io` (previously `app.deepint.net`). It is used when no instance is given as a parameter, in an environment variable or in `~/.deepint.ini`.
+- `Credentials.build(token=...)` now honours the instance configured in the environment or in `~/.deepint.ini` (before, a token given as a parameter always used the built-in default), so applications can keep pointing at their instance.
+- Empty environment variables are ignored, so an empty `AIRCORE_*` variable does not hide a configured `DEEPINT_*` one.
 - Documentation, docstrings, examples and package metadata refer to AIR-Core and use `app.air-core.io` / `air-core.io` links.
 
 ### Added

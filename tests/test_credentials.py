@@ -76,3 +76,27 @@ def test_home_file_instance(clean_env):
 def test_missing_token_raises():
     with pytest.raises(DeepintCredentialsError):
         Credentials.build()
+
+
+def test_empty_new_variables_do_not_hide_legacy_ones(monkeypatch):
+    # Typical of compose files and .env templates: AIRCORE_TOKEN=${AIRCORE_TOKEN}
+    monkeypatch.setenv('AIRCORE_TOKEN', '')
+    monkeypatch.setenv('AIRCORE_INSTANCE', '')
+    monkeypatch.setenv('DEEPINT_TOKEN', 'legacy')
+    monkeypatch.setenv('DEEPINT_INSTANCE', 'app.deepint.net')
+    c = Credentials.build()
+    assert c.token == 'legacy'
+    assert c.instance == 'app.deepint.net'
+
+
+def test_token_parameter_keeps_the_configured_instance(monkeypatch):
+    monkeypatch.setenv('DEEPINT_INSTANCE', 'app.deepint.net')
+    assert Credentials.build(token='t').instance == 'app.deepint.net'
+    monkeypatch.setenv('AIRCORE_INSTANCE', 'onprem.example.org')
+    assert Credentials.build(token='t').instance == 'onprem.example.org'
+
+
+def test_token_parameter_keeps_the_instance_of_the_ini_file(clean_env):
+    (clean_env / '.deepint.ini').write_text('[DEFAULT]\ntoken=file-token\ninstance=app.deepint.net\n')
+    assert Credentials.build(token='t').instance == 'app.deepint.net'
+    assert Credentials.build(token='t').token == 't'
