@@ -23,14 +23,14 @@ def requirements(filename):
 
 setup(
     name='deepint',
-    version='1.4.3',
+    version='1.5.0',
     packages=find_packages(),
-    url='https://deepint.net/',
+    url='https://air-core.io/',
     download_url='https://github.com/deepintdev/deepint-python-SDK/archive/master.zip',
     license='Copyright',
     author='Deep Intelligence',
     author_email='devs@deepint.net',
-    description='deepint is a python package to work with Deep Intelligence in a more easy and intuitive way.',
+    description='deepint is a python package to work with AIR-Core (formerly Deep Intelligence) in a more easy and intuitive way.',
     long_description=readme(),
     long_description_content_type='text/markdown',
     install_requires=requirements(filename='requirements.txt'),
@@ -54,7 +54,7 @@ setup(
         "docs": requirements(filename='docs/requirements.txt')
     },
     keywords=', '.join([
-        'deepint', 'Deep Intelligence', 'datawarehouse', 'analysis',
+        'deepint', 'AIR-Core', 'Deep Intelligence', 'datawarehouse', 'analysis',
         'big data', 'IoT', 'Industry 4.0', 'Healthcare', 'smart cities'
     ]),
     project_urls={

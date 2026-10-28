@@ -15,7 +15,7 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 
 
 class VisualizationInfo:
-    """Stores the information of a Deep Intelligence  visualization
+    """Stores the information of an AIR-Core  visualization
 
     Attributes:
         visualization_id: visualization's id in format uuid4.
@@ -121,7 +121,7 @@ class VisualizationInfo:
 
 
 class Visualization:
-    """ A Deep Intelligence Visualization
+    """ An AIR-Core Visualization
 
     Note: this class should not be instanced directly, and it's recommended to use the
     :obj:'deepint.core.visualization.Visualization.build()' or :obj:'deepint.core.visualization.Visualization.from_url' methods
@@ -130,7 +130,7 @@ class Visualization:
         organization_id: organization where visualization is located
         workspace_id: workspace where visualization is located
         info: :obj:'deepint.core.visualization.VisualizationInfo' to operate with visualization's information.
-        credentials: credentials to authenticate with Deep Intelligence API and be allowed to perform operation over the source.
+        credentials: credentials to authenticate with AIR-Core API and be allowed to perform operation over the source.
                         if not provided, the credentials are generated with the :obj:'deepint.auth.credentials.Credentials.build'.
 
     """
@@ -174,7 +174,7 @@ class Visualization:
             organization_id: organization where visualization is located
             workspace_id: workspace where the visualization is located
             visualization_id: visualziation's id
-            credentials: credentials to authenticate with Deep Intelligence API and be allowed to perform operations
+            credentials: credentials to authenticate with AIR-Core API and be allowed to perform operations
             over the visualization. If not provided, the credentials are generated with the :obj:'deepint.auth.credentials.Credentials.build'.
 
 
@@ -197,15 +197,15 @@ class Visualization:
         The url must contain the workspace's id and the visualization's id as in the following example.
 
         Example
-            - https://app.deepint.net/o/57a4c194-3d4d-4125-904b-8a2b2a56a7c2?ws=edcc4ef4-b85a-4899-89e8-8431af98ad56&s=visualization&i=bfff6a5f-0bd2-46cd-84b7-6cf7692957a8
-            - https://app.deepint.net/api/v1/workspace/15b74790-4b2c-4ccb-9205-30d1af8d0c35/visualization/e14720cb-c645-4d05-b403-4212a5e625c5
+            - https://app.air-core.io/o/57a4c194-3d4d-4125-904b-8a2b2a56a7c2?ws=edcc4ef4-b85a-4899-89e8-8431af98ad56&s=visualization&i=bfff6a5f-0bd2-46cd-84b7-6cf7692957a8
+            - https://app.air-core.io/api/v1/workspace/15b74790-4b2c-4ccb-9205-30d1af8d0c35/visualization/e14720cb-c645-4d05-b403-4212a5e625c5
 
         Note: when the visualization is created, the visualization's information is retrieved from API
 
         Args:
             url: the visualization's API or web associated URL
             organization_id: the id of the organization. Must be providen if the API URL is used.
-            credentials: credentials to authenticate with Deep Intelligence API and be allowed to perform operations
+            credentials: credentials to authenticate with AIR-Core API and be allowed to perform operations
             over the source. If not provided, the credentials are generated with :obj:'deepint.auth.credentials.Credentials.build'
 
         Returns:
@@ -320,7 +320,7 @@ class Visualization:
         """Creates iframe token for the visualization. Requires a secret to be set.
 
         Args:
-            filters: list of filters to apply. Please, check the (advanced documentation)[https://app.deepint.net/api/v1/documentation/#/workspaces/post_api_v1_workspace__workspaceId__iframe] to learn more about it.
+            filters: list of filters to apply. Please, check the (advanced documentation)[https://app.air-core.io/api/v1/documentation/#/workspaces/post_api_v1_workspace__workspaceId__iframe] to learn more about it.
 
         Returns:
             the url and token of the visualization token

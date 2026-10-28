@@ -691,58 +691,58 @@ def test_url_parser():
 
     # check
     ws = Workspace.from_url(
-        url=f'https://app.deepint.net/o/{org_id}/workspace?ws={ws_id}', credentials=org.credentials)
+        url=f'https://app.air-core.io/o/{org_id}/workspace?ws={ws_id}', credentials=org.credentials)
     assert (ws.info.workspace_id == ws_id)
 
     ws = Workspace.from_url(
-        url=f'https://app.deepint.net/api/v1/workspace/{ws_id}', organization_id=org_id, credentials=org.credentials)
+        url=f'https://app.air-core.io/api/v1/workspace/{ws_id}', organization_id=org_id, credentials=org.credentials)
     assert (ws.info.workspace_id == ws_id)
 
-    src = Source.from_url(url=f'https://app.deepint.net/o/{org_id}/workspace?ws={ws_id}&s=source&i={src_id}',
+    src = Source.from_url(url=f'https://app.air-core.io/o/{org_id}/workspace?ws={ws_id}&s=source&i={src_id}',
                           credentials=org.credentials)
     assert (src.workspace_id == ws_id and src.info.source_id == src_id)
 
-    src = Source.from_url(url=f'https://app.deepint.net/api/v1/workspace/{ws_id}/source/{src_id}',
+    src = Source.from_url(url=f'https://app.air-core.io/api/v1/workspace/{ws_id}/source/{src_id}',
                           organization_id=org_id, credentials=org.credentials)
     assert (src.workspace_id == ws_id and src.info.source_id == src_id)
 
-    a = Alert.from_url(url=f'https://app.deepint.net/o/{org_id}/workspace?ws={ws_id}&s=alert&i={a_id}',
+    a = Alert.from_url(url=f'https://app.air-core.io/o/{org_id}/workspace?ws={ws_id}&s=alert&i={a_id}',
                        credentials=org.credentials)
     assert (a.info.alert_id == a_id)
 
-    a = Alert.from_url(url=f'https://app.deepint.net/api/v1/workspace/{ws_id}/alerts/{a_id}',
+    a = Alert.from_url(url=f'https://app.air-core.io/api/v1/workspace/{ws_id}/alerts/{a_id}',
                        organization_id=org_id, credentials=org.credentials)
     assert (a.info.alert_id == a_id)
 
     t = Task.from_url(
-        url=f'https://app.deepint.net/o/{org_id}/workspace?ws={ws_id}&s=task&i={t_id}', credentials=org.credentials)
+        url=f'https://app.air-core.io/o/{org_id}/workspace?ws={ws_id}&s=task&i={t_id}', credentials=org.credentials)
     assert (t.info.task_id == t_id)
 
-    t = Task.from_url(url=f'https://app.deepint.net/api/v1/workspace/{ws_id}/task/{t_id}', organization_id=org_id,
+    t = Task.from_url(url=f'https://app.air-core.io/api/v1/workspace/{ws_id}/task/{t_id}', organization_id=org_id,
                       credentials=org.credentials)
     assert (t.info.task_id == t_id)
 
     m = Model.from_url(
-        url=f'https://app.deepint.net/o/{org_id}/workspace?ws={ws_id}&s=model&i={m_id}', credentials=org.credentials)
+        url=f'https://app.air-core.io/o/{org_id}/workspace?ws={ws_id}&s=model&i={m_id}', credentials=org.credentials)
     assert (m.info.model_id == m_id)
 
     m = Model.from_url(
-        url=f'https://app.deepint.net/api/v1/workspace/{ws_id}/models/{m_id}', organization_id=org_id, credentials=org.credentials)
+        url=f'https://app.air-core.io/api/v1/workspace/{ws_id}/models/{m_id}', organization_id=org_id, credentials=org.credentials)
     assert (m.info.model_id == m_id)
 
-    v = Visualization.from_url(url=f'https://app.deepint.net/o/{org_id}/workspace?ws={ws_id}&s=visualization&i={v_id}',
+    v = Visualization.from_url(url=f'https://app.air-core.io/o/{org_id}/workspace?ws={ws_id}&s=visualization&i={v_id}',
                                credentials=org.credentials)
     assert (v.info.visualization_id == v_id)
 
-    v = Visualization.from_url(url=f'https://app.deepint.net/api/v1/workspace/{ws_id}/visualization/{v_id}',
+    v = Visualization.from_url(url=f'https://app.air-core.io/api/v1/workspace/{ws_id}/visualization/{v_id}',
                                organization_id=org_id, credentials=org.credentials)
     assert (v.info.visualization_id == v_id)
 
-    d = Dashboard.from_url(url=f'https://app.deepint.net/o/{org_id}/workspace?ws={ws_id}&s=dashboard&i={d_id}',
+    d = Dashboard.from_url(url=f'https://app.air-core.io/o/{org_id}/workspace?ws={ws_id}&s=dashboard&i={d_id}',
                            credentials=org.credentials)
     assert (d.info.dashboard_id == d_id)
 
-    d = Dashboard.from_url(url=f'https://app.deepint.net/api/v1/workspace/{ws_id}/dashboard/{d_id}',
+    d = Dashboard.from_url(url=f'https://app.air-core.io/api/v1/workspace/{ws_id}/dashboard/{d_id}',
                            organization_id=org_id, credentials=org.credentials)
     assert (d.info.dashboard_id == d_id)
 
