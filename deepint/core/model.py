@@ -101,7 +101,7 @@ class ModelMethod(enum.Enum):
 
 
 class ModelFeature:
-    """ Stores the index, name, type and stats of a model feature associated with a deepint.net model.
+    """ Stores the index, name, type and stats of a model feature associated with an AIR-Core model.
 
     Attributes:
         index: Feature index, starting with 0.
@@ -167,7 +167,7 @@ class ModelFeature:
 
 
 class ModelInfo:
-    """Stores the information of a Deep Intelligence model.
+    """Stores the information of an AIR-Core model.
 
     Attributes:
         model_id: model's id in format uuid4.
@@ -501,7 +501,7 @@ class ModelPredictions:
 
 
 class Model:
-    """A Deep Intelligence model.
+    """An AIR-Core model.
 
     Note: This class should not be instanced directly, and it's recommended to use the :obj:`deepint.core.model.Model.build`
     or :obj:`deepint.core.model.Model.from_url` methods.
@@ -513,7 +513,7 @@ class Model:
         input_features: :obj:`list` of :obj:`deepint.core.model.ModelFeature` to operate with model's input features.
         output_features: :obj:`list` of :obj:`deepint.core.model.ModelFeature` to operate with model's output features.
         predictions: :obj:`deepint.core.model.ModelPredictions` to operate with model's predictions.
-        credentials: credentials to authenticate with Deep Intelligence API and be allowed to perform operations over the model. If
+        credentials: credentials to authenticate with AIR-Core API and be allowed to perform operations over the model. If
                  not provided, the credentials are generated with the :obj:`deepint.auth.credentials.Credentials.build`.
     """
 
@@ -577,7 +577,7 @@ class Model:
             organization_id: organization where model is located.
             workspace_id: workspace where model is located.
             model_id: model's id.
-            credentials: credentials to authenticate with Deep Intelligence API and be allowed to perform operations over the model. If
+            credentials: credentials to authenticate with AIR-Core API and be allowed to perform operations over the model. If
                  not provided, the credentials are generated with the :obj:`deepint.auth.credentials.Credentials.build`.
 
         Returns:
@@ -600,8 +600,8 @@ class Model:
         The url must contain the workspace's id and the model's id as in the following examples:
 
         Example:
-            - https://app.deepint.net/o/3a874c05-26d1-4b8c-894d-caf90e40078b/workspace?ws=f0e2095f-fe2b-479e-be4b-bbc77207f42d&s=model&i=db98f976-f4bb-43d5-830e-bc18a3a89641
-            - https://app.deepint.net/api/v1/workspace/f0e2095f-fe2b-479e-be4b-bbc77207f42/models/db98f976-f4bb-43d5-830e-bc18a3a89641
+            - https://app.air-core.io/o/3a874c05-26d1-4b8c-894d-caf90e40078b/workspace?ws=f0e2095f-fe2b-479e-be4b-bbc77207f42d&s=model&i=db98f976-f4bb-43d5-830e-bc18a3a89641
+            - https://app.air-core.io/api/v1/workspace/f0e2095f-fe2b-479e-be4b-bbc77207f42/models/db98f976-f4bb-43d5-830e-bc18a3a89641
 
         Note: when model is created, the model's information and features are retrieved from API.
             Also it is remmarkable that if the API URL is providen, the organization_id must be provided in the optional parameter, otherwise
@@ -610,7 +610,7 @@ class Model:
         Args:
             url: the model's API or web associated URL.
             organization_id: the id of the organziation. Must be providen if the API URL is used.
-            credentials: credentials to authenticate with Deep Intelligence API and be allowed to perform operations over the model. If
+            credentials: credentials to authenticate with AIR-Core API and be allowed to perform operations over the model. If
                  not provided, the credentials are generated with the :obj:`deepint.auth.credentials.Credentials.build`.
 
         Returns:

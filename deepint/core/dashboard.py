@@ -12,7 +12,7 @@ from ..util import handle_request, parse_date, parse_url
 
 
 class DashboardInfo:
-    """Stores the information of a Deep Intelligence dashboard.
+    """Stores the information of an AIR-Core dashboard.
 
     Attributes:
         dashboard_id: dashboard's id in format uuid4.
@@ -125,7 +125,7 @@ class DashboardInfo:
 
 
 class Dashboard:
-    """"A Deep Intelligence Dashboard.
+    """"An AIR-Core Dashboard.
 
     Note: this class should not be instanced directly, and it´s recommended to use the
     :obj:'deepint.core.dashboard.Dashboard.build()' of :obj:'deepint.core.dashboard.Dashboard.from_url()' methods
@@ -134,7 +134,7 @@ class Dashboard:
         organization_id: organization where the dashboard is located
         workspace_id: workspace where the dashboard is located
         info: :obj:'deepint.core.dashboard.DashboardInfo' to operate with dashboard's information
-        credentials: credentials to authenticate with Deep Intelligence API and be allowed to perform
+        credentials: credentials to authenticate with AIR-Core API and be allowed to perform
                         over the source. If not provided, the credentials are generated with
                         :obj:'deepint.auth.credentials.Credentials.build'
     """
@@ -178,7 +178,7 @@ class Dashboard:
             organization_id: organization whre the dashboard is located
             workspace_id: workspace where the dashboard is located
             dashboard_id: dashboard's id
-            credentials: credentials to authenticate with Deep Intelligence API and be allowed to perform operations
+            credentials: credentials to authenticate with AIR-Core API and be allowed to perform operations
             over the dashboard. If not provided, the credentials are generated with the :obj:'deepint.auth.credentials.Credentials.build'.
 
         Returns :
@@ -216,15 +216,15 @@ class Dashboard:
         The url must contain the workspace's id and the dashboard's id as in the following example
 
         Example:
-             - https://app.deepint.net/o/3a874c05-26d1-4b8c-894d-caf90e40078b/workspace?ws=f0e2095f-fe2b-479e-be4b-bbc77207f42d&s=dashboard&i=db98f976-f4bb-43d5-830e-bc18a3a89641
-             - https://app.deepint.net/api/v1/workspace/f0e2095f-fe2b-479e-be4b-bbc77207f42/dashboard/db98f976-f4bb-43d5-830e-bc18a3a89641
+             - https://app.air-core.io/o/3a874c05-26d1-4b8c-894d-caf90e40078b/workspace?ws=f0e2095f-fe2b-479e-be4b-bbc77207f42d&s=dashboard&i=db98f976-f4bb-43d5-830e-bc18a3a89641
+             - https://app.air-core.io/api/v1/workspace/f0e2095f-fe2b-479e-be4b-bbc77207f42/dashboard/db98f976-f4bb-43d5-830e-bc18a3a89641
 
         Note: when the dashboard is created, the dashboard's information is retrieved from API
 
         Args:
             url: the dashboard's api or web associated URL
             organization_id: the id of the organziation. Must be providen if the API URL is used
-            credentials: credentials to authenticate with Deep Intelligence API and be allowed to perform operations
+            credentials: credentials to authenticate with AIR-Core API and be allowed to perform operations
             over the source. If not provided, the credentials are generated with :obj:'deepint.auth.credentials.Credentials.build'
 
         Returns:
@@ -327,7 +327,7 @@ class Dashboard:
         """Creates iframe token for the dashboard. Requires a secret to be set.
 
         Args:
-            filters: list of filters to apply. Please, check the (advanced documentation)[https://app.deepint.net/api/v1/documentation/#/workspaces/post_api_v1_workspace__workspaceId__iframe] to learn more about it.
+            filters: list of filters to apply. Please, check the (advanced documentation)[https://app.air-core.io/api/v1/documentation/#/workspaces/post_api_v1_workspace__workspaceId__iframe] to learn more about it.
 
         Returns:
             the url and token of the dashboard token

@@ -52,4 +52,4 @@ jobs:
         DEEPINT_ORGANIZATION: ${{ secrets.DEEPINT_ORGANIZATION }}
         TEST_EXTERNAL_SOURCE_URL: ${{ secrets.TEST_EXTERNAL_SOURCE_URL }}
       working-directory: tests
-      run: python -m pytest test.py
+      run: python -m pytest test.py test_credentials.py

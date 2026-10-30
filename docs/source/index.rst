@@ -1,11 +1,11 @@
-Deep Intelligence SDK for Python documentation
-==============================================
+AIR-Core SDK for Python documentation
+=====================================
 
-.. image:: https://deepint.net/sites/default/files/logo2.svg
+.. image:: https://air-core.io/sites/default/files/logo2.svg
     :align: center
 
-deepint is a python package to work with `Deep Intelligence <https://deepint.net/>`_ in a more easy and intuitive way, allowing the programmer to develop in a fast way the data, analisys and visualization flows.
-The package consists in a wrapper arround `Deep Intelligence API <https://app.deepint.net/api/v1/documentation/>`_, with some extra facilities:
+deepint is a python package to work with `AIR-Core <https://air-core.io/>`_ (formerly Deep Intelligence) in a more easy and intuitive way, allowing the programmer to develop in a fast way the data, analisys and visualization flows.
+The package consists in a wrapper arround `AIR-Core API <https://app.air-core.io/api/v1/documentation/>`_, with some extra facilities:
 
 .. toctree::
    :maxdepth: 1
@@ -16,17 +16,17 @@ The package consists in a wrapper arround `Deep Intelligence API <https://app.de
    ../_info/api.rst
 
 
-Deep Intelligence 
------------------
-Deep Intelligence has been designed to help you select optimal AI & Machine Learning algorithms for the analysis of your business’ datasets. This platform can be customized to read any type of data from webs, files, databases and sensors  among others. It can also stream data in real time if needed, it’s all very simple!
+AIR-Core
+--------
+AIR-Core has been designed to help you select optimal AI & Machine Learning algorithms for the analysis of your business’ datasets. This platform can be customized to read any type of data from webs, files, databases and sensors  among others. It can also stream data in real time if needed, it’s all very simple!
 
 A highly attractive, user-friendly and intuitive visualization environment will guide you in the creation and configuration of algorithms that will analyze your data optimally. The platform makes it possible to create dashboards for better visualization experience, moreover, they can be easily integrated into any other online application. Improve your business decision-making without any expert IT knowledge!
 
-Deep Intelligence is a platform for Fintech, IoT, Smart Cities, Smart Grids, Biomedical analysis, Logistics, Industry 4.0, etc. Some of our customers have already increased their business’ profits by 50%!
+AIR-Core is a platform for Fintech, IoT, Smart Cities, Smart Grids, Biomedical analysis, Logistics, Industry 4.0, etc. Some of our customers have already increased their business’ profits by 50%!
 
 Our extensive team of data analysis experts will be at your complete disposal for any information, guidance and support you may need.
 
-Visit the Deep Intelligence on it's `website <https://deepint.net/>`_.
+Visit the AIR-Core `website <https://air-core.io/>`_.
 
 
 Installation 
@@ -58,4 +58,4 @@ Indices and tables
 
 Disclaimer 
 ------------
-Deep Intelligence SDK for Python © Copyright 2023 by Deep Intelligence. All rights reserved.
+AIR-Core SDK for Python © Copyright 2023 by Deep Intelligence. All rights reserved.

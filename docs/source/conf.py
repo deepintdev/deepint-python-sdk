@@ -19,12 +19,12 @@
 
 # -- Project information -----------------------------------------------------
 
-project = 'Deep Intelligence SDK for Python'
+project = 'AIR-Core SDK for Python'
 copyright = '2023 Deep Intelligence'
 author = 'Deep Intelligence'
 
 # The full version, including alpha/beta/rc tags
-release = '1.4.1'
+release = '1.5.0'
 
 
 # -- General configuration ---------------------------------------------------
@@ -114,7 +114,7 @@ htmlhelp_basename = 'deepint_python_doc'
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'deepint', 'deepint.net Python SDK Documentation',
+    (master_doc, 'deepint', 'AIR-Core Python SDK Documentation',
      [author], 1)
 ]
 
@@ -125,8 +125,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'deepint', 'deepint.net Python SDK Documentation',
-     author, 'deepint', 'deepint.net Python SDK.',
+    (master_doc, 'deepint', 'AIR-Core Python SDK Documentation',
+     author, 'deepint', 'AIR-Core Python SDK.',
      'Developement'),
 ]
 

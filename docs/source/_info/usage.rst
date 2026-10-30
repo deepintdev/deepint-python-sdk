@@ -91,16 +91,16 @@ Load elements with URL
     src_id = 'e7da542c-f38c-42bf-bc1d-e89eac179047'
     org_id = 'organization_id="3a874c05-26d1-4b8c-894d-caf90e40078b'
 
-    ws = Workspace.from_url(url=f'https://app.deepint.net/o/{org_id}/workspace?ws={ws_id}', credentials=org.credentials)
-    ws = Workspace.from_url(url=f'https://app.deepint.net/api/v1/workspace/{ws_id}', credentials=org.credentials, organization_id=org_id)
-    t = Task.from_url(url=f'https://app.deepint.net/api/v1/workspace/{ws_id}/task/{t_id}', credentials=org.credentials, organization_id=org_id)
-    t = Task.from_url(url=f'https://app.deepint.net/o/{org_id}/workspace?ws={ws_id}&s=task&i={t_id}', credentials=org.credentials)
-    m = Model.from_url(url=f'https://app.deepint.net/o/{org_id}/workspace?ws={ws_id}&s=model&i={m_id}', credentials=org.credentials)
-    m = Model.from_url(url=f'https://app.deepint.net/api/v1/workspace/{ws_id}/models/{m_id}', credentials=org.credentials, organization_id=org_id)
-    a = Alert.from_url(url=f'https://app.deepint.net/o/{org_id}/workspace?ws={ws_id}&s=alert&i={a_id}', credentials=org.credentials)
-    a = Alert.from_url(url=f'https://app.deepint.net/api/v1/workspace/{ws_id}/alerts/{a_id}', credentials=org.credentials, organization_id=org_id)
-    src = Source.from_url(url=f'https://app.deepint.net/o/{org_id}/workspace?ws={ws_id}&s=source&i={src_id}', credentials=org.credentials)
-    src = Source.from_url(url=f'https://app.deepint.net/api/v1/workspace/{ws_id}/source/{src_id}', credentials=org.credentials, organization_id=org_id)
+    ws = Workspace.from_url(url=f'https://app.air-core.io/o/{org_id}/workspace?ws={ws_id}', credentials=org.credentials)
+    ws = Workspace.from_url(url=f'https://app.air-core.io/api/v1/workspace/{ws_id}', credentials=org.credentials, organization_id=org_id)
+    t = Task.from_url(url=f'https://app.air-core.io/api/v1/workspace/{ws_id}/task/{t_id}', credentials=org.credentials, organization_id=org_id)
+    t = Task.from_url(url=f'https://app.air-core.io/o/{org_id}/workspace?ws={ws_id}&s=task&i={t_id}', credentials=org.credentials)
+    m = Model.from_url(url=f'https://app.air-core.io/o/{org_id}/workspace?ws={ws_id}&s=model&i={m_id}', credentials=org.credentials)
+    m = Model.from_url(url=f'https://app.air-core.io/api/v1/workspace/{ws_id}/models/{m_id}', credentials=org.credentials, organization_id=org_id)
+    a = Alert.from_url(url=f'https://app.air-core.io/o/{org_id}/workspace?ws={ws_id}&s=alert&i={a_id}', credentials=org.credentials)
+    a = Alert.from_url(url=f'https://app.air-core.io/api/v1/workspace/{ws_id}/alerts/{a_id}', credentials=org.credentials, organization_id=org_id)
+    src = Source.from_url(url=f'https://app.air-core.io/o/{org_id}/workspace?ws={ws_id}&s=source&i={src_id}', credentials=org.credentials)
+    src = Source.from_url(url=f'https://app.air-core.io/api/v1/workspace/{ws_id}/source/{src_id}', credentials=org.credentials, organization_id=org_id)
 
 
 Create source from dataframe
@@ -130,7 +130,7 @@ Use workspaces
     from deepint import Organization, Credentials
 
     # load organization
-    credentials = Credentials.build(token='3e6913ad-49f4-4fed-a50d-1ab703716a75')
+    credentials = Credentials.build(token='<your-token>')
     org = Organization.build(organization_id='dfdb7d08-18ce-4b5a-b082-0afa0f557d31', credentials=credentials)
         
     # create workspace
@@ -182,7 +182,7 @@ Use sources
     retrieved_data = source.instances.fetch()
 
     # query for instances
-    query = {...} # query of deepint.net
+    query = {...} # query of AIR-Core
     retrieved_data = source.instances.fetch(where=query)
 
     # delete instances
@@ -222,7 +222,7 @@ Use sources
 
     # create autoupdated and test configuration
     auto_updated_source = ws.sources.create_autoupdated(
-        name='autoupdated', description='desc', source_type=SourceType.url_json, url='https://app.deepint.net/static/sources/iris.json', json_fields=["sepalLength", "sepalWidth", "petalLength", "petalWidth", "species"], json_prefix=None, http_headers=None, ignore_security_certificates=True, is_single_json_obj=False, wait_for_creation=True
+        name='autoupdated', description='desc', source_type=SourceType.url_json, url='https://app.air-core.io/static/sources/iris.json', json_fields=["sepalLength", "sepalWidth", "petalLength", "petalWidth", "species"], json_prefix=None, http_headers=None, ignore_security_certificates=True, is_single_json_obj=False, wait_for_creation=True
     )
 
     # fetch and update the autoupdate configuration

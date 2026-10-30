@@ -158,9 +158,9 @@ class OrganizationWorkspaces:
     def fetch(self, workspace_id: str = None, name: str = None, force_reload: bool = False) -> Optional[Workspace]:
         """Search for a workspace in the organization.
 
-        The first time is invoked, buidls a generator to retrieve workspaces directly from deepint.net API. However,
+        The first time is invoked, buidls a generator to retrieve workspaces directly from AIR-Core API. However,
         if there is stored workspaces and the force_reload option is not specified, only iterates in local
-        workspaces. In other case, it request the workspaces to deepint.net API and iterates over it.
+        workspaces. In other case, it request the workspaces to AIR-Core API and iterates over it.
 
         Note: if no name or id is provided, the returned value is None.
 
@@ -205,9 +205,9 @@ class OrganizationWorkspaces:
     def fetch_all(self, force_reload: bool = False) -> Generator[Workspace, None, None]:
         """Retrieves all organization's workspaces.
 
-        The first time is invoked, buidls a generator to retrieve workspaces directly from deepint.net API. However,
+        The first time is invoked, buidls a generator to retrieve workspaces directly from AIR-Core API. However,
         if there is stored workspaces and the force_reload option is not specified, only iterates in local
-        workspaces. In other case, it request the workspaces to deepint.net API and iterates over it.
+        workspaces. In other case, it request the workspaces to AIR-Core API and iterates over it.
 
         Args:
             force_reload: if set to True, workspaces are reloaded before the search with the
@@ -231,7 +231,7 @@ class OrganizationWorkspaces:
 
 
 class Organization:
-    """A Deep Intelligence Organization.
+    """An AIR-Core Organization.
 
     Note: This class should not be instanced directly, and it's recommended to use the :obj:`deepint.core.organization.Organization.build`
         method.
@@ -240,9 +240,9 @@ class Organization:
         organization_id: the id of the organization.
         workspaces: :obj:`deepint.core.organization.OrganizationWorkspaces` to operate with organization's workspaces.
         account: :obj:`dict` containing information about the providen token, like permissions and associated account details like id or name.
-        credentials: credentials to authenticate with Deep Intelligence API and be allowed to perform operations over the task. If
+        credentials: credentials to authenticate with AIR-Core API and be allowed to perform operations over the task. If
                  not provided, the credentials are generated with the :obj:`deepint.auth.credentials.Credentials.build`.
-        endpoint: objet to call a custom endpoint of Deep Intelligence.
+        endpoint: objet to call a custom endpoint of AIR-Core.
     """
 
     def __init__(self, organization_id: str, credentials: Credentials, workspaces: List[Workspace], account: Dict[Any, Any]) -> None:
@@ -287,7 +287,7 @@ class Organization:
 
         Args:
             organization_id: the id of the organization.
-            credentials: credentials to authenticate with Deep Intelligence API and be allowed to perform operations over the organization. If
+            credentials: credentials to authenticate with AIR-Core API and be allowed to perform operations over the organization. If
                  not provided, the credentials are generated with the :obj:`deepint.auth.credentials.Credentials.build`.
 
         Returns:
@@ -308,8 +308,8 @@ class Organization:
         The url must contain the workspace's id as in the following examples:
 
         Example:
-            - https://app.deepint.net/o/3a874c05-26d1-4b8c-894d-caf90e40078b/workspace?ws=f0e2095f-fe2b-479e-be4b-bbc77207f42d
-            - https://app.deepint.net/api/v1/workspace/f0e2095f-fe2b-479e-be4b-bbc77207f42
+            - https://app.air-core.io/o/3a874c05-26d1-4b8c-894d-caf90e40078b/workspace?ws=f0e2095f-fe2b-479e-be4b-bbc77207f42d
+            - https://app.air-core.io/api/v1/workspace/f0e2095f-fe2b-479e-be4b-bbc77207f42
 
         Note: when organization is created, the organization's information and list of it's associated objects (workspaces) are loaded.
             Also it is remmarkable that if the API URL is providen, the organization_id must be provided in the optional parameter, otherwise
@@ -318,7 +318,7 @@ class Organization:
         Args:
             url: the workspace's API or web associated URL.
             organization_id: the id of the organziation. Must be providen if the API URL is used.
-            credentials: credentials to authenticate with Deep Intelligence API and be allowed to perform operations over the workspace. If
+            credentials: credentials to authenticate with AIR-Core API and be allowed to perform operations over the workspace. If
                  not provided, the credentials are generated with the :obj:`deepint.auth.credentials.Credentials.build`.
 
         Returns:

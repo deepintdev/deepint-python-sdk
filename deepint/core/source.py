@@ -168,7 +168,7 @@ class FeatureType(enum.Enum):
 
 
 class SourceFeature:
-    """ Stores the index, name, type and stats of a feature associated with a deepint.net source.
+    """ Stores the index, name, type and stats of a feature associated with an AIR-Core source.
 
     Attributes:
         index: Feature index, starting with 0.
@@ -301,7 +301,7 @@ class SourceFeature:
             df: :obj:`pandas.DataFrame` from which the data types for each of its columns will be constructed.
             date_formats: dicionary contianing the association between column name and date format like the ones specified
                 in [#/date_formats]. Is optional to provide value for any column, but if not provided will be considered as
-                null and the date format (in case of being a date type) will be the default one assigned by Deep Intelligence.
+                null and the date format (in case of being a date type) will be the default one assigned by AIR-Core.
             min_text_length: the minimun length of an element to consider the type as text instead of nominal.
 
         Returns:
@@ -319,7 +319,7 @@ class SourceFeature:
 
 
 class SourceInfo:
-    """Stores the information of a Deep Intelligence source.
+    """Stores the information of an AIR-Core source.
 
     Attributes:
         source_id: source's id in format uuid4.
@@ -710,7 +710,7 @@ class SourceFeatures:
 
 
 class Source:
-    """A Deep Intelligence source.
+    """An AIR-Core source.
 
     Note: This class should not be instanced directly, and it's recommended to use the :obj:`deepint.core.source.Source.build`
     or :obj:`deepint.core.source.Source.from_url` methods.
@@ -721,7 +721,7 @@ class Source:
         info: :obj:`deepint.core.source.SourceInfo` to operate with source's information.
         instances: :obj:`deepint.core.source.SourceInstances` to operate with source's instances.
         features: :obj:`deepint.core.source.SourceFeatures` to operate with source's features.
-        credentials: credentials to authenticate with Deep Intelligence API and be allowed to perform operations over the source. If
+        credentials: credentials to authenticate with AIR-Core API and be allowed to perform operations over the source. If
                  not provided, the credentials are generated with the :obj:`deepint.auth.credentials.Credentials.build`.
     """
 
@@ -774,7 +774,7 @@ class Source:
             organization_id: organization where source is located.
             workspace_id: workspace where source is located.
             source_id: source's id.
-            credentials: credentials to authenticate with Deep Intelligence API and be allowed to perform operations over the source. If
+            credentials: credentials to authenticate with AIR-Core API and be allowed to perform operations over the source. If
                  not provided, the credentials are generated with the :obj:`deepint.auth.credentials.Credentials.build`.
 
         Returns:
@@ -808,8 +808,8 @@ class Source:
         The url must contain the workspace's id and the source's id as in the following examples:
 
         Example:
-            - https://app.deepint.net/o/3a874c05-26d1-4b8c-894d-caf90e40078b/workspace?ws=f0e2095f-fe2b-479e-be4b-bbc77207f42d&s=source&i=db98f976-f4bb-43d5-830e-bc18a3a89641
-            - https://app.deepint.net/api/v1/workspace/f0e2095f-fe2b-479e-be4b-bbc77207f42/source/db98f976-f4bb-43d5-830e-bc18a3a89641
+            - https://app.air-core.io/o/3a874c05-26d1-4b8c-894d-caf90e40078b/workspace?ws=f0e2095f-fe2b-479e-be4b-bbc77207f42d&s=source&i=db98f976-f4bb-43d5-830e-bc18a3a89641
+            - https://app.air-core.io/api/v1/workspace/f0e2095f-fe2b-479e-be4b-bbc77207f42/source/db98f976-f4bb-43d5-830e-bc18a3a89641
 
         Note: when source is created, the source's information and features are retrieved from API.
             Also it is remmarkable that if the API URL is providen, the organization_id must be provided in the optional parameter, otherwise
@@ -818,7 +818,7 @@ class Source:
         Args:
             url: the source's API or web associated URL.
             organization_id: the id of the organziation. Must be providen if the API URL is used.
-            credentials: credentials to authenticate with Deep Intelligence API and be allowed to perform operations over the source. If
+            credentials: credentials to authenticate with AIR-Core API and be allowed to perform operations over the source. If
                  not provided, the credentials are generated with the :obj:`deepint.auth.credentials.Credentials.build`.
 
         Returns:
@@ -928,7 +928,7 @@ class Source:
 
 
 class RealTimeSource(Source):
-    """Operates over a Deep Intelligence Real Time Source.
+    """Operates over an AIR-Core Real Time Source.
 
     Note: This class should not be instanced directly, and it's recommended to use the :obj:`deepint.core.source.Source.build`
     or :obj:`deepint.core.source.Source.from_url` methods.
@@ -939,7 +939,7 @@ class RealTimeSource(Source):
         info: :obj:`deepint.core.source.SourceInfo` to operate with source's information.
         instances: :obj:`deepint.core.source.SourceInstances` to operate with source's instances.
         features: :obj:`deepint.core.source.SourceFeatures` to operate with source's features.
-        credentials: credentials to authenticate with Deep Intelligence API and be allowed to perform operations over the source. If
+        credentials: credentials to authenticate with AIR-Core API and be allowed to perform operations over the source. If
                  not provided, the credentials are generated with the :obj:`deepint.auth.credentials.Credentials.build`.
     """
 
@@ -996,7 +996,7 @@ class RealTimeSource(Source):
 
 
 class RealTimeSourceInstances(SourceInstances):
-    """Operates over a Deep Intelligence Real Time Source's instances.
+    """Operates over an AIR-Core Real Time Source's instances.
 
     Note: This class should not be instanced, and only be used within an :obj:`deepint.core.source.Source`
 
@@ -1083,7 +1083,7 @@ class RealTimeSourceInstances(SourceInstances):
 
 
 class ExternalSource(Source):
-    """Operates over a Deep Intelligence External Source.
+    """Operates over an AIR-Core External Source.
 
     To learn more about external sources, please check the (External Sources documentation)[https://deepintdev.github.io/deepint-documentation/EXTERNAL-SOURCES.html].
 
@@ -1096,7 +1096,7 @@ class ExternalSource(Source):
         info: :obj:`deepint.core.source.SourceInfo` to operate with source's information.
         instances: :obj:`deepint.core.source.SourceInstances` to operate with source's instances.
         features: :obj:`deepint.core.source.SourceFeatures` to operate with source's features.
-        credentials: credentials to authenticate with Deep Intelligence API and be allowed to perform operations over the source. If
+        credentials: credentials to authenticate with AIR-Core API and be allowed to perform operations over the source. If
                  not provided, the credentials are generated with the :obj:`deepint.auth.credentials.Credentials.build`.
     """
 
@@ -1151,7 +1151,7 @@ class ExternalSource(Source):
 
 
 class ExternalSourceInstances(SourceInstances):
-    """Operates over a Deep Intelligence External Source's instances.
+    """Operates over an AIR-Core External Source's instances.
 
     Note: This class should not be instanced, and only be used within an :obj:`deepint.core.source.Source`
 
@@ -1179,11 +1179,11 @@ class ExternalSourceInstances(SourceInstances):
         """Overwrites the update on a external source's instances.
         """
 
-        raise DeepintBaseError(code='OPERATION_NOT_ALLOWED', message='An external source can not be updated throught Deep Intelligence. The update must be performed internally.')
+        raise DeepintBaseError(code='OPERATION_NOT_ALLOWED', message='An external source can not be updated throught AIR-Core. The update must be performed internally.')
 
 
 class AutoUpdatedSource(Source):
-    """Operates over a Deep Intelligence autoupdated source.
+    """Operates over an AIR-Core autoupdated source.
 
     Note: This class should not be instanced directly, and it's recommended to use the :obj:`deepint.core.source.Source.build`
     or :obj:`deepint.core.source.Source.from_url` methods.
@@ -1194,7 +1194,7 @@ class AutoUpdatedSource(Source):
         info: :obj:`deepint.core.source.SourceInfo` to operate with source's information.
         instances: :obj:`deepint.core.source.SourceInstances` to operate with source's instances.
         features: :obj:`deepint.core.source.SourceFeatures` to operate with source's features.
-        credentials: credentials to authenticate with Deep Intelligence API and be allowed to perform operations over the source. If
+        credentials: credentials to authenticate with AIR-Core API and be allowed to perform operations over the source. If
                  not provided, the credentials are generated with the :obj:`deepint.auth.credentials.Credentials.build`.
     """
 
@@ -1235,7 +1235,7 @@ class AutoUpdatedSource(Source):
     def update_actualization_config(self, is_json_content: bool = None, is_csv_content: bool = None, auto_update: bool = None, auto_update_period: int = None, replace_on_update: bool = None, pk_for_update: str = None, update_duplicates: bool = None, separator: str = None, quotes: str = None, has_csv_header: bool = None, json_fields: List[str] = None, json_prefix: str = None, is_single_json_obj: bool = None, date_format: str = None, url: str = None, http_headers: Dict[str, str] = None, ignore_security_certificates: bool = None, enable_store_data_parameters: bool = None, stored_data_parameters_name: str = None, stored_data_parameters_sorting_desc: bool = None, database_name: str = None, database_user: str = None, database_password: str = None, database_table: str = None, database_query: str = None, mongodb_sort: Dict[str, Any] = None, mongodb_project: str = None, database_query_limit: int = None, database_host: str = None, database_port: str = None, mqtt_topics: List[str] = None, mqtt_fields: List[Dict[str, str]] = None, database_type: SourceType = None) -> None:
         """Updates the auto udpate source configuration.
 
-        Note: the not providen configuration, is taken from the current source configuration, fetched from Deep Intelligence.
+        Note: the not providen configuration, is taken from the current source configuration, fetched from AIR-Core.
 
         Args:
             auto_update: set to true to enable auto update
@@ -1252,7 +1252,7 @@ class AutoUpdatedSource(Source):
             date_format: Date format in the CSV of JSON file. By default is the ISO format. This uses the Moment.js formats.
             url: URL for url/any and ckan source types. In case of S3. This is the URI of the object inside the bucket. For mongo and influx, this is the connection URL.
             is_csv_content: Set to True to indicate that is a CSV content. Otherwise the content will be considered as JSON.
-            http_headers: Custom headers to send by Deep Intelligence for requesting the data. example: "example: Header1: Value1 Header2: Value2"
+            http_headers: Custom headers to send by AIR-Core for requesting the data. example: "example: Header1: Value1 Header2: Value2"
             ignore_security_certificates:   Set to true to ignore invalid certificates for HTTPs
             enable_store_data_parameters: Set to true to enable stored data parameter in the Query. Any instances of ${SDP} will be replaced.
             stored_data_parameters_name: Name of the field to use for SDP.
@@ -1269,7 +1269,7 @@ class AutoUpdatedSource(Source):
             database_host: Database host
             database_port: Port number
             mqtt_topics: For MQTT, list of topics split by commas.
-            mqtt_fields: List of expected fields for MQTT. Read Deep Intelligence advanced documentation for more information.
+            mqtt_fields: List of expected fields for MQTT. Read AIR-Core advanced documentation for more information.
         """
 
         # create calculated parameters

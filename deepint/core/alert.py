@@ -44,7 +44,7 @@ class AlertType(enum.Enum):
 
 
 class AlertInfo:
-    """Stores the information of a Deep Intelligence alert.
+    """Stores the information of an AIR-Core alert.
 
     Attributes:
         alert_id: alert's id in format uuid4.
@@ -198,7 +198,7 @@ class AlertInstances:
 
 
 class Alert:
-    """A Deep Intelligence alert.
+    """An AIR-Core alert.
 
     Note: This class should not be instanced directly, and it's recommended to use the :obj:`deepint.core.alert.Alert.build`
     or :obj:`deepint.core.alert.Alert.from_url` methods.
@@ -208,7 +208,7 @@ class Alert:
         workspace_id: workspace where alert is located.
         info: :obj:`deepint.core.alert.AlertInfo` to operate with alert's information.
         instances: :obj:`deepint.core.alert.AlertInstances` to operate with alert's instances.
-        credentials: credentials to authenticate with Deep Intelligence API and be allowed to perform operations over the alert. If
+        credentials: credentials to authenticate with AIR-Core API and be allowed to perform operations over the alert. If
                  not provided, the credentials are generated with the :obj:`deepint.auth.credentials.Credentials.build`.
     """
 
@@ -251,7 +251,7 @@ class Alert:
             organization_id: organization where alert is located.
             workspace_id: workspace where alert is located.
             alert_id: alert's id.
-            credentials: credentials to authenticate with Deep Intelligence API and be allowed to perform operations over the alert. If
+            credentials: credentials to authenticate with AIR-Core API and be allowed to perform operations over the alert. If
                  not provided, the credentials are generated with the :obj:`deepint.auth.credentials.Credentials.build`.
 
         Returns:
@@ -274,8 +274,8 @@ class Alert:
         The url must contain the workspace's id and the alert's id as in the following examples:
 
         Example:
-            - https://app.deepint.net/o/3a874c05-26d1-4b8c-894d-caf90e40078b/workspace?ws=f0e2095f-fe2b-479e-be4b-bbc77207f42d&s=alert&i=db98f976-f4bb-43d5-830e-bc18a3a89641
-            - https://app.deepint.net/api/v1/workspace/f0e2095f-fe2b-479e-be4b-bbc77207f42/alerts/db98f976-f4bb-43d5-830e-bc18a3a89641
+            - https://app.air-core.io/o/3a874c05-26d1-4b8c-894d-caf90e40078b/workspace?ws=f0e2095f-fe2b-479e-be4b-bbc77207f42d&s=alert&i=db98f976-f4bb-43d5-830e-bc18a3a89641
+            - https://app.air-core.io/api/v1/workspace/f0e2095f-fe2b-479e-be4b-bbc77207f42/alerts/db98f976-f4bb-43d5-830e-bc18a3a89641
 
         Note: when alert is created, the alert's information is retrieved from API.
             Also it is remmarkable that if the API URL is providen, the organization_id must be provided in the optional parameter, otherwise
@@ -284,7 +284,7 @@ class Alert:
         Args:
             url: the alert's API or web associated URL.
             organization_id: the id of the organziation. Must be providen if the API URL is used.
-            credentials: credentials to authenticate with Deep Intelligence API and be allowed to perform operations over the alert. If
+            credentials: credentials to authenticate with AIR-Core API and be allowed to perform operations over the alert. If
                  not provided, the credentials are generated with the :obj:`deepint.auth.credentials.Credentials.build`.
 
         Returns:

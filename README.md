@@ -1,8 +1,8 @@
 
-# DeepIntelligence SDK for Python
+# AIR-Core SDK for Python
 
 <p align="center">
- <img src="https://deepint.net/sites/default/files/logo2.svg" align="center" width=300 height=300>
+ <img src="https://air-core.io/sites/default/files/logo2.svg" align="center" width=300 height=300>
 </p>
 
 [![codecov](https://codecov.io/gh/deepintdev/deepint-python-sdk/branch/master/graph/badge.svg?token=QNAP7Y8CT1)](https://codecov.io/gh/deepintdev/deepint-python-sdk)
@@ -13,25 +13,25 @@
 [![Documentation Status](https://readthedocs.org/projects/deepint-python-sdk/badge/?version=latest)](https://deepint-python-sdk.readthedocs.io)
 
 
-##### DeepIntelligence SDK
-deepint is a python package to work with <a href="https://deepint.net/" target="_blank" >DeepIntelligence<a> in a more easy and intuitive way, allowing the programmer to develop in a fast way the data, analisys and visualization flows.
-The package consists in a wrapper arround <a href="https://app.deepint.net/api/v1/documentation/" target="_blank" >DeepIntelligence API<a>, with some extra facilities.
+##### AIR-Core SDK
+deepint is a python package to work with <a href="https://air-core.io/" target="_blank" >AIR-Core</a> (formerly Deep Intelligence) in a more easy and intuitive way, allowing the programmer to develop in a fast way the data, analisys and visualization flows.
+The package consists in a wrapper arround <a href="https://app.air-core.io/api/v1/documentation/" target="_blank" >AIR-Core API</a>, with some extra facilities.
 
-##### Deep Intelligence 
-Deep Intelligence has been designed to help you select optimal AI & Machine Learning algorithms for the analysis of your business’ datasets. This platform can be customized to read any type of data from webs, files, databases, sensors…, it can also stream data in real time if needed, it’s all very simple!
+##### AIR-Core
+AIR-Core has been designed to help you select optimal AI & Machine Learning algorithms for the analysis of your business’ datasets. This platform can be customized to read any type of data from webs, files, databases, sensors…, it can also stream data in real time if needed, it’s all very simple!
 
 A highly attractive, user-friendly and intuitive visualization environment will guide you in the creation and configuration of algorithms that will analyze your data optimally. The platform makes it possible to create dashboards for better visualization experience, moreover, they can be easily integrated into any other online application. Improve your business decision-making without any expert IT knowledge!
 
-Deep Intelligence is a platform for Fintech, IoT, Smart Cities, Smart Grids, Biomedical analysis, Logistics, Industry 4.0, etc. Some of our customers have already increased their business’ profits by 50%!
+AIR-Core is a platform for Fintech, IoT, Smart Cities, Smart Grids, Biomedical analysis, Logistics, Industry 4.0, etc. Some of our customers have already increased their business’ profits by 50%!
 
 Our extensive team of data analysis experts will be at your complete disposal for any information, guidance and support you may need.
 
-Visit the DeepIntelligence on it's <a href="https://deepint.net/" target="_blank" >website<a>.
+Visit the AIR-Core <a href="https://air-core.io/" target="_blank" >website</a>.
 
 ## Installation
 
 - **install**: `python3 -m pip install deepint`
-- **run tests**: install test dependencies with `python3 -m pip install deepint[tests]`, then define the enviroment variables `DEEPINT_TOKEN` and `DEEPINT_ORGANIZATION`. Finally, go to the tests foleder and run `pytest -vv test.py`
+- **run tests**: install test dependencies with `python3 -m pip install deepint[tests]`, then define the enviroment variables `DEEPINT_TOKEN` and `DEEPINT_ORGANIZATION`. Finally, go to the tests foleder and run `pytest -vv test.py`. The credentials tests in `test_credentials.py` run offline and do not need these variables.
 - **generate doc**: install documentation dependencies with `python3 -m pip install -e deepint[docs]`, then go to the docs foleder and run `make html`
 
 ## Documentation
@@ -39,15 +39,15 @@ Visit the documentation page at <a href="https://pypi.org/project/deepint/" targ
 
 ## Setup credentials
 Credentials can be set up with one of the following methods (the token and instance is loaded in the priority defined in the order of the following items):
- - instance credentials object with the token and instance optional parameters `c = Credentials(token='a token', instance='app.deepint.net')`
- - create a environment variable called `DEEPINT_TOKEN` with the token value and another one called `DEEPINT_INSTANCE`.
+ - instance credentials object with the token and instance optional parameters `c = Credentials(token='a token', instance='app.air-core.io')`
+ - create a environment variable called `AIRCORE_TOKEN` with the token value and another one called `AIRCORE_INSTANCE`. The previous names `DEEPINT_TOKEN` and `DEEPINT_INSTANCE` are still supported; when both are set, the `AIRCORE_*` variables take precedence.
  - create a .ini file in your home directory called `.deepint` coninting in the `DEFAULT` section the key `token` and the key `instance` like in following example
      ```
      [DEFAULT]
         token=a token
-        instance=host to connect with (if not providen app.deepint.net will be taken by default)
+        instance=host to connect with (if not providen app.air-core.io will be taken by default)
      ```
-Note: If instance is not providen, the default value will be the SaaS instance `app.deepint.net`.
+Note: If instance is not providen, the default value will be the SaaS instance `app.air-core.io`. Since version 1.5.0 this default changed from `app.air-core.io`; if you need to keep using that host, set it explicitly with the `instance` parameter, the `AIRCORE_INSTANCE`/`DEEPINT_INSTANCE` environment variable or the `.deepint.ini` file.
 
 To learn more about credentials setup, please visit the <a href="https://deepint-python-sdk.readthedocs.io/en/latest/_info/authentication.html" target="_blank" >official documentation<a>.
 
@@ -132,16 +132,16 @@ ws_id = '03f695f2-8b6a-4b7d-9f66-e2479f8025a4'
 src_id = 'e7da542c-f38c-42bf-bc1d-e89eac179047'
 org_id = 'organization_id="3a874c05-26d1-4b8c-894d-caf90e40078b'
 
-ws = Workspace.from_url(url=f'https://app.deepint.net/o/{org_id}/workspace?ws={ws_id}', credentials=org.credentials)
-ws = Workspace.from_url(url=f'https://app.deepint.net/api/v1/workspace/{ws_id}', credentials=org.credentials, organization_id=org_id)
-t = Task.from_url(url=f'https://app.deepint.net/api/v1/workspace/{ws_id}/task/{t_id}', credentials=org.credentials, organization_id=org_id)
-t = Task.from_url(url=f'https://app.deepint.net/o/{org_id}/workspace?ws={ws_id}&s=task&i={t_id}', credentials=org.credentials)
-m = Model.from_url(url=f'https://app.deepint.net/o/{org_id}/workspace?ws={ws_id}&s=model&i={m_id}', credentials=org.credentials)
-m = Model.from_url(url=f'https://app.deepint.net/api/v1/workspace/{ws_id}/models/{m_id}', credentials=org.credentials, organization_id=org_id)
-a = Alert.from_url(url=f'https://app.deepint.net/o/{org_id}/workspace?ws={ws_id}&s=alert&i={a_id}', credentials=org.credentials)
-a = Alert.from_url(url=f'https://app.deepint.net/api/v1/workspace/{ws_id}/alerts/{a_id}', credentials=org.credentials, organization_id=org_id)
-src = Source.from_url(url=f'https://app.deepint.net/o/{org_id}/workspace?ws={ws_id}&s=source&i={src_id}', credentials=org.credentials)
-src = Source.from_url(url=f'https://app.deepint.net/api/v1/workspace/{ws_id}/source/{src_id}', credentials=org.credentials, organization_id=org_id)
+ws = Workspace.from_url(url=f'https://app.air-core.io/o/{org_id}/workspace?ws={ws_id}', credentials=org.credentials)
+ws = Workspace.from_url(url=f'https://app.air-core.io/api/v1/workspace/{ws_id}', credentials=org.credentials, organization_id=org_id)
+t = Task.from_url(url=f'https://app.air-core.io/api/v1/workspace/{ws_id}/task/{t_id}', credentials=org.credentials, organization_id=org_id)
+t = Task.from_url(url=f'https://app.air-core.io/o/{org_id}/workspace?ws={ws_id}&s=task&i={t_id}', credentials=org.credentials)
+m = Model.from_url(url=f'https://app.air-core.io/o/{org_id}/workspace?ws={ws_id}&s=model&i={m_id}', credentials=org.credentials)
+m = Model.from_url(url=f'https://app.air-core.io/api/v1/workspace/{ws_id}/models/{m_id}', credentials=org.credentials, organization_id=org_id)
+a = Alert.from_url(url=f'https://app.air-core.io/o/{org_id}/workspace?ws={ws_id}&s=alert&i={a_id}', credentials=org.credentials)
+a = Alert.from_url(url=f'https://app.air-core.io/api/v1/workspace/{ws_id}/alerts/{a_id}', credentials=org.credentials, organization_id=org_id)
+src = Source.from_url(url=f'https://app.air-core.io/o/{org_id}/workspace?ws={ws_id}&s=source&i={src_id}', credentials=org.credentials)
+src = Source.from_url(url=f'https://app.air-core.io/api/v1/workspace/{ws_id}/source/{src_id}', credentials=org.credentials, organization_id=org_id)
 ```
 
 ##### Create source from pandas.DataFrame
@@ -167,7 +167,7 @@ source = ws.sources.create_and_initialize(name='exampe', description='exampe', d
 from deepint import Organization, Credentials
 
 # load organization
-credentials = Credentials.build(token='3e6913ad-49f4-4fed-a50d-1ab703716a75')
+credentials = Credentials.build(token='<your-token>')
 org = Organization.build(organization_id='dfdb7d08-18ce-4b5a-b082-0afa0f557d31', credentials=credentials)
     
 # create workspace
@@ -217,7 +217,7 @@ task.resolve()
 retrieved_data = source.instances.fetch()
 
 # query for instances
-query = {...} # query of deepint.net
+query = {...} # query of AIR-Core
 retrieved_data = source.instances.fetch(where=query)
 
 # delete instances
@@ -257,7 +257,7 @@ derived_source = ws.sources.create_derived(name='derived_test', description='des
 
 # create autoupdated and test configuration
 auto_updated_source = ws.sources.create_autoupdated(
-    name='autoupdated', description='desc', source_type=SourceType.url_json, url='https://app.deepint.net/static/sources/iris.json', json_fields=["sepalLength", "sepalWidth", "petalLength", "petalWidth", "species"], json_prefix=None, http_headers=None, ignore_security_certificates=True, is_single_json_obj=False, wait_for_creation=True
+    name='autoupdated', description='desc', source_type=SourceType.url_json, url='https://app.air-core.io/static/sources/iris.json', json_fields=["sepalLength", "sepalWidth", "petalLength", "petalWidth", "species"], json_prefix=None, http_headers=None, ignore_security_certificates=True, is_single_json_obj=False, wait_for_creation=True
 )
 
 # fetch and update the autoupdate configuration

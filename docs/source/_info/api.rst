@@ -1,7 +1,7 @@
 API Reference
 =============
 
-This section discusses the API offered by this package to interact with `Deep Intelligence <https://deepint.net/>`_.
+This section discusses the API offered by this package to interact with `AIR-Core <https://air-core.io/>`_.
 
 .. toctree::
    :maxdepth: 5

@@ -42,7 +42,7 @@ jobs:
     - name: install test dependencies
       run: pip install .[tests]
     - name: generate codecov report
-      run: python -m pytest test.py --cov=./ --cov-report=xml; codecov
+      run: python -m pytest test.py test_credentials.py --cov=./ --cov-report=xml; codecov
       working-directory: tests
       env:
         TEST_CSV: ${{ secrets.TEST_CSV }}

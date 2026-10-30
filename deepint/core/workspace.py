@@ -24,7 +24,7 @@ from .visualization import Visualization
 
 
 class WorkspaceInfo:
-    """Stores the information of a Deep Intelligence workspace.
+    """Stores the information of an AIR-Core workspace.
 
     Attributes:
         workspace_id: workspace's id in format uuid4.
@@ -214,9 +214,9 @@ class WorkspaceVisualizations:
     def fetch(self, visualization_id: str = None, name: str = None, force_reload: bool = False) -> Optional[Visualization]:
         """Search for a visualization in the workspace.
 
-        The first time is invoked, builds a generator to retrieve visualizations directly from deepint.net API. However,
+        The first time is invoked, builds a generator to retrieve visualizations directly from AIR-Core API. However,
         if there is stored visualizations and the force_reload option is not specified, only iterates in local
-        visualizations. In other case, it request the visualizations to deepint.net API and iterates over it.
+        visualizations. In other case, it request the visualizations to AIR-Core API and iterates over it.
 
         Note: if no name or id is provided, the returned value is None.
 
@@ -254,9 +254,9 @@ class WorkspaceVisualizations:
     def fetch_all(self, force_reload: bool = False) -> Generator[Visualization, None, None]:
         """Retrieves all workspace's visualizations.
 
-        The first time is invoked, builds a generator to retrieve visualizations directly from deepint.net API. However,
+        The first time is invoked, builds a generator to retrieve visualizations directly from AIR-Core API. However,
         if there is stored visualizations and the force_reload option is not specified, only iterates in local
-        visualizations. In other case, it request the visualizations to deepint.net API and iterates over it.
+        visualizations. In other case, it request the visualizations to AIR-Core API and iterates over it.
 
         Args:
             force_reload: if set to True, visualizations are reloaded before the search with the
@@ -360,9 +360,9 @@ class WorkspaceDashboards:
     def fetch(self, dashboard_id: str = None, name: str = None, force_reload: bool = False) -> Optional[Dashboard]:
         """Search for a dashboard in the workspace.
 
-        The first time is invoked, builds a generator to retrieve dashboards directly from deepint.net API. However,
+        The first time is invoked, builds a generator to retrieve dashboards directly from AIR-Core API. However,
         if there is stored dashboards and the force_reload option is not specified, only iterates in local
-        dashboards. In other case, it request the dashboards to deepint.net API and iterates over it.
+        dashboards. In other case, it request the dashboards to AIR-Core API and iterates over it.
 
         Note: if no name or id is provided, the returned value is None.
 
@@ -400,9 +400,9 @@ class WorkspaceDashboards:
     def fetch_all(self, force_reload: bool = False) -> Generator[Dashboard, None, None]:
         """Retrieves all workspace's dashboards.
 
-        The first time is invoked, builds a generator to retrieve dashboards directly from deepint.net API. However,
+        The first time is invoked, builds a generator to retrieve dashboards directly from AIR-Core API. However,
         if there is stored dashboards and the force_reload option is not specified, only iterates in local
-        dashboards. In other case, it request the dashboards to deepint.net API and iterates over it.
+        dashboards. In other case, it request the dashboards to AIR-Core API and iterates over it.
 
         Args:
             force_reload: if set to True, dashboards are reloaded before the search with the
@@ -457,7 +457,7 @@ class WorkspaceEmails:
             email: the email to add to workspace
 
         Returns:
-            The email object with the Deep Intelligence email information
+            The email object with the AIR-Core email information
         """
 
         path = f'/api/v1/workspace/{self.workspace.info.workspace_id}/emails'
@@ -513,9 +513,9 @@ class WorkspaceEmails:
     def fetch(self, email_id: str = None, email: str = None, force_reload: bool = False) -> Optional[Dict[str, str]]:
         """Search for an email in the workspace.
 
-        The first time is invoked, retrieve emails directly from deepint.net API. However,
+        The first time is invoked, retrieve emails directly from AIR-Core API. However,
         if there is stored emails and the force_reload option is not specified, only iterates in local
-        emails. In other case, it request the emails to deepint.net API and iterates over it.
+        emails. In other case, it request the emails to AIR-Core API and iterates over it.
 
         Note: if no email or id is provided, the returned value is None.
 
@@ -552,9 +552,9 @@ class WorkspaceEmails:
     def fetch_all(self, force_reload: bool = False) -> List[Dict[str, str]]:
         """Retrieves all workspace's emails.
 
-        The first time is invoked, retrieve emails directly from deepint.net API. However,
+        The first time is invoked, retrieve emails directly from AIR-Core API. However,
         if there is stored emails and the force_reload option is not specified, only iterates in local
-        emails. In other case, it request the emails to deepint.net API and iterates over it.
+        emails. In other case, it request the emails to AIR-Core API and iterates over it.
 
         Args:
             force_reload: if set to True, emails are reloaded before the search with the
@@ -817,7 +817,7 @@ class WorkspaceSources:
             date_format: Date format in the CSV of JSON file. By default is the ISO format. This uses the Moment.js formats.
             url: URL for url/any and ckan source types. In case of S3. This is the URI of the object inside the bucket. For mongo and influx, this is the connection URL.
             is_csv_content: Set to True to indicate that is a CSV content. Otherwise the content will be considered as JSON.
-            http_headers: Custom headers to send by Deep Intelligence for requesting the data. example: "example: Header1: Value1 Header2: Value2"
+            http_headers: Custom headers to send by AIR-Core for requesting the data. example: "example: Header1: Value1 Header2: Value2"
             ignore_security_certificates:   Set to true to ignore invalid certificates for HTTPs
             enable_store_data_parameters: Set to true to enable stored data parameter in the Query. Any instances of ${SDP} will be replaced.
             stored_data_parameters_name: Name of the field to use for SDP.
@@ -833,7 +833,7 @@ class WorkspaceSources:
             host: Database host
             port: Port number
             mqtt_topics: For MQTT, list of topics split by commas.
-            mqtt_fields: List of expected fields for MQTT. Read Deep Intelligence advanced documentation for more information.
+            mqtt_fields: List of expected fields for MQTT. Read AIR-Core advanced documentation for more information.
             wait_for_creation: if set to true, it waits until the source is created and a Source is returned. Otherwise it returns a :obj:`deepint.core.Task`, that when resolved, the new source id will be returned and the source will not be added to the local state, beign neccesary to update it manually with the method :obj:`deepint.core.WorkspaceSources.load`.
 
         Returns:
@@ -988,7 +988,7 @@ class WorkspaceSources:
             data: data to in initialize the source. The source's feature names and data types are extracted from the given DataFrame.
             date_formats: dicionary contianing the association between feature (column name) and date format like the ones specified
                 in [#/date_formats]. Is optional to provide value for any column, but if not provided will be considered as
-                null and the date format (in case of being a date type) will be the default one assigned by Deep Intelligence.
+                null and the date format (in case of being a date type) will be the default one assigned by AIR-Core.
             wait_for_initialization: if set to True, before the source creation, it waits for the source to update it's instances. In
                 other case, only the source is created, and then is returned without any guarantee that the instances have been
                 inserted into the source.
@@ -1096,9 +1096,9 @@ class WorkspaceSources:
     def fetch(self, source_id: str = None, name: str = None, force_reload: bool = False) -> Optional[Source]:
         """Search for a source in the workspace.
 
-        The first time is invoked, builds a generator to retrieve sources directly from deepint.net API. However,
+        The first time is invoked, builds a generator to retrieve sources directly from AIR-Core API. However,
         if there is stored sources and the force_reload option is not specified, only iterates in local
-        sources. In other case, it request the sources to deepint.net API and iterates over it.
+        sources. In other case, it request the sources to AIR-Core API and iterates over it.
 
         Note: if no name or id is provided, the returned value is None.
 
@@ -1136,9 +1136,9 @@ class WorkspaceSources:
     def fetch_all(self, force_reload: bool = False) -> Generator[Source, None, None]:
         """Retrieves all workspace's sources.
 
-        The first time is invoked, builds a generator to retrieve sources directly from deepint.net API. However,
+        The first time is invoked, builds a generator to retrieve sources directly from AIR-Core API. However,
         if there is stored sources and the force_reload option is not specified, only iterates in local
-        sources. In other case, it request the sources to deepint.net API and iterates over it.
+        sources. In other case, it request the sources to AIR-Core API and iterates over it.
 
         Args:
             force_reload: if set to True, sources are reloaded before the search with the
@@ -1208,9 +1208,9 @@ class WorkspaceTasks:
     def fetch(self, task_id: str = None, name: str = None, force_reload: bool = False) -> Optional[Task]:
         """Search for a task in the workspace.
 
-        The first time is invoked, builds a generator to retrieve tasks directly from deepint.net API. However,
+        The first time is invoked, builds a generator to retrieve tasks directly from AIR-Core API. However,
         if there is stored tasks and the force_reload option is not specified, only iterates in local
-        tasks. In other case, it request the tasks to deepint.net API and iterates over it.
+        tasks. In other case, it request the tasks to AIR-Core API and iterates over it.
 
         Note: if no name or id is provided, the returned value is None.
 
@@ -1248,9 +1248,9 @@ class WorkspaceTasks:
     def fetch_by_status(self, status: TaskStatus, force_reload: bool = False) -> Generator[Task, None, None]:
         """Search for a task in the workspace by status.
 
-        The first time is invoked, builds a generator to retrieve tasks directly from deepint.net API. However,
+        The first time is invoked, builds a generator to retrieve tasks directly from AIR-Core API. However,
         if there is stored tasks and the force_reload option is not specified, only iterates in local
-        tasks. In other case, it request the tasks to deepint.net API and iterates over it.
+        tasks. In other case, it request the tasks to AIR-Core API and iterates over it.
 
         Args:
             status: task's status to search by.
@@ -1272,9 +1272,9 @@ class WorkspaceTasks:
     def fetch_all(self, force_reload: bool = False) -> Generator[Task, None, None]:
         """Retrieves all workspace's tasks.
 
-        The first time is invoked, builds a generator to retrieve tasks directly from deepint.net API. However,
+        The first time is invoked, builds a generator to retrieve tasks directly from AIR-Core API. However,
         if there is stored tasks and the force_reload option is not specified, only iterates in local
-        tasks. In other case, it request the tasks to deepint.net API and iterates over it.
+        tasks. In other case, it request the tasks to AIR-Core API and iterates over it.
 
         Args:
             force_reload: if set to True, tasks are reloaded before the search with the
@@ -1396,9 +1396,9 @@ class WorkspaceAlerts:
     def fetch(self, alert_id: str = None, name: str = None, force_reload: bool = False) -> Optional[Alert]:
         """Search for a alert in the workspace.
 
-        The first time is invoked, buidls a generator to retrieve alerts directly from deepint.net API. However,
+        The first time is invoked, buidls a generator to retrieve alerts directly from AIR-Core API. However,
         if there is stored alerts and the force_reload option is not specified, only iterates in local
-        alerts. In other case, it request the alerts to deepint.net API and iterates over it.
+        alerts. In other case, it request the alerts to AIR-Core API and iterates over it.
 
         Note: if no name or id is provided, the returned value is None.
 
@@ -1436,9 +1436,9 @@ class WorkspaceAlerts:
     def fetch_all(self, force_reload: bool = False) -> Generator[Alert, None, None]:
         """Retrieves all workspace's alerts.
 
-        The first time is invoked, buidls a generator to retrieve alerts directly from deepint.net API. However,
+        The first time is invoked, buidls a generator to retrieve alerts directly from AIR-Core API. However,
         if there is stored alerts and the force_reload option is not specified, only iterates in local
-        alerts. In other case, it request the alerts to deepint.net API and iterates over it.
+        alerts. In other case, it request the alerts to AIR-Core API and iterates over it.
 
         Args:
             force_reload: if set to True, alerts are reloaded before the search with the
@@ -1591,9 +1591,9 @@ class WorkspaceModels:
     def fetch(self, model_id: str = None, name: str = None, force_reload: bool = False) -> Optional[Model]:
         """Search for a model in the workspace.
 
-        The first time is invoked, buidls a generator to retrieve models directly from deepint.net API. However,
+        The first time is invoked, buidls a generator to retrieve models directly from AIR-Core API. However,
         if there is stored models and the force_reload option is not specified, only iterates in local
-        models. In other case, it request the models to deepint.net API and iterates over it.
+        models. In other case, it request the models to AIR-Core API and iterates over it.
 
         Note: if no name or id is provided, the returned value is None.
 
@@ -1631,9 +1631,9 @@ class WorkspaceModels:
     def fetch_all(self, force_reload: bool = False) -> Generator[Model, None, None]:
         """Retrieves all workspace's models.
 
-        The first time is invoked, buidls a generator to retrieve models directly from deepint.net API. However,
+        The first time is invoked, buidls a generator to retrieve models directly from AIR-Core API. However,
         if there is stored models and the force_reload option is not specified, only iterates in local
-        models. In other case, it request the models to deepint.net API and iterates over it.
+        models. In other case, it request the models to AIR-Core API and iterates over it.
 
         Args:
             force_reload: if set to True, models are reloaded before the search with the
@@ -1657,7 +1657,7 @@ class WorkspaceModels:
 
 
 class Workspace:
-    """A Deep Intelligence workspace.
+    """An AIR-Core workspace.
 
     Note: This class should not be instanced directly, and it's recommended to use the :obj:`deepint.core.workspace.Workspace.build`
     or :obj:`deepint.core.workspace.Workspace.from_url` methods.
@@ -1672,7 +1672,7 @@ class Workspace:
         dashboards: :obj:`deepint.core.workspace.WorkspaceDashboards` to operate with workspace's dashboards.
         visualizations: :obj:`deepint.core.workspace.WorkspaceVisualizations` to operate with workspace's visualizations.
         emails: :obj:`deepint.core.workspace.WorkspaceEmails` to operate with workspace's emails.
-        credentials: credentials to authenticate with Deep Intelligence API and be allowed to perform operations over the workspace. If
+        credentials: credentials to authenticate with AIR-Core API and be allowed to perform operations over the workspace. If
                  not provided, the credentials are generated with the :obj:`deepint.auth.credentials.Credentials.build`.
     """
 
@@ -1780,7 +1780,7 @@ class Workspace:
         Args:
             organization_id: organization where workspace is located.
             workspace_id: workspace's id.
-            credentials: credentials to authenticate with Deep Intelligence API and be allowed to perform operations over the workspace. If
+            credentials: credentials to authenticate with AIR-Core API and be allowed to perform operations over the workspace. If
                  not provided, the credentials are generated with the :obj:`deepint.auth.credentials.Credentials.build`.
 
         Returns:
@@ -1813,8 +1813,8 @@ class Workspace:
         The url must contain the workspace's id as in the following examples:
 
         Example:
-            - https://app.deepint.net/o/3a874c05-26d1-4b8c-894d-caf90e40078b/workspace?ws=f0e2095f-fe2b-479e-be4b-bbc77207f42d
-            - https://app.deepint.net/api/v1/workspace/f0e2095f-fe2b-479e-be4b-bbc77207f42
+            - https://app.air-core.io/o/3a874c05-26d1-4b8c-894d-caf90e40078b/workspace?ws=f0e2095f-fe2b-479e-be4b-bbc77207f42d
+            - https://app.air-core.io/api/v1/workspace/f0e2095f-fe2b-479e-be4b-bbc77207f42
 
         Note: when workspace is created, the workspace's information and list of it's associated objects (tasks, models, sources, etc.) are loaded.
             Also it is remmarkable that if the API URL is providen, the organization_id must be provided in the optional parameter, otherwise
@@ -1823,7 +1823,7 @@ class Workspace:
         Args:
             url: the workspace's API or web associated URL.
             organization_id: the id of the organziation. Must be providen if the API URL is used.
-            credentials: credentials to authenticate with Deep Intelligence API and be allowed to perform operations over the workspace. If
+            credentials: credentials to authenticate with AIR-Core API and be allowed to perform operations over the workspace. If
                  not provided, the credentials are generated with the :obj:`deepint.auth.credentials.Credentials.build`.
 
         Returns:

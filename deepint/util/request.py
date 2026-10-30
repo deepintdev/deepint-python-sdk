@@ -111,10 +111,10 @@ def handle_paginated_request(credentials: Credentials = None, method: str = None
 
 
 class CustomEndpointCall:
-    """Allows to create custom endpoints to communciate with Deep Intelligence.
+    """Allows to create custom endpoints to communciate with AIR-Core.
 
     Attributes:
-        organization_id: Deep Intelligence organization.
+        organization_id: AIR-Core organization.
         credentials: credentials to auth with.
     """
 
@@ -130,16 +130,16 @@ class CustomEndpointCall:
             http_operation: the HTTP method to run, such as GET, POST, PUT and DELETE.
             path: the URL path to run
             headers: the headers except the organization and authentication information.
-            parameters: the parameters to send in the URL or body of the request. It will be formated to suite the Deep Intelligence restrictions.
+            parameters: the parameters to send in the URL or body of the request. It will be formated to suite the AIR-Core restrictions.
             is_paginated: set to True if you want to handle a paginated request. In that case a generator will be returned to iterate through all results.
 
         Returns:
-            The response of Deep Intelligence API
+            The response of AIR-Core API
         """
 
         # check
         if http_operation.upper() not in ['GET', 'POST', 'PUT', 'DELETE']:
-            raise DeepintBaseError(code='OPERATION_NOT_ALLOWED', message='The allowed operations on Deep Intelligence custon endpoint, currenlty are GET, POST, PUT and DELETE')
+            raise DeepintBaseError(code='OPERATION_NOT_ALLOWED', message='The allowed operations on AIR-Core custon endpoint, currenlty are GET, POST, PUT and DELETE')
 
         # preprocess parameters
         http_operation = http_operation.upper()
