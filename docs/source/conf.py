@@ -24,7 +24,7 @@ copyright = '2023 Deep Intelligence'
 author = 'Deep Intelligence'
 
 # The full version, including alpha/beta/rc tags
-release = '1.5.0'
+release = '1.6.0'
 
 
 # -- General configuration ---------------------------------------------------

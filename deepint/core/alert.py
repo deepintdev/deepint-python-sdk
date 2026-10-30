@@ -4,6 +4,8 @@
 # See LICENSE for details.
 
 import enum
+import hashlib
+import hmac
 from datetime import datetime
 from typing import Any, Dict, List
 
@@ -197,6 +199,73 @@ class AlertInstances:
         return response
 
 
+class AlertWebhook:
+    """Operates over the signed outgoing webhook of a concrete alert.
+
+    When the alert fires, AIR-Core sends a JSON event to the URL, signed with HMAC-SHA256 over the raw body
+    (header ``x-signature-256: sha256=<hex>``), with ``x-aircore-timestamp`` and ``x-aircore-delivery`` headers for
+    replay protection. Use :obj:`deepint.core.alert.AlertWebhook.verify_signature` in the receiver.
+
+    Note: This class should not be instanced, and only be used within an :obj:`deepint.core.alert.Alert`
+
+    Attributes:
+        alert: the alert whose webhook is managed
+    """
+
+    def __init__(self, alert: 'Alert'):
+
+        self.alert = alert
+
+    def _path(self, suffix: str = '') -> str:
+        return f'/api/v1/workspace/{self.alert.workspace_id}/alerts/{self.alert.info.alert_id}/webhook{suffix}'
+
+    def _headers(self) -> Dict[str, str]:
+        return {'x-deepint-organization': self.alert.organization_id}
+
+    def get(self) -> Dict[str, Any]:
+        """Retrieves the webhook configuration (never its secret) and its latest deliveries."""
+        return handle_request(method='GET', path=self._path(), headers=self._headers(), credentials=self.alert.credentials)
+
+    def set(self, url: str, enabled: bool = True) -> Dict[str, Any]:
+        """Creates or updates the webhook. When it is created, the response includes the signing secret, only once.
+
+        Args:
+            url: HTTPS URL that receives the events.
+            enabled: False to keep the configuration without sending events.
+        """
+        return handle_request(method='POST', path=self._path(), headers=self._headers(),
+                              parameters={'url': url, 'enabled': enabled}, credentials=self.alert.credentials)
+
+    def delete(self):
+        """Removes the webhook of the alert."""
+        handle_request(method='DELETE', path=self._path(), headers=self._headers(), credentials=self.alert.credentials)
+
+    def rotate_secret(self) -> Dict[str, Any]:
+        """Replaces the signing secret. The new secret is returned only in this response; the previous one stops working at once."""
+        return handle_request(method='POST', path=self._path('/rotate'), headers=self._headers(),
+                              parameters={}, credentials=self.alert.credentials)
+
+    def test(self) -> Dict[str, Any]:
+        """Sends a test event and returns the result of the delivery."""
+        return handle_request(method='POST', path=self._path('/test'), headers=self._headers(),
+                              parameters={}, credentials=self.alert.credentials)
+
+    @staticmethod
+    def verify_signature(secret: str, body: bytes, signature_header: str) -> bool:
+        """Checks the signature of a received event (receiver side).
+
+        Args:
+            secret: the signing secret of the webhook.
+            body: the raw body of the request, as received.
+            signature_header: the value of the ``x-signature-256`` header.
+
+        Returns:
+            True if the event was signed with the secret.
+        """
+        expected = 'sha256=' + hmac.new(secret.encode('utf-8'), body, hashlib.sha256).hexdigest()
+        return hmac.compare_digest(expected, (signature_header or '').strip())
+
+
 class Alert:
     """An AIR-Core alert.
 
@@ -231,6 +300,7 @@ class Alert:
         self.workspace_id = workspace_id
         self.organization_id = organization_id
         self.instances = AlertInstances(self)
+        self.webhook = AlertWebhook(self)
 
     def __str__(self):
         return f'<Alert organization_id={self.organization_id} workspace={self.workspace_id} {self.info}>'

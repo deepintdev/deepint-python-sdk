@@ -500,6 +500,64 @@ class ModelPredictions:
         return data_copy
 
 
+class ModelExplanations:
+    """Explains the predictions of a concrete model (SHAP), when the explainability module of the instance is enabled.
+
+    Note: This class should not be instanced, and only be used within an :obj:`deepint.core.model.Model`
+
+    Attributes:
+        model: the model whose predictions are explained
+    """
+
+    def __init__(self, model: 'Model'):
+
+        self.model = model
+
+    def global_importances(self, lang: str = None) -> Dict[str, Any]:
+        """Retrieves the global explanation of the model: the importance of each input feature.
+
+        Args:
+            lang: language of the texts of the explanation ('es' or 'en'). If not provided, the instance's default.
+
+        Returns:
+            a dictionary with the method, the base value and the list of importances (feature, importance, signed_mean)
+        """
+
+        path = f'/api/v1/workspace/{self.model.workspace_id}/models/{self.model.info.model_id}/explanation'
+        headers = {'x-deepint-organization': self.model.organization_id}
+        return handle_request(method='GET', path=path, headers=headers, parameters={'lang': lang},
+                              credentials=self.model.credentials)
+
+    def explain_prediction(self, inputs: Any, lang: str = None) -> Dict[str, Any]:
+        """Explains one prediction: the contribution of each input value.
+
+        Args:
+            inputs: the input values, as a list in the order of the model's input features, or a DataFrame of one row
+                whose columns are the model's input feature names.
+            lang: language of the texts of the explanation ('es' or 'en'). If not provided, the instance's default.
+
+        Returns:
+            a dictionary with the prediction, the base value and the list of contributions (feature, value, contribution)
+        """
+
+        if isinstance(inputs, pd.DataFrame):
+            if len(inputs) != 1:
+                raise DeepintBaseError(code='LARGE_DATA', message='The provided DataFrame must have a lenght of 1')
+            missing = [f.name for f in self.model.input_features if f.name not in inputs.columns]
+            if missing:
+                raise DeepintBaseError(code='INPUTS_MISMATCH',
+                                       message=f'The provided DataFrame lacks the model\'s features: {missing}')
+            row = inputs.where(pd.notnull(inputs), None).to_dict(orient='records')[0]
+            inputs = [row[f.name] for f in self.model.input_features]
+        elif not isinstance(inputs, list):
+            raise DeepintBaseError(code='TYPE_MISMATCH', message='The provided inputs must be a list or a DataFrame.')
+
+        path = f'/api/v1/workspace/{self.model.workspace_id}/models/{self.model.info.model_id}/explanation/prediction'
+        headers = {'x-deepint-organization': self.model.organization_id}
+        return handle_request(method='POST', path=path, headers=headers, parameters={'inputs': inputs, 'lang': lang},
+                              credentials=self.model.credentials)
+
+
 class Model:
     """An AIR-Core model.
 
@@ -513,6 +571,7 @@ class Model:
         input_features: :obj:`list` of :obj:`deepint.core.model.ModelFeature` to operate with model's input features.
         output_features: :obj:`list` of :obj:`deepint.core.model.ModelFeature` to operate with model's output features.
         predictions: :obj:`deepint.core.model.ModelPredictions` to operate with model's predictions.
+        explanations: :obj:`deepint.core.model.ModelExplanations` to explain the model and its predictions.
         credentials: credentials to authenticate with AIR-Core API and be allowed to perform operations over the model. If
                  not provided, the credentials are generated with the :obj:`deepint.auth.credentials.Credentials.build`.
     """
@@ -557,6 +616,7 @@ class Model:
         if self.input_features is not None:
             self.input_features.sort(key=lambda x: x.index)
         self.predictions = ModelPredictions(self)
+        self.explanations = ModelExplanations(self)
 
     def __str__(self):
         return f'<Model organization_id={self.organization_id} workspace={self.workspace_id} {self.info}>'
@@ -676,6 +736,21 @@ class Model:
         # update local state
         self.info.name = name
         self.info.description = description
+
+    def card(self, lang: str = None) -> Dict[str, Any]:
+        """Retrieves the model card: purpose, training data, evaluation, explainability and limitations of the model.
+
+        Args:
+            lang: language of the texts of the card ('es' or 'en'). If not provided, the instance's default.
+
+        Returns:
+            a dictionary with the model card
+        """
+
+        path = f'/api/v1/workspace/{self.workspace_id}/models/{self.info.model_id}/card'
+        headers = {'x-deepint-organization': self.organization_id}
+        return handle_request(method='GET', path=path, headers=headers, parameters={'format': 'json', 'lang': lang},
+                              credentials=self.credentials)
 
     def delete(self):
         """Deletes a model.

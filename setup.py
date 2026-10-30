@@ -23,7 +23,7 @@ def requirements(filename):
 
 setup(
     name='deepint',
-    version='1.5.0',
+    version='1.6.0',
     packages=find_packages(),
     url='https://air-core.io/',
     download_url='https://github.com/deepintdev/deepint-python-SDK/archive/master.zip',

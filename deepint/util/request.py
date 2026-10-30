@@ -38,7 +38,7 @@ def handle_request(credentials: Credentials = None, method: str = None, path: st
     # build request parameters
     auth_header = {'x-auth-token': credentials.token}
     if headers is None:
-        header = headers
+        header = auth_header
     else:
         header = {**auth_header, **headers}
 

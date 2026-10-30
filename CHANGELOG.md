@@ -2,6 +2,22 @@
 
 All notable changes to this package are documented in this file.
 
+## 1.6.0
+
+Support for the features of AIR-Core 1.1.
+
+### Added
+- `Model.explanations`: `global_importances()` and `explain_prediction()` return the SHAP explanation of a model and of one prediction (the input may be a list or a one-row DataFrame).
+- `Model.card()` returns the model card (purpose, training data, evaluation, explainability, limitations).
+- `Alert.webhook`: `get()`, `set()`, `delete()`, `rotate_secret()` and `test()` manage the signed outgoing webhook of an alert, and `AlertWebhook.verify_signature()` checks the `x-signature-256` header in the receiver.
+- `Organization.ai_activity()` reads the audit log of the assistant, the MCP server and the explainability module.
+- Offline tests for these requests (`tests/test_api_1_1.py`).
+
+### Fixed
+- Requests made without extra headers were sent without the `x-auth-token` header.
+- `Organization(...)` raised a `TypeError` when it received a non-empty list of workspaces.
+- The documentation builds again on Read the Docs (the configuration used the removed `python.version` key).
+
 ## 1.5.0
 
 The Deep Intelligence platform is now called AIR-Core and is served at https://app.air-core.io.

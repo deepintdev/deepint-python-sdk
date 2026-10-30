@@ -486,6 +486,36 @@ emails = workspace.emails.fetch_all(force_reload=True)
 workspace.emails.delete(email=TEST_EMAIL)
 ```
 
+#### Explainability, model cards, alert webhooks and AI activity (AIR-Core 1.1)
+
+```python3
+from deepint import Organization
+
+org = Organization.build(organization_id='e612d27d-9c81-479f-a35f-85cac80c0718')
+ws = org.workspaces.fetch(name='example')
+model = ws.models.fetch(name='example')
+
+# explainability (SHAP, when the explainability module of the instance is enabled)
+importances = model.explanations.global_importances(lang='en')
+explanation = model.explanations.explain_prediction([5.1, 3.5, 1.4, 0.2], lang='en')
+
+# model card: purpose, data, evaluation, explainability and limitations
+card = model.card(lang='en')
+
+# signed webhook of an alert (the secret is returned once, when it is created or rotated)
+alert = ws.alerts.fetch(name='example')
+created = alert.webhook.set(url='https://hooks.example.com/aircore')
+alert.webhook.test()
+print(alert.webhook.get())
+
+# in the receiver: check the x-signature-256 header against the raw body
+from deepint.core.alert import AlertWebhook
+AlertWebhook.verify_signature(secret, raw_body, request_headers['x-signature-256'])
+
+# audit log of the assistant, MCP and explainability calls (organization administrators)
+activity = org.ai_activity(channel='mcp', limit=20)
+```
+
 #### Use custom endpoint
 
 ```python3

@@ -5,17 +5,20 @@
 # Required
 version: 2
 
+# Read the Docs no longer accepts python.version: the build image and the Python version go here
+build:
+   os: ubuntu-22.04
+   tools:
+      python: "3.8"
+
 # Build documentation in the docs/ directory with Sphinx
 sphinx:
    configuration: docs/source/conf.py
 
-
-# Optionally set the version of Python and requirements required to build your docs
+# Install the package with the requirements of the documentation
 python:
-   version: 3.8
    install:
       - method: pip
         path: .
         extra_requirements:
            - docs
-   system_packages: true
