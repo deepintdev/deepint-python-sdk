@@ -3,7 +3,8 @@
 # Copyright 2023 Deep Intelligence
 # See LICENSE for details.
 
-from typing import Any, Dict, Generator, List, Optional
+from datetime import datetime
+from typing import Any, Dict, Generator, List, Optional, Union
 
 from ..auth import Credentials
 from ..error import DeepintBaseError
@@ -28,7 +29,7 @@ class OrganizationWorkspaces:
 
         if workspaces is not None:
             for w in workspaces:
-                if w is not None and not isinstance(w, workspaces):
+                if w is not None and not isinstance(w, Workspace):
                     raise ValueError(f'workspaces must be a list of {Workspace.__class__}')
 
         self.organization = organization
@@ -261,7 +262,7 @@ class Organization:
 
         if workspaces is not None:
             for w in workspaces:
-                if w is not None and not isinstance(w, workspaces):
+                if w is not None and not isinstance(w, Workspace):
                     raise ValueError(f'workspaces must be a list of {Workspace.__class__}')
 
         self.account = account
@@ -367,6 +368,32 @@ class Organization:
         for ws in self.workspaces.fetch_all():
             ws.delete()
         self.workspaces.load()
+
+    def ai_activity(self, page: int = 0, limit: int = 50, channel: str = None, user: str = None,
+                    from_time: Union[datetime, int] = None, to_time: Union[datetime, int] = None) -> Dict[str, Any]:
+        """Retrieves the audit log of the AI layer of the organization: calls of the assistant, the MCP server and
+        the explainability module (organization administrators only).
+
+        Args:
+            page: page to retrieve, starting at 0.
+            limit: entries per page (at most 100).
+            channel: only this channel ('assistant', 'mcp' or 'xai').
+            user: only the activity of this user id.
+            from_time: only entries from this moment (datetime or Unix time in milliseconds). A datetime without time zone is taken as local time.
+            to_time: only entries until this moment (datetime or Unix time in milliseconds). A datetime without time zone is taken as local time.
+
+        Returns:
+            a dictionary with page, limit, total and the items of the page
+        """
+
+        def millis(t):
+            return int(t.timestamp() * 1000) if isinstance(t, datetime) else t
+
+        parameters = {'page': page, 'limit': limit, 'channel': channel, 'user': user,
+                      'from': millis(from_time), 'to': millis(to_time)}
+        headers = {'x-deepint-organization': self.organization_id}
+        return handle_request(method='GET', path='/api/v1/ai/activity', headers=headers, parameters=parameters,
+                              credentials=self.credentials)
 
     def to_dict(self) -> Dict[str, Any]:
         """Builds a dictionary containing the information stored in current object.

@@ -47,7 +47,7 @@ Credentials can be set up with one of the following methods (the token and insta
         token=a token
         instance=host to connect with (if not providen app.air-core.io will be taken by default)
      ```
-Note: If instance is not providen, the default value will be the SaaS instance `app.air-core.io`. Since version 1.5.0 this default changed from `app.air-core.io`; if you need to keep using that host, set it explicitly with the `instance` parameter, the `AIRCORE_INSTANCE`/`DEEPINT_INSTANCE` environment variable or the `.deepint.ini` file.
+Note: If instance is not provided, the default value will be the SaaS instance `app.air-core.io`. Since version 1.5.0 this default changed from `app.deepint.net`; if you need to keep using that host, set it explicitly with the `instance` parameter, the `AIRCORE_INSTANCE`/`DEEPINT_INSTANCE` environment variable or the `.deepint.ini` file.
 
 To learn more about credentials setup, please visit the <a href="https://deepint-python-sdk.readthedocs.io/en/latest/_info/authentication.html" target="_blank" >official documentation<a>.
 
@@ -484,6 +484,36 @@ emails = workspace.emails.fetch_all(force_reload=True)
 
 # delete email
 workspace.emails.delete(email=TEST_EMAIL)
+```
+
+#### Explainability, model cards, alert webhooks and AI activity (AIR-Core 1.1)
+
+```python3
+from deepint import Organization
+
+org = Organization.build(organization_id='e612d27d-9c81-479f-a35f-85cac80c0718')
+ws = org.workspaces.fetch(name='example')
+model = ws.models.fetch(name='example')
+
+# explainability (SHAP, when the explainability module of the instance is enabled)
+importances = model.explanations.global_importances(lang='en')
+explanation = model.explanations.explain_prediction([5.1, 3.5, 1.4, 0.2], lang='en')
+
+# model card: purpose, data, evaluation, explainability and limitations
+card = model.card(lang='en')
+
+# signed webhook of an alert (the secret is returned once, when it is created or rotated)
+alert = ws.alerts.fetch(name='example')
+created = alert.webhook.set(url='https://hooks.example.com/aircore')
+alert.webhook.test()
+print(alert.webhook.get())
+
+# in the receiver: check the x-signature-256 header against the raw body
+from deepint.core.alert import AlertWebhook
+AlertWebhook.verify_signature(secret, raw_body, request_headers['x-signature-256'])
+
+# audit log of the assistant, MCP and explainability calls (organization administrators)
+activity = org.ai_activity(channel='mcp', limit=20)
 ```
 
 #### Use custom endpoint
