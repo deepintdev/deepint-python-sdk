@@ -379,8 +379,8 @@ class Organization:
             limit: entries per page (at most 100).
             channel: only this channel ('assistant', 'mcp' or 'xai').
             user: only the activity of this user id.
-            from_time: only entries from this moment (datetime or Unix time in milliseconds).
-            to_time: only entries until this moment (datetime or Unix time in milliseconds).
+            from_time: only entries from this moment (datetime or Unix time in milliseconds). A datetime without time zone is taken as local time.
+            to_time: only entries until this moment (datetime or Unix time in milliseconds). A datetime without time zone is taken as local time.
 
         Returns:
             a dictionary with page, limit, total and the items of the page

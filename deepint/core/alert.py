@@ -7,7 +7,7 @@ import enum
 import hashlib
 import hmac
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Union
 
 from ..auth import Credentials
 from ..error import DeepintBaseError
@@ -203,8 +203,9 @@ class AlertWebhook:
     """Operates over the signed outgoing webhook of a concrete alert.
 
     When the alert fires, AIR-Core sends a JSON event to the URL, signed with HMAC-SHA256 over the raw body
-    (header ``x-signature-256: sha256=<hex>``), with ``x-aircore-timestamp`` and ``x-aircore-delivery`` headers for
-    replay protection. Use :obj:`deepint.core.alert.AlertWebhook.verify_signature` in the receiver.
+    (header ``x-signature-256: sha256=<hex>``). Use :obj:`deepint.core.alert.AlertWebhook.verify_signature` in the
+    receiver. The ``x-aircore-delivery`` header identifies each event, and is the same in its retries: process an
+    identifier only once to discard replayed or repeated deliveries (the ``x-aircore-timestamp`` header is not signed).
 
     Note: This class should not be instanced, and only be used within an :obj:`deepint.core.alert.Alert`
 
@@ -222,9 +223,14 @@ class AlertWebhook:
     def _headers(self) -> Dict[str, str]:
         return {'x-deepint-organization': self.alert.organization_id}
 
-    def get(self) -> Dict[str, Any]:
-        """Retrieves the webhook configuration (never its secret) and its latest deliveries."""
-        return handle_request(method='GET', path=self._path(), headers=self._headers(), credentials=self.alert.credentials)
+    def get(self, limit: int = 20) -> Dict[str, Any]:
+        """Retrieves the webhook configuration (never its secret) and its latest deliveries.
+
+        Args:
+            limit: number of latest deliveries to retrieve (1 to 100).
+        """
+        return handle_request(method='GET', path=self._path(), headers=self._headers(), parameters={'limit': limit},
+                              credentials=self.alert.credentials)
 
     def set(self, url: str, enabled: bool = True) -> Dict[str, Any]:
         """Creates or updates the webhook. When it is created, the response includes the signing secret, only once.
@@ -251,19 +257,23 @@ class AlertWebhook:
                               parameters={}, credentials=self.alert.credentials)
 
     @staticmethod
-    def verify_signature(secret: str, body: bytes, signature_header: str) -> bool:
+    def verify_signature(secret: str, body: Union[bytes, str], signature_header: str) -> bool:
         """Checks the signature of a received event (receiver side).
 
         Args:
             secret: the signing secret of the webhook.
-            body: the raw body of the request, as received.
+            body: the raw body of the request, as received (bytes, or text decoded as UTF-8).
             signature_header: the value of the ``x-signature-256`` header.
 
         Returns:
-            True if the event was signed with the secret.
+            True if the event was signed with the secret. False for any other header, including a missing or
+            malformed one.
         """
+        if isinstance(body, str):
+            body = body.encode('utf-8')
         expected = 'sha256=' + hmac.new(secret.encode('utf-8'), body, hashlib.sha256).hexdigest()
-        return hmac.compare_digest(expected, (signature_header or '').strip())
+        received = (signature_header or '').strip().encode('utf-8', 'replace')
+        return hmac.compare_digest(expected.encode('ascii'), received)
 
 
 class Alert:

@@ -47,7 +47,7 @@ Credentials can be set up with one of the following methods (the token and insta
         token=a token
         instance=host to connect with (if not providen app.air-core.io will be taken by default)
      ```
-Note: If instance is not providen, the default value will be the SaaS instance `app.air-core.io`. Since version 1.5.0 this default changed from `app.air-core.io`; if you need to keep using that host, set it explicitly with the `instance` parameter, the `AIRCORE_INSTANCE`/`DEEPINT_INSTANCE` environment variable or the `.deepint.ini` file.
+Note: If instance is not provided, the default value will be the SaaS instance `app.air-core.io`. Since version 1.5.0 this default changed from `app.deepint.net`; if you need to keep using that host, set it explicitly with the `instance` parameter, the `AIRCORE_INSTANCE`/`DEEPINT_INSTANCE` environment variable or the `.deepint.ini` file.
 
 To learn more about credentials setup, please visit the <a href="https://deepint-python-sdk.readthedocs.io/en/latest/_info/authentication.html" target="_blank" >official documentation<a>.
 

@@ -7,9 +7,9 @@ All notable changes to this package are documented in this file.
 Support for the features of AIR-Core 1.1.
 
 ### Added
-- `Model.explanations`: `global_importances()` and `explain_prediction()` return the SHAP explanation of a model and of one prediction (the input may be a list or a one-row DataFrame).
+- `Model.explanations`: `global_importances()` and `explain_prediction()` return the SHAP explanation of a model and of one prediction (the input may be a list or a one-row DataFrame; missing values are sent as null and dates as ISO 8601 text).
 - `Model.card()` returns the model card (purpose, training data, evaluation, explainability, limitations).
-- `Alert.webhook`: `get()`, `set()`, `delete()`, `rotate_secret()` and `test()` manage the signed outgoing webhook of an alert, and `AlertWebhook.verify_signature()` checks the `x-signature-256` header in the receiver.
+- `Alert.webhook`: `get()` (with the number of latest deliveries), `set()`, `delete()`, `rotate_secret()` and `test()` manage the signed outgoing webhook of an alert, and `AlertWebhook.verify_signature()` checks the `x-signature-256` header in the receiver (the body may be bytes or text; a malformed header is reported as not valid).
 - `Organization.ai_activity()` reads the audit log of the assistant, the MCP server and the explainability module.
 - Offline tests for these requests (`tests/test_api_1_1.py`).
 
@@ -17,6 +17,7 @@ Support for the features of AIR-Core 1.1.
 - Requests made without extra headers were sent without the `x-auth-token` header.
 - `Organization(...)` raised a `TypeError` when it received a non-empty list of workspaces.
 - The documentation builds again on Read the Docs (the configuration used the removed `python.version` key).
+- The README said the default instance changed from `app.air-core.io`; it changed from `app.deepint.net`.
 
 ## 1.5.0
 

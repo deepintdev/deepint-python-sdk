@@ -8,6 +8,7 @@
 
 import hashlib
 import hmac
+import json
 import unittest
 from datetime import datetime, timezone
 from unittest import mock
@@ -78,6 +79,33 @@ class TestApi11(unittest.TestCase):
         self.assertTrue(request.call_args.kwargs['url'].endswith('/alerts/al1/webhook/rotate'))
         alert.webhook.test()
         self.assertTrue(request.call_args.kwargs['url'].endswith('/alerts/al1/webhook/test'))
+
+    @mock.patch('deepint.util.request.requests.request')
+    def test_explain_prediction_sends_missing_values_and_dates_as_json(self, request):
+        request.return_value = response({'contributions': []})
+        model().explanations.explain_prediction(pd.DataFrame([{'a': float('nan'), 'b': 2.0}]))
+        self.assertEqual(request.call_args.kwargs['json']['inputs'], [None, 2.0])
+        model().explanations.explain_prediction(pd.DataFrame([{'a': pd.Timestamp('2026-10-30T12:00:00'), 'b': pd.NaT}]))
+        sent = request.call_args.kwargs['json']['inputs']
+        self.assertEqual(sent, ['2026-10-30T12:00:00', None])
+        json.dumps(sent, allow_nan=False)
+        model().explanations.explain_prediction([float('nan'), 3])
+        self.assertEqual(request.call_args.kwargs['json']['inputs'], [None, 3])
+
+    @mock.patch('deepint.util.request.requests.request')
+    def test_webhook_deliveries_limit(self, request):
+        request.return_value = response({'webhook': None, 'deliveries': []})
+        info = AlertInfo(alert_id='al1', name='n', description='', created=None, last_modified=None, subscriptions=[],
+                         color='#000', alert_type=None, source_id='s', condition={}, time_stall=None)
+        Alert('org1', 'ws1', CREDENTIALS, info).webhook.get(limit=50)
+        self.assertEqual(request.call_args.kwargs['params'], {'limit': 50})
+
+    def test_webhook_signature_of_text_bodies_and_malformed_headers(self):
+        body = '{"event":"alert","name":"Ñandú"}'
+        header = 'sha256=' + hmac.new(b'secret', body.encode('utf-8'), hashlib.sha256).hexdigest()
+        self.assertTrue(AlertWebhook.verify_signature('secret', body, header))
+        self.assertFalse(AlertWebhook.verify_signature('secret', body, 'sha256=ñ'))
+        self.assertFalse(AlertWebhook.verify_signature('secret', body, ''))
 
     def test_webhook_signature(self):
         body = b'{"event":"alert"}'

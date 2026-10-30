@@ -16,6 +16,18 @@ from ..util import handle_request, parse_date, parse_url
 from .source import FeatureType, SourceFeature
 
 
+def _json_value(value: Any) -> Any:
+    """A value of a DataFrame or a list as JSON accepts it: missing values (NaN, NaT, None) as null, dates as ISO
+    8601 text and NumPy scalars as Python ones."""
+    if value is None or (not isinstance(value, (list, dict, str)) and pd.isna(value)):
+        return None
+    if isinstance(value, (pd.Timestamp, datetime)):
+        return value.isoformat()
+    if hasattr(value, 'item') and not isinstance(value, (list, dict, str)):
+        return value.item()
+    return value
+
+
 class ModelType(enum.Enum):
     """Available model types in the system.
     """
@@ -517,7 +529,7 @@ class ModelExplanations:
         """Retrieves the global explanation of the model: the importance of each input feature.
 
         Args:
-            lang: language of the texts of the explanation ('es' or 'en'). If not provided, the instance's default.
+            lang: language of the texts of the explanation ('es' or 'en'). If not provided, Spanish.
 
         Returns:
             a dictionary with the method, the base value and the list of importances (feature, importance, signed_mean)
@@ -534,7 +546,7 @@ class ModelExplanations:
         Args:
             inputs: the input values, as a list in the order of the model's input features, or a DataFrame of one row
                 whose columns are the model's input feature names.
-            lang: language of the texts of the explanation ('es' or 'en'). If not provided, the instance's default.
+            lang: language of the texts of the explanation ('es' or 'en'). If not provided, Spanish.
 
         Returns:
             a dictionary with the prediction, the base value and the list of contributions (feature, value, contribution)
@@ -547,10 +559,15 @@ class ModelExplanations:
             if missing:
                 raise DeepintBaseError(code='INPUTS_MISMATCH',
                                        message=f'The provided DataFrame lacks the model\'s features: {missing}')
-            row = inputs.where(pd.notnull(inputs), None).to_dict(orient='records')[0]
+            row = inputs.to_dict(orient='records')[0]
             inputs = [row[f.name] for f in self.model.input_features]
         elif not isinstance(inputs, list):
             raise DeepintBaseError(code='TYPE_MISMATCH', message='The provided inputs must be a list or a DataFrame.')
+
+        try:
+            inputs = [_json_value(v) for v in inputs]
+        except Exception:
+            raise DeepintBaseError(code='CONVERSION_ERROR', message='Unable to convert the inputs to JSON.')
 
         path = f'/api/v1/workspace/{self.model.workspace_id}/models/{self.model.info.model_id}/explanation/prediction'
         headers = {'x-deepint-organization': self.model.organization_id}
@@ -741,7 +758,7 @@ class Model:
         """Retrieves the model card: purpose, training data, evaluation, explainability and limitations of the model.
 
         Args:
-            lang: language of the texts of the card ('es' or 'en'). If not provided, the instance's default.
+            lang: language of the texts of the card ('es' or 'en'). If not provided, Spanish.
 
         Returns:
             a dictionary with the model card
