@@ -10,11 +10,10 @@
 [![PyPI Version](https://img.shields.io/pypi/v/deepint.svg)](https://pypi.org/project/deepint/)
 [![Package Status](https://img.shields.io/pypi/status/deepint.svg)](https://pypi.org/project/deepint/)
 [![Build Status](https://github.com/deepintdev/deepint-python-sdk/workflows/CI/badge.svg)](https://github.com/deepintdev/deepint-python-sdk/actions?query=workflow%3Aci)
-[![Documentation Status](https://readthedocs.org/projects/deepint-python-sdk/badge/?version=latest)](https://deepint-python-sdk.readthedocs.io)
 
 
 ##### AIR-Core SDK
-deepint is a python package to work with <a href="https://air-core.io/" target="_blank" >AIR-Core</a> (formerly Deep Intelligence) in a more easy and intuitive way, allowing the programmer to develop in a fast way the data, analisys and visualization flows.
+deepint is a python package to work with <a href="https://air-core.io/" target="_blank" >AIR-Core</a>, the data and AI platform maintained by <a href="https://air-institute.com" target="_blank">AIR Institute</a>, in a more easy and intuitive way, allowing the programmer to develop in a fast way the data, analisys and visualization flows.
 The package consists in a wrapper arround <a href="https://app.air-core.io/api/v1/documentation/" target="_blank" >AIR-Core API</a>, with some extra facilities.
 
 ##### AIR-Core
@@ -35,7 +34,7 @@ Visit the AIR-Core <a href="https://air-core.io/" target="_blank" >website</a>.
 - **generate doc**: install documentation dependencies with `python3 -m pip install -e deepint[docs]`, then go to the docs foleder and run `make html`
 
 ## Documentation
-Visit the documentation page at <a href="https://pypi.org/project/deepint/" target="_blanck">Pypi</a> or <a href="https://deepint-python-sdk.readthedocs.io/en/latest/index.html" target="_blanck">readthedocs</a> 
+Visit the documentation at <a href="https://app.air-core.io/docs/sdk" target="_blank">app.air-core.io/docs/sdk</a> and the package page on <a href="https://pypi.org/project/deepint/" target="_blank">PyPI</a>. 
 
 ## Setup credentials
 Credentials can be set up with one of the following methods (the token and instance is loaded in the priority defined in the order of the following items):
@@ -47,9 +46,9 @@ Credentials can be set up with one of the following methods (the token and insta
         token=a token
         instance=host to connect with (if not providen app.air-core.io will be taken by default)
      ```
-Note: If instance is not provided, the default value will be the SaaS instance `app.air-core.io`. Since version 1.5.0 this default changed from `app.deepint.net`; if you need to keep using that host, set it explicitly with the `instance` parameter, the `AIRCORE_INSTANCE`/`DEEPINT_INSTANCE` environment variable or the `.deepint.ini` file.
+Note: If instance is not provided, the default value will be the SaaS instance `app.air-core.io`. To use another AIR-Core instance (for example an on-premises one), set it with the `instance` parameter, the `AIRCORE_INSTANCE` environment variable or the `.deepint.ini` file.
 
-To learn more about credentials setup, please visit the <a href="https://deepint-python-sdk.readthedocs.io/en/latest/_info/authentication.html" target="_blank" >official documentation<a>.
+To learn more about credentials setup, please visit the <a href="https://app.air-core.io/docs/sdk" target="_blank">official documentation</a>.
 
 ## Usage of main components
 
