@@ -4,6 +4,7 @@
 # See LICENSE for details.
 
 from .alert import Alert, AlertType
+from .automation import Automation, AutomationInfo, AutomationKind
 from .dashboard import Dashboard
 from .model import Model, ModelMethod, ModelType
 from .organization import Organization

@@ -21,3 +21,7 @@ deepint.error
 .. autoclass:: deepint.error.DeepintTaskError
    :exclude-members:
    :members:
+
+.. autoclass:: deepint.error.DeepintAlertsRemovedError
+   :exclude-members:
+   :members:

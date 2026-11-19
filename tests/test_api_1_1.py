@@ -3,7 +3,7 @@
 # Copyright 2023 Deep Intelligence
 # See LICENSE for details.
 
-# Requests of the API 1.1 features (explanations, model card, alert webhooks, AI activity), checked against a mocked
+# Requests of the API 1.1 features (explanations, model card, AI activity; the alert webhooks were removed), checked against a mocked
 # HTTP layer: no instance or credentials needed.
 
 import hashlib
@@ -20,6 +20,7 @@ from deepint.core.alert import Alert, AlertInfo, AlertWebhook
 from deepint.core.model import Model, ModelFeature, ModelInfo
 from deepint.core.organization import Organization
 from deepint.core.source import FeatureType
+from deepint.error import DeepintAlertsRemovedError
 from deepint.util import handle_request
 
 
@@ -54,7 +55,7 @@ class TestApi11(unittest.TestCase):
         model().explanations.explain_prediction(pd.DataFrame([{'b': 2, 'a': 1}]), lang='en')
         kwargs = request.call_args.kwargs
         self.assertEqual(kwargs['method'], 'POST')
-        self.assertTrue(kwargs['url'].endswith('/api/v1/workspace/ws1/models/m1/explanation/prediction'))
+        self.assertTrue(kwargs['url'].endswith('/api/v2/workspace/ws1/models/m1/explanation/prediction'))
         self.assertEqual(kwargs['json'], {'inputs': [1, 2], 'lang': 'en'})
 
     @mock.patch('deepint.util.request.requests.request')
@@ -67,18 +68,15 @@ class TestApi11(unittest.TestCase):
         m.card(lang='es')
         self.assertEqual(request.call_args.kwargs['params'], {'format': 'json', 'lang': 'es'})
 
-    @mock.patch('deepint.util.request.requests.request')
-    def test_alert_webhook_requests(self, request):
-        request.return_value = response({'result': 'success'})
+    def test_alert_webhook_requests_were_removed(self):
         info = AlertInfo(alert_id='al1', name='n', description='', created=None, last_modified=None, subscriptions=[],
                          color='#000', alert_type=None, source_id='s', condition={}, time_stall=None)
         alert = Alert('org1', 'ws1', CREDENTIALS, info)
-        alert.webhook.set('https://hooks.example.com/x')
-        self.assertEqual(request.call_args.kwargs['json'], {'url': 'https://hooks.example.com/x', 'enabled': True})
-        alert.webhook.rotate_secret()
-        self.assertTrue(request.call_args.kwargs['url'].endswith('/alerts/al1/webhook/rotate'))
-        alert.webhook.test()
-        self.assertTrue(request.call_args.kwargs['url'].endswith('/alerts/al1/webhook/test'))
+        # the alerts are now automations (tests/test_automations.py)
+        for call in (lambda: alert.webhook.set('https://hooks.example.com/x'), alert.webhook.rotate_secret,
+                     alert.webhook.test, lambda: alert.webhook.get(limit=50)):
+            with self.assertRaises(DeepintAlertsRemovedError):
+                call()
 
     @mock.patch('deepint.util.request.requests.request')
     def test_explain_prediction_sends_missing_values_and_dates_as_json(self, request):
@@ -91,14 +89,6 @@ class TestApi11(unittest.TestCase):
         json.dumps(sent, allow_nan=False)
         model().explanations.explain_prediction([float('nan'), 3])
         self.assertEqual(request.call_args.kwargs['json']['inputs'], [None, 3])
-
-    @mock.patch('deepint.util.request.requests.request')
-    def test_webhook_deliveries_limit(self, request):
-        request.return_value = response({'webhook': None, 'deliveries': []})
-        info = AlertInfo(alert_id='al1', name='n', description='', created=None, last_modified=None, subscriptions=[],
-                         color='#000', alert_type=None, source_id='s', condition={}, time_stall=None)
-        Alert('org1', 'ws1', CREDENTIALS, info).webhook.get(limit=50)
-        self.assertEqual(request.call_args.kwargs['params'], {'limit': 50})
 
     def test_webhook_signature_of_text_bodies_and_malformed_headers(self):
         body = '{"event":"alert","name":"Ñandú"}'

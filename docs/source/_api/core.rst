@@ -14,6 +14,7 @@ deepint.core
    ./core/source.rst
    ./core/model.rst
    ./core/task.rst
+   ./core/automation.rst
    ./core/alert.rst
    ./core/visualization.rst
    ./core/dashboard.rst

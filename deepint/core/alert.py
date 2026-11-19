@@ -3,6 +3,20 @@
 # Copyright 2023 Deep Intelligence
 # See LICENSE for details.
 
+"""Alerts of AIR-Core: removed from the API.
+
+.. deprecated:: 2.0.0
+    The alerts were removed from the AIR-Core API: API v2 replaced them with automations (simple notices and
+    flows), and every route of the alerts in API v1 answers HTTP 410 Gone with the code ``ALERTS_REMOVED``.
+    Every method of this module that called the API raises :obj:`deepint.error.DeepintAlertsRemovedError`,
+    naming the method that replaces it. Use :obj:`deepint.core.automation.Automation` and
+    ``workspace.automations`` (:obj:`deepint.core.workspace.WorkspaceAutomations`) instead. A former alert keeps
+    its id as a simple notice: ``Automation.build(organization_id, workspace_id, automation_id=alert_id)``.
+
+    The classes are kept so that code importing them keeps loading; :obj:`AlertWebhook.verify_signature` still works,
+    as it does not call the API.
+"""
+
 import enum
 import hashlib
 import hmac
@@ -10,12 +24,19 @@ from datetime import datetime
 from typing import Any, Dict, List, Union
 
 from ..auth import Credentials
-from ..error import DeepintBaseError
-from ..util import handle_request, parse_date, parse_url
+from ..error import DeepintAlertsRemovedError
+from ..util import parse_date
+
+
+def _removed(operation: str, replacement: str):
+    raise DeepintAlertsRemovedError(replacement=replacement, operation=operation)
 
 
 class AlertType(enum.Enum):
-    """Available alert types in the system.
+    """Types of the former alerts.
+
+    .. deprecated:: 2.0.0
+        Alerts are now automations; the type of a simple notice is :obj:`deepint.core.automation.AutomationInfo.automation_type`.
     """
 
     update = 0
@@ -47,6 +68,9 @@ class AlertType(enum.Enum):
 
 class AlertInfo:
     """Stores the information of an AIR-Core alert.
+
+    .. deprecated:: 2.0.0
+        Alerts are now automations: use :obj:`deepint.core.automation.AutomationInfo`.
 
     Attributes:
         alert_id: alert's id in format uuid4.
@@ -174,9 +198,10 @@ class AlertInfo:
 
 
 class AlertInstances:
-    """Operates over the instances of a concrete alert.
+    """The instances (firings) of an alert.
 
-    Note: This class should not be instanced, and only be used within an :obj:`deepint.core.alert.Alert`
+    .. deprecated:: 2.0.0
+        Removed from the AIR-Core API. Use :obj:`deepint.core.automation.Automation.history`.
 
     Attributes:
         alert: the alert with which to operate with its instances
@@ -190,24 +215,21 @@ class AlertInstances:
         self.alert = alert
 
     def fetch(self) -> List[Dict]:
-        # request
-        path = f'/api/v1/workspace/{self.alert.workspace_id}/alerts/{self.alert.info.alert_id}/instances'
-        headers = {'x-deepint-organization': self.alert.organization_id}
-        response = handle_request(method='GET', path=path, headers=headers, credentials=self.alert.credentials)
+        """Raises :obj:`deepint.error.DeepintAlertsRemovedError`. Use :obj:`deepint.core.automation.Automation.history`.
 
-        # format response
-        return response
+        .. deprecated:: 2.0.0
+        """
+        _removed('Alert.instances.fetch()', 'Automation.history()')
 
 
 class AlertWebhook:
-    """Operates over the signed outgoing webhook of a concrete alert.
+    """The signed outgoing webhook of an alert.
 
-    When the alert fires, AIR-Core sends a JSON event to the URL, signed with HMAC-SHA256 over the raw body
-    (header ``x-signature-256: sha256=<hex>``). Use :obj:`deepint.core.alert.AlertWebhook.verify_signature` in the
-    receiver. The ``x-aircore-delivery`` header identifies each event, and is the same in its retries: process an
-    identifier only once to discard replayed or repeated deliveries (the ``x-aircore-timestamp`` header is not signed).
-
-    Note: This class should not be instanced, and only be used within an :obj:`deepint.core.alert.Alert`
+    .. deprecated:: 2.0.0
+        Removed from the AIR-Core API. The webhook of an automation is one of its actions
+        (``{'type': 'webhook', 'url': ...}``): set it with :obj:`deepint.core.automation.Automation.update` or when it is
+        created, and check received events with :obj:`deepint.core.automation.Automation.verify_webhook_signature`.
+        :obj:`AlertWebhook.verify_signature` still works.
 
     Attributes:
         alert: the alert whose webhook is managed
@@ -217,48 +239,49 @@ class AlertWebhook:
 
         self.alert = alert
 
-    def _path(self, suffix: str = '') -> str:
-        return f'/api/v1/workspace/{self.alert.workspace_id}/alerts/{self.alert.info.alert_id}/webhook{suffix}'
-
-    def _headers(self) -> Dict[str, str]:
-        return {'x-deepint-organization': self.alert.organization_id}
-
     def get(self, limit: int = 20) -> Dict[str, Any]:
-        """Retrieves the webhook configuration (never its secret) and its latest deliveries.
+        """Raises :obj:`deepint.error.DeepintAlertsRemovedError`. The webhook is in the ``actions`` of
+        :obj:`deepint.core.automation.Automation.load`.
 
-        Args:
-            limit: number of latest deliveries to retrieve (1 to 100).
+        .. deprecated:: 2.0.0
         """
-        return handle_request(method='GET', path=self._path(), headers=self._headers(), parameters={'limit': limit},
-                              credentials=self.alert.credentials)
+        _removed('Alert.webhook.get()', "Automation.load() (the webhook is in info.actions)")
 
     def set(self, url: str, enabled: bool = True) -> Dict[str, Any]:
-        """Creates or updates the webhook. When it is created, the response includes the signing secret, only once.
+        """Raises :obj:`deepint.error.DeepintAlertsRemovedError`. Use
+        ``Automation.update(actions=[{'type': 'email', 'to': 'list'}, {'type': 'webhook', 'url': url}])``.
 
-        Args:
-            url: HTTPS URL that receives the events.
-            enabled: False to keep the configuration without sending events.
+        .. deprecated:: 2.0.0
         """
-        return handle_request(method='POST', path=self._path(), headers=self._headers(),
-                              parameters={'url': url, 'enabled': enabled}, credentials=self.alert.credentials)
+        _removed('Alert.webhook.set()', "Automation.update(actions=[..., {'type': 'webhook', 'url': url}])")
 
     def delete(self):
-        """Removes the webhook of the alert."""
-        handle_request(method='DELETE', path=self._path(), headers=self._headers(), credentials=self.alert.credentials)
+        """Raises :obj:`deepint.error.DeepintAlertsRemovedError`. Use :obj:`deepint.core.automation.Automation.update`
+        with ``actions`` without the webhook action.
+
+        .. deprecated:: 2.0.0
+        """
+        _removed('Alert.webhook.delete()', "Automation.update(actions=[...]) without the webhook action")
 
     def rotate_secret(self) -> Dict[str, Any]:
-        """Replaces the signing secret. The new secret is returned only in this response; the previous one stops working at once."""
-        return handle_request(method='POST', path=self._path('/rotate'), headers=self._headers(),
-                              parameters={}, credentials=self.alert.credentials)
+        """Raises :obj:`deepint.error.DeepintAlertsRemovedError`. Use ``Automation.update(rotate_secret=True)`` (a flow).
+
+        .. deprecated:: 2.0.0
+        """
+        _removed('Alert.webhook.rotate_secret()', 'Automation.update(rotate_secret=True)')
 
     def test(self) -> Dict[str, Any]:
-        """Sends a test event and returns the result of the delivery."""
-        return handle_request(method='POST', path=self._path('/test'), headers=self._headers(),
-                              parameters={}, credentials=self.alert.credentials)
+        """Raises :obj:`deepint.error.DeepintAlertsRemovedError`. Use :obj:`deepint.core.automation.Automation.test`.
+
+        .. deprecated:: 2.0.0
+        """
+        _removed('Alert.webhook.test()', 'Automation.test()')
 
     @staticmethod
     def verify_signature(secret: str, body: Union[bytes, str], signature_header: str) -> bool:
-        """Checks the signature of a received event (receiver side).
+        """Checks the signature of a received event (receiver side). It does not call the API and keeps working.
+
+        Same as :obj:`deepint.core.automation.Automation.verify_webhook_signature`.
 
         Args:
             secret: the signing secret of the webhook.
@@ -279,16 +302,18 @@ class AlertWebhook:
 class Alert:
     """An AIR-Core alert.
 
-    Note: This class should not be instanced directly, and it's recommended to use the :obj:`deepint.core.alert.Alert.build`
-    or :obj:`deepint.core.alert.Alert.from_url` methods.
+    .. deprecated:: 2.0.0
+        The alerts were removed from the AIR-Core API (API v1 answers HTTP 410 Gone, code ``ALERTS_REMOVED``).
+        Every method that called the API raises :obj:`deepint.error.DeepintAlertsRemovedError`. Use
+        :obj:`deepint.core.automation.Automation`; a former alert is a simple notice with the same id.
 
     Attributes:
         organization_id: organization where alert is located.
         workspace_id: workspace where alert is located.
-        info: :obj:`deepint.core.alert.AlertInfo` to operate with alert's information.
-        instances: :obj:`deepint.core.alert.AlertInstances` to operate with alert's instances.
-        credentials: credentials to authenticate with AIR-Core API and be allowed to perform operations over the alert. If
-                 not provided, the credentials are generated with the :obj:`deepint.auth.credentials.Credentials.build`.
+        info: :obj:`deepint.core.alert.AlertInfo` with the alert's information.
+        instances: :obj:`deepint.core.alert.AlertInstances` (deprecated).
+        webhook: :obj:`deepint.core.alert.AlertWebhook` (deprecated).
+        credentials: credentials to authenticate with AIR-Core API.
     """
 
     def __init__(self, organization_id: str, workspace_id: str, credentials: Credentials, info: AlertInfo) -> None:
@@ -323,150 +348,43 @@ class Alert:
 
     @classmethod
     def build(cls, organization_id: str, workspace_id: str, alert_id: str, credentials: Credentials = None) -> 'Alert':
-        """Builds an alert.
+        """Raises :obj:`deepint.error.DeepintAlertsRemovedError`. Use
+        ``Automation.build(organization_id, workspace_id, automation_id=alert_id)``.
 
-        Note: when alert is created, the alert's information is retrieved from API.
-
-        Args:
-            organization_id: organization where alert is located.
-            workspace_id: workspace where alert is located.
-            alert_id: alert's id.
-            credentials: credentials to authenticate with AIR-Core API and be allowed to perform operations over the alert. If
-                 not provided, the credentials are generated with the :obj:`deepint.auth.credentials.Credentials.build`.
-
-        Returns:
-            the alert build with the given parameters and credentials.
+        .. deprecated:: 2.0.0
         """
-
-        credentials = credentials if credentials is not None else Credentials.build()
-        alert_info = AlertInfo(alert_id=alert_id, name=None, description=None, created=None, last_modified=None,
-                               subscriptions=None, color=None, alert_type=None, source_id=None, condition=None,
-                               time_stall=None)
-        alert = cls(organization_id=organization_id, workspace_id=workspace_id,
-                    credentials=credentials, info=alert_info)
-        alert.load()
-        return alert
+        _removed('Alert.build()', 'Automation.build(organization_id, workspace_id, automation_id=alert_id)')
 
     @classmethod
     def from_url(cls, url: str, organization_id: str = None, credentials: Credentials = None) -> 'Alert':
-        """Builds a alert from it's API or web associated URL.
+        """Raises :obj:`deepint.error.DeepintAlertsRemovedError`. Use :obj:`deepint.core.automation.Automation.from_url`
+        with the API v2 URL (``/api/v2/workspace/{workspace_id}/automations/{alert_id}``).
 
-        The url must contain the workspace's id and the alert's id as in the following examples:
-
-        Example:
-            - https://app.air-core.io/o/3a874c05-26d1-4b8c-894d-caf90e40078b/workspace?ws=f0e2095f-fe2b-479e-be4b-bbc77207f42d&s=alert&i=db98f976-f4bb-43d5-830e-bc18a3a89641
-            - https://app.air-core.io/api/v1/workspace/f0e2095f-fe2b-479e-be4b-bbc77207f42/alerts/db98f976-f4bb-43d5-830e-bc18a3a89641
-
-        Note: when alert is created, the alert's information is retrieved from API.
-            Also it is remmarkable that if the API URL is providen, the organization_id must be provided in the optional parameter, otherwise
-            this ID won't be found on the URL and the Organization will not be created, raising a value error.
-
-        Args:
-            url: the alert's API or web associated URL.
-            organization_id: the id of the organziation. Must be providen if the API URL is used.
-            credentials: credentials to authenticate with AIR-Core API and be allowed to perform operations over the alert. If
-                 not provided, the credentials are generated with the :obj:`deepint.auth.credentials.Credentials.build`.
-
-        Returns:
-            the alert build with the URL and credentials.
+        .. deprecated:: 2.0.0
         """
-
-        url_info, hostname = parse_url(url)
-
-        if 'organization_id' not in url_info and organization_id is None:
-            raise ValueError(
-                'Fields organization_id must be in url to build the object. Or providen as optional parameter.')
-
-        if 'workspace_id' not in url_info or 'alert_id' not in url_info:
-            raise ValueError(
-                'Fields workspace_id and alert_id must be in url to build the object.')
-
-        organization_id = url_info['organization_id'] if 'organization_id' in url_info else organization_id
-
-        # create new credentials
-        new_credentials = Credentials(
-            token=credentials.token, instance=hostname)
-
-        return cls.build(organization_id=organization_id, workspace_id=url_info['workspace_id'], alert_id=url_info['alert_id'], credentials=new_credentials)
+        _removed('Alert.from_url()', 'Automation.from_url(url) with /api/v2/workspace/{ws}/automations/{id}')
 
     def load(self):
-        """Loads the alert's information.
+        """Raises :obj:`deepint.error.DeepintAlertsRemovedError`. Use :obj:`deepint.core.automation.Automation.load`.
 
-        If the alert's information is already loaded, is replace by the new one after retrieval.
+        .. deprecated:: 2.0.0
         """
-
-        # request
-        path = f'/api/v1/workspace/{self.workspace_id}/alerts/{self.info.alert_id}'
-        headers = {'x-deepint-organization': self.organization_id}
-        response = handle_request(
-            method='GET', path=path, headers=headers, credentials=self.credentials)
-
-        # map results
-        self.info = AlertInfo.from_dict(response)
+        _removed('Alert.load()', 'Automation.load()')
 
     def update(self, name: str = None, description: str = None, subscriptions: List[str] = None, color: str = None,
                alert_type: AlertType = None, source_id: str = None, condition: Dict[str, Any] = None, time_stall: int = None):
-        """Updates a alert's attributes
+        """Raises :obj:`deepint.error.DeepintAlertsRemovedError`. Use :obj:`deepint.core.automation.Automation.update`.
 
-        Args:
-            name: alert's name. If not provided the alert's name stored in the :obj:`deepint.core.alert.Alert.alert_info` attribute is taken.
-            descrpition: alert's description. If not provided the alert's description stored in the :obj:`deepint.core.alert.Alert.alert_info` attribute is taken.
-            subscriptions: list of emails subscribed to the alert. If not provided the alert's subscriptions stored in the :obj:`deepint.core.alert.Alert.alert_info` attribute is taken.
-            color: alert's color. If not provided the alert's color stored in the :obj:`deepint.core.alert.Alert.alert_info` attribute is taken.
-            alert_type: alert's type. If not provided the alert's type stored in the :obj:`deepint.core.alert.Alert.alert_info` attribute is taken.
-            source_id: identifier of associated source. If not provided the alert's target source's id stored in the :obj:`deepint.core.alert.Alert.alert_info` attribute is taken.
-            condition: condition to trigger the alert. If not provided the alert's condition stored in the :obj:`deepint.core.alert.Alert.alert_info` attribute is taken.
-            time_stall: time in seconds when the alert should trigger (for stall). If not provided the alert's time_stall stored in the :obj:`deepint.core.alert.Alert.alert_info` attribute is taken.
+        .. deprecated:: 2.0.0
         """
-
-        # check parameters
-        name = name if name is not None else self.info.name
-        color = color if color is not None else self.info.color
-        description = description if description is not None else self.info.description
-        subscriptions = subscriptions if subscriptions is not None else self.info.subscriptions
-        source_id = source_id if source_id is not None else self.info.source_id
-        alert_type = alert_type if alert_type is not None else self.info.alert_type
-        condition = condition if condition is not None else self.info.condition
-        time_stall = time_stall if time_stall is not None else self.info.time_stall
-
-        if alert_type == AlertType.stall and time_stall is not None and time_stall < 60:
-            raise DeepintBaseError(
-                code='ALERT_CREATION_VALUES', message='Minimum alert time stall is 60 seconds.')
-
-        # request
-        path = f'/api/v1/workspace/{self.workspace_id}/alerts/{self.info.alert_id}'
-        headers = {'x-deepint-organization': self.organization_id}
-        parameters = {
-            'name': name,
-            'description': description,
-            'subscriptions': subscriptions,
-            'color': color,
-            'type': alert_type.name,
-            'source': source_id,
-            'condition': condition,
-            'time_stall': time_stall
-        }
-        _ = handle_request(method='POST', path=path, headers=headers,
-                                  parameters=parameters, credentials=self.credentials)
-
-        # map results
-        self.info.name = name
-        self.info.description = description
-        self.info.subscriptions = subscriptions
-        self.info.alert_type = alert_type
-        self.info.source_id = source_id
-        self.info.condition = condition
-        self.info.time_stall = time_stall
+        _removed('Alert.update()', 'Automation.update(name=..., trigger=..., condition=..., actions=...)')
 
     def delete(self):
-        """Deletes an alert.
-        """
+        """Raises :obj:`deepint.error.DeepintAlertsRemovedError`. Use :obj:`deepint.core.automation.Automation.delete`.
 
-        # request
-        path = f'/api/v1/workspace/{self.workspace_id}/alerts/{self.info.alert_id}'
-        headers = {'x-deepint-organization': self.organization_id}
-        handle_request(method='DELETE', path=path,
-                       headers=headers, credentials=self.credentials)
+        .. deprecated:: 2.0.0
+        """
+        _removed('Alert.delete()', 'Automation.delete()')
 
     def to_dict(self) -> Dict[str, Any]:
         """Builds a dictionary containing the information stored in current object.
