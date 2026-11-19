@@ -58,9 +58,8 @@ TEST_SRC_NAME = f'{PYTHON_VERSION_NAME}_automated_python_sdk_test_src'
 TEST_SRC_DESC = f'{PYTHON_VERSION_NAME}_Automated python SDK test src'
 TEST_MODEL_NAME = f'{PYTHON_VERSION_NAME}_automated_python_sdk_test_model'
 TEST_MODEL_DESC = f'{PYTHON_VERSION_NAME}_Automated python SDK test model'
-TEST_ALERT_NAME = f'{PYTHON_VERSION_NAME}_automated_python_sdk_test_alert'
-TEST_ALERT_DESC = f'{PYTHON_VERSION_NAME}_Automated python SDK test alert'
-TEST_ALERT_SUBSCRIPTIONS = [f'{PYTHON_VERSION_NAME}_example@example.com']
+TEST_AUTOMATION_NAME = f'{PYTHON_VERSION_NAME}_automated_python_sdk_test_automation'
+TEST_AUTOMATION_DESC = f'{PYTHON_VERSION_NAME}_Automated python SDK test automation'
 TEST_VISUALIZATION_NAME = f'{PYTHON_VERSION_NAME}_automated_python_sdk_test_visualization'
 TEST_VISUALIZATION_DESC = f'{PYTHON_VERSION_NAME}_Automated python SDK test visualization'
 TEST_DASHBOARD_NAME = f'{PYTHON_VERSION_NAME}_automated_python_sdk_test_dashboard'
@@ -407,7 +406,7 @@ def test_task_CRUD():
     ws.delete()
 
 
-def test_alert_CRUD():
+def test_automation_CRUD():
 
     # load organization and create workspace and source
     org = Organization.build(organization_id=DEEPINT_ORGANIZATION)
@@ -417,34 +416,50 @@ def test_alert_CRUD():
     source = ws.sources.create(
         name=src_name, description=TEST_SRC_DESC, features=[])
 
-    # create
-    alert_name = serve_name(TEST_ALERT_NAME)
-    alert = ws.alerts.create(name=alert_name, description=TEST_ALERT_DESC, subscriptions=TEST_ALERT_SUBSCRIPTIONS,
-                             color='#FF00FF', alert_type=AlertType.update, source_id=source.info.source_id)
+    # create (no new data for 6 hours: always a simple notice)
+    automation_name = serve_name(TEST_AUTOMATION_NAME)
+    automation = ws.automations.create(name=automation_name, description=TEST_AUTOMATION_DESC,
+                                       trigger={'type': 'stall', 'source': source.info.source_id, 'hours': 6})
+    assert (automation.saved_as['kind'] == 'notice' and automation.saved_as['reason'] == 'STALL')
+    assert (automation.is_notice)
 
     # retrieve (single)
-    retrieved_alert = Alert.build(organization_id=DEEPINT_ORGANIZATION, credentials=org.credentials, workspace_id=ws.info.workspace_id,
-                                  alert_id=alert.info.alert_id)
-    assert (
-        retrieved_alert.info.alert_id == alert.info.alert_id and retrieved_alert.info.name == alert_name and retrieved_alert.info.description == TEST_ALERT_DESC)
+    retrieved = Automation.build(organization_id=DEEPINT_ORGANIZATION, credentials=org.credentials,
+                                 workspace_id=ws.info.workspace_id, automation_id=automation.info.automation_id)
+    assert (retrieved.info.automation_id == automation.info.automation_id and retrieved.info.name == automation_name)
+    assert (retrieved.info.trigger['type'] == 'stall' and retrieved.info.trigger['hours'] == 6)
 
     # update
-    retrieved_alert.update(name=f'{alert_name}2',
-                           description=f'{TEST_ALERT_DESC}2')
-    retrieved_alert.load()
-    assert (
-        retrieved_alert.info.name == f'{alert_name}2' and retrieved_alert.info.description == f'{TEST_ALERT_DESC}2')
+    retrieved.update(name=f'{automation_name}2', description=f'{TEST_AUTOMATION_DESC}2')
+    retrieved.load()
+    assert (retrieved.info.name == f'{automation_name}2' and retrieved.info.description == f'{TEST_AUTOMATION_DESC}2')
 
-    # retrieve (in organization)
-    selected_alert = ws.alerts.fetch(
-        alert_id=retrieved_alert.info.alert_id, force_reload=True)
-    assert (selected_alert is not None)
+    # a notice never becomes a flow
+    try:
+        retrieved.update(trigger={'type': 'schedule', 'source': source.info.source_id, 'every_hours': 24})
+        assert False
+    except DeepintHTTPError as e:
+        assert (e.code == 'NOT_A_NOTICE')
+
+    # list, history and test
+    assert (any(a.info.automation_id == retrieved.info.automation_id for a in ws.automations.list(kind='notice')))
+    assert (not any(a.info.automation_id == retrieved.info.automation_id for a in ws.automations.list(kind='flow')))
+    assert (ws.automations.fetch(automation_id=retrieved.info.automation_id) is not None)
+    assert (retrieved.history()['kind'] == 'notice')
+    assert (retrieved.test()['dry_run'])
+
+    # the alerts were removed
+    try:
+        ws.alerts.fetch_all()
+        assert False
+    except DeepintAlertsRemovedError:
+        assert True
 
     # delete
-    alert.delete()
+    automation.delete()
     try:
-        _ = Alert.build(credentials=org.credentials, organization_id=DEEPINT_ORGANIZATION, workspace_id=retrieved_alert.info.alert_id,
-                        alert_id=alert.info.alert_id)
+        _ = Automation.build(credentials=org.credentials, organization_id=DEEPINT_ORGANIZATION,
+                             workspace_id=ws.info.workspace_id, automation_id=automation.info.automation_id)
         assert False
     except DeepintHTTPError:
         assert True
@@ -652,7 +667,7 @@ def test_emails_CRUD():
 
 def test_url_parser():
 
-    # load organization and create workspace, source and alert
+    # load organization and create workspace, source and automation
     org = Organization.build(organization_id=DEEPINT_ORGANIZATION)
 
     workspace = org.workspaces.create(
@@ -667,9 +682,8 @@ def test_url_parser():
     model = workspace.models.create(name=model_name, description=TEST_MODEL_DESC, model_type=ModelType.classifier,
                                     method=ModelMethod.bayes, source=source, target_feature_name=target_feature.name, wait_for_model_creation=True)
 
-    alert = workspace.alerts.create(name=serve_name(TEST_ALERT_NAME), description=TEST_ALERT_DESC,
-                                    subscriptions=TEST_ALERT_SUBSCRIPTIONS,
-                                    color='#FF00FF', alert_type=AlertType.update, source_id=source.info.source_id)
+    automation = workspace.automations.create(name=serve_name(TEST_AUTOMATION_NAME), description=TEST_AUTOMATION_DESC,
+                                              trigger={'type': 'source_updated', 'source': source.info.source_id})
 
     task = list(workspace.tasks.fetch_all(force_reload=True))[0]
 
@@ -681,7 +695,7 @@ def test_url_parser():
 
     # extract id
     t_id = task.info.task_id
-    a_id = alert.info.alert_id
+    a_id = automation.info.automation_id
     m_id = model.info.model_id
     src_id = source.info.source_id
     ws_id = workspace.info.workspace_id
@@ -706,13 +720,9 @@ def test_url_parser():
                           organization_id=org_id, credentials=org.credentials)
     assert (src.workspace_id == ws_id and src.info.source_id == src_id)
 
-    a = Alert.from_url(url=f'https://app.air-core.io/o/{org_id}/workspace?ws={ws_id}&s=alert&i={a_id}',
-                       credentials=org.credentials)
-    assert (a.info.alert_id == a_id)
-
-    a = Alert.from_url(url=f'https://app.air-core.io/api/v1/workspace/{ws_id}/alerts/{a_id}',
-                       organization_id=org_id, credentials=org.credentials)
-    assert (a.info.alert_id == a_id)
+    a = Automation.from_url(url=f'https://app.air-core.io/api/v2/workspace/{ws_id}/automations/{a_id}',
+                            organization_id=org_id, credentials=org.credentials)
+    assert (a.info.automation_id == a_id)
 
     t = Task.from_url(
         url=f'https://app.air-core.io/o/{org_id}/workspace?ws={ws_id}&s=task&i={t_id}', credentials=org.credentials)
@@ -781,7 +791,7 @@ if __name__ == '__main__':
     test_real_time_source_CRUD()
     test_external_source_CRUD()
     test_task_CRUD()
-    test_alert_CRUD()
+    test_automation_CRUD()
     test_model_CRUD()
     test_visualization_CRUD()
     test_dashboard_CRUD()

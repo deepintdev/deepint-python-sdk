@@ -15,7 +15,7 @@
 
 ##### AIR-Core SDK
 deepint is a python package to work with <a href="https://air-core.io/" target="_blank" >AIR-Core</a> (formerly Deep Intelligence) in a more easy and intuitive way, allowing the programmer to develop in a fast way the data, analisys and visualization flows.
-The package consists in a wrapper arround <a href="https://app.air-core.io/api/v1/documentation/" target="_blank" >AIR-Core API</a>, with some extra facilities.
+The package consists in a wrapper arround <a href="https://app.air-core.io/docs/api" target="_blank" >AIR-Core API</a> (v2), with some extra facilities.
 
 ##### AIR-Core
 AIR-Core has been designed to help you select optimal AI & Machine Learning algorithms for the analysis of your business’ datasets. This platform can be customized to read any type of data from webs, files, databases, sensors…, it can also stream data in real time if needed, it’s all very simple!
@@ -31,7 +31,7 @@ Visit the AIR-Core <a href="https://air-core.io/" target="_blank" >website</a>.
 ## Installation
 
 - **install**: `python3 -m pip install deepint`
-- **run tests**: install test dependencies with `python3 -m pip install deepint[tests]`, then define the enviroment variables `DEEPINT_TOKEN` and `DEEPINT_ORGANIZATION`. Finally, go to the tests foleder and run `pytest -vv test.py`. The credentials tests in `test_credentials.py` run offline and do not need these variables.
+- **run tests**: install test dependencies with `python3 -m pip install deepint[tests]`, then define the enviroment variables `DEEPINT_TOKEN` and `DEEPINT_ORGANIZATION`. Finally, go to the tests foleder and run `pytest -vv test.py`. The tests in `test_credentials.py`, `test_api_1_1.py` and `test_automations.py` run offline and do not need these variables.
 - **generate doc**: install documentation dependencies with `python3 -m pip install -e deepint[docs]`, then go to the docs foleder and run `make html`
 
 ## Documentation
@@ -64,7 +64,7 @@ print(org.account)
 print(org.workspaces.fetch_all())
 ws = org.workspaces.fetch_all()[0]
 
-print(ws.alerts.fetch_all())
+print(ws.automations.list())
 print(ws.tasks.fetch_all())
 print(ws.models.fetch_all())
 print(ws.sources.fetch_all())
@@ -72,7 +72,7 @@ print(ws.dashboards.fetch_all())
 print(ws.visualizations.fetch_all())
 
 print(ws.info)
-print(ws.alerts.fetch_all()[0].info)
+print(ws.automations.list()[0])
 print(ws.tasks.fetch_all()[0].info)
 print(ws.models.fetch_all()[0].info)
 print(ws.sources.fetch_all()[0].output_features)
@@ -86,24 +86,24 @@ print(ws.visualizations.fetch_all()[0].info)
 print(ws.info.to_dict())
 ```
 
-##### Create workspace, source, alert and model
+##### Create workspace, source, automation and model
 
 ```python3
-from deepint import Organization, AlertType, ModelType, ModelMethod
+from deepint import Organization, ModelType, ModelMethod
 
 org = Organization.build(organization_id="3a874c05-26d1-4b8c-894d-caf90e40078b")
 workspace = org.workspaces.create(name='example', description='example')
 source = workspace.sources.create(name='example', description='example', features=[])
 target_feature = source.features.fetch_all()[0]
 model = workspace.models.create(name='example', description='example', model_type=ModelType.regressor, method=ModelMethod.tree, source=source, target_feature_name=target_feature.name)
-alert = workspace.alerts.create(name='example', description='example', subscriptions=['example@example.ex'], color='#FF00FF', alert_type=AlertType.update, source_id=source.info.source_id)
+automation = workspace.automations.create(name='example', description='example', trigger={'type': 'source_updated', 'source': source.info.source_id})
 task = workspace.tasks.fetch_all(force_reload=True)[0]
 ```
 
 ##### Load elements with builder
 
 ```python3
-from deepint import Organization, Workspace, Model, Alert, Task, Alert, Source
+from deepint import Organization, Workspace, Model, Automation, Task, Source
 
 t_id = 'f88cd9ac-8bc7-49db-ab49-b53512b6adc9'
 a_id = 'ce92588d-700a-42d6-92f9-76863b648359'
@@ -115,14 +115,14 @@ org_id = 'organization_id="3a874c05-26d1-4b8c-894d-caf90e40078b'
 ws = Workspace.build(credentials=org.credentials, workspace_id=ws_id, organization_id=org_id)
 task = Task.build(task_id=a_id, workspace_id=ws_id, organization_id=org_id, credentials=org.credentials)
 model = Model.build(model_id=a_id, workspace_id=ws_id, organization_id=org_id, credentials=org.credentials)
-alert = Alert.build(alert_id=a_id, workspace_id=ws_id, organization_id=org_id, credentials=org.credentials)
+automation = Automation.build(automation_id=a_id, workspace_id=ws_id, organization_id=org_id, credentials=org.credentials)
 src = Source.build(source_id=src_id, workspace_id=ws_id, organization_id=org_id, credentials=org.credentials)
 ```
 
 ##### Load elements with URL
 
 ```python3
-from deepint import Organization, Workspace, Model, Alert, Task, Alert, Source
+from deepint import Organization, Workspace, Model, Automation, Task, Source
 
 
 t_id = 'f88cd9ac-8bc7-49db-ab49-b53512b6adc9'
@@ -138,8 +138,7 @@ t = Task.from_url(url=f'https://app.air-core.io/api/v1/workspace/{ws_id}/task/{t
 t = Task.from_url(url=f'https://app.air-core.io/o/{org_id}/workspace?ws={ws_id}&s=task&i={t_id}', credentials=org.credentials)
 m = Model.from_url(url=f'https://app.air-core.io/o/{org_id}/workspace?ws={ws_id}&s=model&i={m_id}', credentials=org.credentials)
 m = Model.from_url(url=f'https://app.air-core.io/api/v1/workspace/{ws_id}/models/{m_id}', credentials=org.credentials, organization_id=org_id)
-a = Alert.from_url(url=f'https://app.air-core.io/o/{org_id}/workspace?ws={ws_id}&s=alert&i={a_id}', credentials=org.credentials)
-a = Alert.from_url(url=f'https://app.air-core.io/api/v1/workspace/{ws_id}/alerts/{a_id}', credentials=org.credentials, organization_id=org_id)
+a = Automation.from_url(url=f'https://app.air-core.io/api/v2/workspace/{ws_id}/automations/{a_id}', credentials=org.credentials, organization_id=org_id)
 src = Source.from_url(url=f'https://app.air-core.io/o/{org_id}/workspace?ws={ws_id}&s=source&i={src_id}', credentials=org.credentials)
 src = Source.from_url(url=f'https://app.air-core.io/api/v1/workspace/{ws_id}/source/{src_id}', credentials=org.credentials, organization_id=org_id)
 ```
@@ -486,7 +485,7 @@ emails = workspace.emails.fetch_all(force_reload=True)
 workspace.emails.delete(email=TEST_EMAIL)
 ```
 
-#### Explainability, model cards, alert webhooks and AI activity (AIR-Core 1.1)
+#### Explainability, model cards and AI activity (AIR-Core 1.1)
 
 ```python3
 from deepint import Organization
@@ -502,18 +501,83 @@ explanation = model.explanations.explain_prediction([5.1, 3.5, 1.4, 0.2], lang='
 # model card: purpose, data, evaluation, explainability and limitations
 card = model.card(lang='en')
 
-# signed webhook of an alert (the secret is returned once, when it is created or rotated)
-alert = ws.alerts.fetch(name='example')
-created = alert.webhook.set(url='https://hooks.example.com/aircore')
-alert.webhook.test()
-print(alert.webhook.get())
-
-# in the receiver: check the x-signature-256 header against the raw body
-from deepint.core.alert import AlertWebhook
-AlertWebhook.verify_signature(secret, raw_body, request_headers['x-signature-256'])
-
 # audit log of the assistant, MCP and explainability calls (organization administrators)
 activity = org.ai_activity(channel='mcp', limit=20)
+```
+
+#### Automations (simple notices and flows)
+
+The alerts are now **automations** (AIR-Core API v2): the simple notices and the flows of a workspace. AIR-Core saves a new automation as a simple notice when it is exactly one (a `stall` trigger, or new rows that meet rules with eq, gt, gte, lt, lte, null, cn, sw or ew, emailed to the whole notice list, with at most one webhook) and as a flow otherwise (a schedule, a model, rows written, other recipients...). `saved_as` says which and why. Editing never changes the kind: a change that would turn a notice into a flow raises `DeepintHTTPError` with code `NOT_A_NOTICE` (create a new automation instead), and the notices of a metric, of the quality of a source or of the monitoring of a model only change their name and description (`NOTICE_FIXED`).
+
+```python3
+from deepint import Organization, Automation
+
+org = Organization.build(organization_id='e612d27d-9c81-479f-a35f-85cac80c0718')
+ws = org.workspaces.fetch(name='example')
+source = ws.sources.fetch(name='example')
+
+# a simple notice: email the notice list of the workspace when a new row has temperature > 30
+hot = ws.automations.create(name='Hot', trigger={'type': 'source_updated', 'source': source.info.source_id},
+                            condition={'kind': 'rules', 'match': 'all',
+                                       'rules': [{'column': 'temperature', 'op': 'gt', 'value': 30}]})
+print(hot.saved_as)  # {'kind': 'notice', 'reason': 'SIMPLE'}
+
+# a simple notice: no new data for 6 hours
+ws.automations.create(name='Silent', trigger={'type': 'stall', 'source': source.info.source_id, 'hours': 6})
+
+# a flow: also call a webhook and write the matching rows to another source
+flow = ws.automations.create(name='Hot to log', trigger={'type': 'source_updated', 'source': source.info.source_id},
+                             condition={'kind': 'rules', 'match': 'any',
+                                        'rules': [{'column': 'status', 'op': 'cni', 'value': 'error'}]},
+                             actions=[{'type': 'webhook', 'url': 'https://hooks.example.com/aircore'},
+                                      {'type': 'append', 'target': 'b3c1e7a0-0000-4000-8000-000000000000'}])
+print(flow.saved_as)        # {'kind': 'flow', 'reason': 'OPERATOR'}
+print(flow.webhook_secret)  # the signing secret of the webhook, returned only now
+
+# list (all, only notices or only flows), read in full, change, test, history and delete
+ws.automations.list()
+ws.automations.list(kind='flow')
+a = ws.automations.fetch(automation_id=hot.info.automation_id)
+a.update(name='Very hot')         # editing never changes the kind: 409 NOT_A_NOTICE / NOTICE_FIXED
+print(a.test())                   # what would happen now, nothing sent or written
+print(a.history(page=0, limit=20))
+a.delete()
+
+# a former alert is a simple notice with the same id
+notice = Automation.build(organization_id='e612d27d-9c81-479f-a35f-85cac80c0718', workspace_id=ws.info.workspace_id,
+                          automation_id='ce92588d-700a-42d6-92f9-76863b648359', credentials=org.credentials)
+
+# in the receiver of a webhook: check the x-signature-256 header against the raw body
+Automation.verify_webhook_signature(secret, raw_body, request_headers['x-signature-256'])
+```
+
+#### Migrating from alerts (2.0)
+
+Every former alert method raises `DeepintAlertsRemovedError` (a `DeepintHTTPError` with code `ALERTS_REMOVED`, the code of the HTTP 410 Gone that API v1 answers) naming its replacement, without calling the API. A former alert keeps its id as a simple notice.
+
+| Before (1.x) | Now (2.0) |
+| --- | --- |
+| `ws.alerts.fetch_all()` | `ws.automations.fetch_all(kind='notice')  # or ws.automations.list()` |
+| `ws.alerts.fetch(alert_id=a_id)` | `ws.automations.fetch(automation_id=a_id)` |
+| `ws.alerts.create(name, description, subscriptions, color, AlertType.update, source_id, condition)` | `ws.automations.create(name, trigger={'type': 'source_updated', 'source': source_id}, condition=...)` |
+| `ws.alerts.create(..., alert_type=AlertType.stall, time_stall=seconds)` | `ws.automations.create(name, trigger={'type': 'stall', 'source': source_id, 'hours': hours})` |
+| `Alert.build(org_id, ws_id, alert_id)` | `Automation.build(org_id, ws_id, automation_id=alert_id)` |
+| `Alert.from_url(url)` | `Automation.from_url('https://app.air-core.io/api/v2/workspace/{ws}/automations/{id}', organization_id=org_id)` |
+| `alert.update(...) / alert.delete()` | `automation.update(...) / automation.delete()` |
+| `alert.instances.fetch()` | `automation.history()` |
+| `alert.webhook.set(url) / alert.webhook.delete()` | `automation.update(actions=[{'type': 'email', 'to': 'list'}, {'type': 'webhook', 'url': url}])` |
+| `alert.webhook.test()` | `automation.test()` |
+| `AlertWebhook.verify_signature(...)` | `Automation.verify_webhook_signature(...)  # the old one still works` |
+
+#### API version
+
+The SDK calls AIR-Core API v2 (`/api/v2/...`), which serves every operation of API v1 except the alerts. API v1 is deprecated and keeps working: to keep calling it, use `set_api_version('v1')` or the `AIRCORE_API_VERSION=v1` environment variable (the automations always use v2). Paths given to `org.endpoint.call(...)` are sent as written.
+
+```python3
+from deepint import set_api_version, get_api_version
+
+print(get_api_version())  # 'v2'
+set_api_version('v1')     # only to keep calling the deprecated API v1
 ```
 
 #### Use custom endpoint
@@ -525,6 +589,6 @@ from deepint import Organization
 org = Organization.build(organization_id='e612d27d-9c81-479f-a35f-85cac80c0718')
 ws = org.workspaces.create(name='example', description='example')
 
-# perform call to /api/v1/who
-response = org.endpoint.call(http_operation='GET', path='/api/v1/who', headers=None, parameters=None, is_paginated=False)
+# perform call to /api/v2/who
+response = org.endpoint.call(http_operation='GET', path='/api/v2/who', headers=None, parameters=None, is_paginated=False)
 ```

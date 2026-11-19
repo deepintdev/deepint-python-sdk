@@ -33,10 +33,12 @@ def parse_url(url):
     pieces = urlparse(url)
     hostname = pieces.netloc
 
-    if '/api/v1' in url:
+    api_prefix = '/api/v1/' if '/api/v1' in url else ('/api/v2/' if '/api/v2' in url else None)
+
+    if api_prefix is not None:
 
         # extract from path
-        path_pieces = pieces.path.replace('/api/v1/', '').split('/')
+        path_pieces = pieces.path.replace(api_prefix, '').split('/')
 
         for arg in range(len(path_pieces))[::2]:
 
@@ -54,6 +56,9 @@ def parse_url(url):
 
             elif path_pieces[arg] == 'alerts':
                 ids['alert_id'] = path_pieces[arg + 1]
+
+            elif path_pieces[arg] == 'automations':
+                ids['automation_id'] = path_pieces[arg + 1]
 
             elif path_pieces[arg] == 'dashboard':
                 ids['dashboard_id'] = path_pieces[arg + 1]

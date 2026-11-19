@@ -70,3 +70,45 @@ class DeepintTaskError(DeepintBaseError):
     def __init__(self, task: str, name: str, code: str, message: str) -> None:
         super().__init__(
             code=f"TASK_{code}", message=f"Task ({task}) {name} failed with description: {message}")
+
+
+class DeepintAlertsRemovedError(DeepintHTTPError):
+    """Exception raised by every operation of the alerts, which were removed from the AIR-Core API.
+
+    AIR-Core API v2 replaced the alerts with automations (simple notices and flows), and every route of the
+    alerts in API v1 answers HTTP 410 Gone with the code ``ALERTS_REMOVED``. The SDK raises this exception
+    before sending the request when a deprecated alert method is called, and also when the API answers 410
+    ``ALERTS_REMOVED`` (for example, to a :obj:`deepint.util.CustomEndpointCall`).
+
+    Use :obj:`deepint.core.workspace.WorkspaceAutomations` (``workspace.automations``) and
+    :obj:`deepint.core.automation.Automation` instead.
+
+    Attributes:
+        code: always ``ALERTS_REMOVED``.
+        replacement: the SDK method (or the API v2 operation, when raised from an API answer) that replaces
+            the removed operation.
+        docs: link to the documentation of the automations.
+
+    Args:
+        replacement: the SDK method or API v2 operation that replaces the removed operation.
+        operation: the removed operation, to name it in the message.
+        message: message given by the API, if any.
+        method: HTTP method of the request, when raised from an API answer.
+        url: URL of the request, when raised from an API answer.
+        docs: link to the documentation, when given by the API.
+    """
+
+    DEFAULT_DOCS = 'https://app.air-core.io/docs/api#tag-automations'
+
+    def __init__(self, replacement: str, operation: str = None, message: str = None, method: str = None,
+                 url: str = None, docs: str = None) -> None:
+        self.replacement = replacement
+        self.docs = docs or self.DEFAULT_DOCS
+        if message is None:
+            removed = f'{operation} is no longer available: the' if operation else 'The'
+            message = (f'{removed} alerts were removed from the AIR-Core API (API v1 answers HTTP 410 Gone '
+                       f'with the code ALERTS_REMOVED). Alerts are now automations (simple notices and flows) '
+                       f'of API v2. Use {replacement} instead. See {self.docs}')
+        if method is not None and url is not None:
+            message = f'Error on HTTP {method} {url}: {message}'
+        DeepintBaseError.__init__(self, code='ALERTS_REMOVED', message=message)

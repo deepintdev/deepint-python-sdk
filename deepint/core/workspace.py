@@ -11,10 +11,12 @@ import pandas as pd
 import requests
 
 from ..auth import Credentials
-from ..error import DeepintBaseError
+from ..error import DeepintAlertsRemovedError, DeepintBaseError
 from ..util import (handle_paginated_request, handle_request, parse_date,
                     parse_url)
 from .alert import Alert, AlertType
+from .automation import (Automation, AutomationInfo, AutomationKind,
+                         create_automation, list_automations)
 from .dashboard import Dashboard
 from .model import Model, ModelMethod, ModelType
 from .source import (DerivedSourceType, ExternalSource, FeatureType,
@@ -1298,18 +1300,18 @@ class WorkspaceTasks:
 
 
 class WorkspaceAlerts:
-    """Operates over the alerts of a concrete workspace.
+    """The alerts of a workspace.
 
-    Note: This class should not be instanced, and only be used within an :obj:`deepint.core.workspace.Workspace`.
+    .. deprecated:: 2.0.0
+        The alerts were removed from the AIR-Core API (API v1 answers HTTP 410 Gone, code ``ALERTS_REMOVED``):
+        they are now automations. Every method raises :obj:`deepint.error.DeepintAlertsRemovedError`. Use
+        ``workspace.automations`` (:obj:`deepint.core.workspace.WorkspaceAutomations`) instead.
 
     Attributes:
-        workspace: the workspace with which to operate with its alerts.
+        workspace: the workspace of the alerts.
     """
 
-    def __init__(self, workspace: 'Workspace', alerts: List[Alert]):
-
-        if workspace is not None and not isinstance(workspace, Workspace):
-            raise ValueError(f'workspace must be {Workspace.__class__}')
+    def __init__(self, workspace: 'Workspace', alerts: List[Alert] = None):
 
         if alerts is not None and not isinstance(alerts, list):
             raise ValueError(f'alerts must be a list of {Alert.__class__}')
@@ -1320,145 +1322,222 @@ class WorkspaceAlerts:
                     raise ValueError(f'alerts must be a list of {Alert.__class__}')
 
         self.workspace = workspace
-        self._generator = None
-        self._alerts = alerts
 
     def load(self):
-        """Loads a workspace's alerts.
+        """Raises :obj:`deepint.error.DeepintAlertsRemovedError`. Use ``workspace.automations.load()``.
 
-        If the alerts were already loaded, this ones are replace by the new ones after retrieval.
+        .. deprecated:: 2.0.0
         """
-
-        # request
-        path = f'/api/v1/workspace/{self.workspace.info.workspace_id}/alerts'
-        headers = {'x-deepint-organization': self.workspace.organization_id}
-        response = handle_paginated_request(
-            method='GET', path=path, headers=headers, credentials=self.workspace.credentials)
-
-        # map results
-        self._alerts = None
-        self._generator = (
-            Alert.build(organization_id=self.workspace.organization_id, workspace_id=self.workspace.info.workspace_id,
-                        credentials=self.workspace.credentials, alert_id=a['id']) for a in response)
+        raise DeepintAlertsRemovedError(operation='workspace.alerts.load()', replacement='workspace.automations.load()')
 
     def create(self, name: str, description: str, subscriptions: List[str], color: str, alert_type: AlertType,
                source_id: str, condition: dict = None, time_stall: int = None) -> Alert:
-        """Creates an alert in current workspace.
+        """Raises :obj:`deepint.error.DeepintAlertsRemovedError`. Use ``workspace.automations.create(...)``
+        (:obj:`deepint.core.workspace.WorkspaceAutomations.create`).
 
-        Before creation, the alert is loaded and stored locally in the internal list of alerts in the current instance.
-
-        Args:
-            name: alert's name.
-            description: alert's description.
-            subscriptions: List of emails subscribed to the alert.
-            color: Color for the alert
-            alert_type: type of alert (update, stall). Set to 'update' if you want to trigger when a source updated
-                on certain conditions. Set to 'stall' if you want to trigger when a source do not update for a long time.
-            source_id: Identifier of associated source.
-            condition: condition to trigger the alert.
-            time_stall: Time in seconds when the alert should trigger (for stall). Must be at least 60.
-
-        Returns:
-            the created alert
+        .. deprecated:: 2.0.0
         """
-
-        # check parameters
-        if time_stall is not None and time_stall < 60:
-            raise DeepintBaseError(
-                code='ALERT_CREATION_VALUES', message='Minimum alert time stall is 60 seconds.')
-
-        # request
-        path = f'/api/v1/workspace/{self.workspace.info.workspace_id}/alerts'
-        headers = {'x-deepint-organization': self.workspace.organization_id}
-        parameters = {
-            'name': name,
-            'description': description,
-            'subscriptions': subscriptions,
-            'color': color,
-            'type': alert_type.name,
-            'source': source_id,
-            'condition': condition,
-            'time_stall': time_stall
-        }
-        response = handle_request(method='POST', path=path, headers=headers,
-                                  credentials=self.workspace.credentials, parameters=parameters)
-
-        # map results
-        new_alert = Alert.build(organization_id=self.workspace.organization_id, workspace_id=self.workspace.info.workspace_id,
-                                credentials=self.workspace.credentials, alert_id=response['alert_id'])
-
-        # update local state
-        self._alerts = self._alerts if self._alerts is not None else []
-        self._alerts.append(new_alert)
-
-        return new_alert
+        raise DeepintAlertsRemovedError(operation='workspace.alerts.create()',
+                                        replacement="workspace.automations.create(name=..., trigger={'type': 'source_updated', 'source': source_id}, condition=...)")
 
     def fetch(self, alert_id: str = None, name: str = None, force_reload: bool = False) -> Optional[Alert]:
-        """Search for a alert in the workspace.
+        """Raises :obj:`deepint.error.DeepintAlertsRemovedError`. Use ``workspace.automations.fetch(automation_id=..., name=...)``.
 
-        The first time is invoked, buidls a generator to retrieve alerts directly from AIR-Core API. However,
-        if there is stored alerts and the force_reload option is not specified, only iterates in local
-        alerts. In other case, it request the alerts to AIR-Core API and iterates over it.
-
-        Note: if no name or id is provided, the returned value is None.
-
-        Args:
-            alert_id: alert's id to search by.
-            name: alert's name to search by.
-            force_reload: if set to True, alerts are reloaded before the search with the
-                :obj:`deepint.core.workspace.WorkspaceAlerts.load` method.
-
-        Returns:
-            retrieved alert if found, and in other case None.
+        .. deprecated:: 2.0.0
         """
-
-        # if set to true reload
-        if force_reload or self._generator is None:
-            self.load()
-
-        # check parameters
-        if alert_id is None and name is None:
-            return None
-
-        # search by given attributes
-        if self._alerts is not None and not force_reload:
-            for a in self._alerts:
-                if a.info.alert_id == alert_id or a.info.name == name:
-                    return a
-
-        if self._generator is not None:
-            for a in self._generator:
-                if a.info.alert_id == alert_id or a.info.name == name:
-                    return a
-
-        return None
+        raise DeepintAlertsRemovedError(operation='workspace.alerts.fetch()',
+                                        replacement='workspace.automations.fetch(automation_id=alert_id, name=name)')
 
     def fetch_all(self, force_reload: bool = False) -> Generator[Alert, None, None]:
-        """Retrieves all workspace's alerts.
+        """Raises :obj:`deepint.error.DeepintAlertsRemovedError`. Use ``workspace.automations.fetch_all(kind='notice')``.
 
-        The first time is invoked, buidls a generator to retrieve alerts directly from AIR-Core API. However,
-        if there is stored alerts and the force_reload option is not specified, only iterates in local
-        alerts. In other case, it request the alerts to AIR-Core API and iterates over it.
+        .. deprecated:: 2.0.0
+        """
+        raise DeepintAlertsRemovedError(operation='workspace.alerts.fetch_all()',
+                                        replacement="workspace.automations.fetch_all(kind='notice')")
+
+
+class WorkspaceAutomations:
+    """Operates over the automations of a workspace: its simple notices and its flows (AIR-Core API v2).
+
+    A new automation is saved as a simple notice when it is exactly one and as a flow otherwise (see
+    :obj:`deepint.core.automation`); the answer says which and why (:obj:`deepint.core.automation.Automation.saved_as`).
+
+    Note: This class should not be instanced, and only be used within a :obj:`deepint.core.workspace.Workspace`
+    (``workspace.automations``).
+
+    Attributes:
+        workspace: the workspace with which to operate with its automations.
+    """
+
+    def __init__(self, workspace: 'Workspace', automations: List[Automation] = None):
+
+        if automations is not None and not isinstance(automations, list):
+            raise ValueError(f'automations must be a list of {Automation.__class__}')
+
+        if automations is not None:
+            for a in automations:
+                if a is not None and not isinstance(a, Automation):
+                    raise ValueError(f'automations must be a list of {Automation.__class__}')
+
+        self.workspace = workspace
+        self._automations = automations
+
+    def _wrap(self, info: AutomationInfo) -> Automation:
+        return Automation(organization_id=self.workspace.organization_id, workspace_id=self.workspace.info.workspace_id,
+                          credentials=self.workspace.credentials, info=info)
+
+    def list(self, kind: Union[str, AutomationKind] = None) -> List[AutomationInfo]:
+        """Lists the automations of the workspace, by name, as read from the API (nothing is stored).
 
         Args:
-            force_reload: if set to True, alerts are reloaded before the search with the
-                :obj:`deepint.core.workspace.WorkspaceAlert.load` method.
-
-        Yields:
-            :obj:`deepint.core.workspace.Alert`: The next alert returned by deeepint.net API.
+            kind: ``'notice'`` or ``'flow'`` to list only the simple notices or only the flows.
 
         Returns:
-            the workspace's alerts.
+            the summary of each automation (id, kind, type of a notice, name, description, enabled, source, created,
+            last modified and, for a flow, the outcome of its last run). Read the trigger, condition and actions with
+            :obj:`deepint.core.workspace.WorkspaceAutomations.fetch` or :obj:`deepint.core.automation.Automation.load`.
         """
 
-        # if set to true reload
-        if force_reload or self._generator is None:
-            self.load()
+        return list_automations(self.workspace.organization_id, self.workspace.info.workspace_id,
+                                self.workspace.credentials, kind=kind)
 
-        if force_reload or self._alerts is None:
-            yield from self._generator
-        else:
-            yield from self._alerts
+    def load(self, kind: Union[str, AutomationKind] = None) -> None:
+        """Loads the automations of the workspace (their summaries), replacing the ones stored.
+
+        Args:
+            kind: ``'notice'`` or ``'flow'`` to load only one kind.
+        """
+
+        self._automations = [self._wrap(info) for info in self.list(kind=kind)]
+
+    def create(self, name: str, trigger: Dict[str, Any], condition: Dict[str, Any] = None,
+               actions: List[Dict[str, Any]] = None, description: str = None, enabled: bool = None,
+               model: str = None, retrain: str = None) -> Automation:
+        """Creates an automation in the workspace.
+
+        AIR-Core saves it as a simple notice when it is exactly one, and as a flow otherwise (see
+        :obj:`deepint.core.automation`). ``automation.saved_as`` says which and why, ``automation.webhook_secret``
+        has the signing secret of a new webhook (only now) and ``automation.warnings`` may have ``LIST_EMPTY``.
+
+        Example:
+            .. code-block:: python
+
+                # a simple notice: emails the notice list when a new row has temperature > 30
+                a = ws.automations.create(name='Hot', trigger={'type': 'source_updated', 'source': source_id},
+                                          condition={'kind': 'rules', 'match': 'all',
+                                                     'rules': [{'column': 'temperature', 'op': 'gt', 'value': 30}]})
+                # a simple notice: no new data for 6 hours
+                ws.automations.create(name='Silent', trigger={'type': 'stall', 'source': source_id, 'hours': 6})
+                # a flow: every 24 hours, predict with a model and write the rows to another source
+                ws.automations.create(name='Daily', trigger={'type': 'schedule', 'source': source_id, 'every_hours': 24},
+                                      model=model_id, actions=[{'type': 'append', 'target': target_id}])
+
+        Args:
+            name: name (up to 120 characters).
+            trigger: what starts it: ``{'type': 'source_updated', 'source': id}`` (new rows reach the source),
+                ``{'type': 'schedule', 'source': id, 'every_hours': n}`` (a flow) or
+                ``{'type': 'stall', 'source': id, 'hours': n}`` (no new data for n hours; a simple notice).
+            condition: when it acts: ``{'kind': 'all'}`` (default), ``{'kind': 'rules', 'match': 'all'|'any',
+                'rules': [{'column', 'op', 'value'}]}`` (op: eq, gt, gte, lt, lte, cn, cni, sw, ew, null) or
+                ``{'kind': 'alert', 'alert': id}``; ``min_rows``: rows that must meet it (1).
+            actions: what it does (up to 3): ``{'type': 'email', 'to': 'list'|'me'|'members', 'recipients': [...]}``,
+                ``{'type': 'webhook', 'url': 'https://...'}`` and ``{'type': 'append', 'target': source_id}``.
+                Without it, an email to the notice list of the workspace.
+            description: description (up to 300 characters).
+            enabled: False to create it off (that makes it a flow). On by default.
+            model: id of a model that predicts the new rows (a flow).
+            retrain: retraining of the model: ``'never'``, ``'if_due'`` or ``'always'`` (a flow).
+
+        Returns:
+            the created automation.
+        """
+
+        automation = create_automation(self.workspace.organization_id, self.workspace.info.workspace_id,
+                                       self.workspace.credentials, name=name, description=description, enabled=enabled,
+                                       trigger=trigger, model=model, retrain=retrain, condition=condition,
+                                       actions=actions)
+        if self._automations is not None:
+            self._automations.append(automation)
+        return automation
+
+    def fetch(self, automation_id: str = None, name: str = None, force_reload: bool = False) -> Optional[Automation]:
+        """Returns an automation of the workspace, read in full (trigger, condition and actions).
+
+        Args:
+            automation_id: automation's id (the id of a former alert is the id of its simple notice).
+            name: automation's name, used when no id is given.
+            force_reload: if True, the list of automations is read again before searching by name.
+
+        Returns:
+            the automation, or None if there is none with that name. An unknown id raises
+            :obj:`deepint.error.DeepintHTTPError` (``NOT_FOUND``).
+        """
+
+        if automation_id is None and name is None:
+            raise ValueError('You must specify either the automation_id or the name')
+
+        if automation_id is None:
+            if force_reload or self._automations is None:
+                self.load()
+            found = next((a for a in self._automations if a.info.name == name), None)
+            if found is None:
+                return None
+            automation_id = found.info.automation_id
+
+        automation = self._wrap(AutomationInfo(automation_id=automation_id, kind=None))
+        automation.load()
+        return automation
+
+    def fetch_all(self, kind: Union[str, AutomationKind] = None, force_reload: bool = False) -> Generator[Automation, None, None]:
+        """Iterates over the automations of the workspace (their summaries; :obj:`deepint.core.automation.Automation.load`
+        reads one in full).
+
+        Args:
+            kind: ``'notice'`` or ``'flow'`` to iterate over only one kind.
+            force_reload: if True, the automations are read again from the API.
+
+        Yields:
+            :obj:`deepint.core.automation.Automation`: the next automation.
+        """
+
+        if force_reload or self._automations is None:
+            self.load()
+        if isinstance(kind, AutomationKind):
+            kind = kind.name
+        for a in list(self._automations):
+            if kind is None or (a.info.kind is not None and a.info.kind.name == kind):
+                yield a
+
+    def _get(self, automation_id: str) -> Automation:
+        return self._wrap(AutomationInfo(automation_id=automation_id, kind=None))
+
+    def update(self, automation_id: str, **fields) -> Dict[str, Any]:
+        """Changes an automation; see :obj:`deepint.core.automation.Automation.update` for the arguments.
+
+        Returns:
+            the answer of the API (``kind``, ``saved_as``, ``automation``, ...).
+        """
+
+        return self._get(automation_id).update(**fields)
+
+    def delete(self, automation_id: str) -> Dict[str, Any]:
+        """Deletes an automation (see :obj:`deepint.core.automation.Automation.delete`)."""
+
+        response = self._get(automation_id).delete()
+        if self._automations is not None:
+            self._automations = [a for a in self._automations if a.info.automation_id != automation_id]
+        return response
+
+    def history(self, automation_id: str, page: int = None, limit: int = None) -> Dict[str, Any]:
+        """Reads the history of an automation (see :obj:`deepint.core.automation.Automation.history`)."""
+
+        return self._get(automation_id).history(page=page, limit=limit)
+
+    def test(self, automation_id: str) -> Dict[str, Any]:
+        """Tests an automation, with nothing sent or written (see :obj:`deepint.core.automation.Automation.test`)."""
+
+        return self._get(automation_id).test()
 
 
 class WorkspaceModels:
@@ -1509,9 +1588,9 @@ class WorkspaceModels:
                target_feature_name: str, configuration: dict = None, test_split_size: float = 0.3,
                shuffle_test_split: bool = False, initial_model_state: float = 0, hyper_parameters: dict = None,
                wait_for_model_creation: bool = True) -> Optional[Model]:
-        """Creates an alert in current workspace.
+        """Creates a model in current workspace.
 
-        Before creation, the alert is loaded and stored locally in the internal list of alerts in the current instance.
+        Before creation, the model is loaded and stored locally in the internal list of models in the current instance.
 
         Args:
             name: model's name.
@@ -1616,7 +1695,7 @@ class WorkspaceModels:
             return None
 
         # search by given attributes
-        if self._alerts is not None and not force_reload:
+        if self._models is not None and not force_reload:
             for m in self._models:
                 if m.info.model_id == model_id or m.info.name == name:
                     return m
@@ -1667,7 +1746,10 @@ class Workspace:
         info: :obj:`deepint.core.workspace.WorkspaceInfo` to operate with workspace's information.
         tasks: :obj:`deepint.core.workspace.WorkspaceTasks` to operate with workspace's tasks.
         models: :obj:`deepint.core.workspace.WorkspaceModels` to operate with workspace's models.
-        alerts: :obj:`deepint.core.workspace.WorkspaceAlerts` to operate with workspace's alerts.
+        automations: :obj:`deepint.core.workspace.WorkspaceAutomations` to operate with workspace's automations
+            (simple notices and flows).
+        alerts: deprecated, :obj:`deepint.core.workspace.WorkspaceAlerts`: every method raises
+            :obj:`deepint.error.DeepintAlertsRemovedError`; use ``automations``.
         sources: :obj:`deepint.core.workspace.WorkspaceSources` to operate with workspace's sources.
         dashboards: :obj:`deepint.core.workspace.WorkspaceDashboards` to operate with workspace's dashboards.
         visualizations: :obj:`deepint.core.workspace.WorkspaceVisualizations` to operate with workspace's visualizations.
@@ -1677,7 +1759,8 @@ class Workspace:
     """
 
     def __init__(self, organization_id: str, credentials: Credentials, info: WorkspaceInfo, sources: List[Source], models: List[Model],
-                 tasks: List[Task], alerts: List[Alert], visualizations: List[Visualization], dashboards: List[Dashboard], emails: List[Dict[str, str]]) -> None:
+                 tasks: List[Task], alerts: List[Alert], visualizations: List[Visualization], dashboards: List[Dashboard], emails: List[Dict[str, str]],
+                 automations: List[Automation] = None) -> None:
 
         if organization_id is not None and not isinstance(organization_id, str):
             raise ValueError('organization_id must be str')
@@ -1715,14 +1798,6 @@ class Workspace:
                 if t is not None and not isinstance(t, Task):
                     raise ValueError(f'tasks must be a list of {Task.__class__}')
 
-        if alerts is not None and not isinstance(alerts, list):
-            raise ValueError(f'alerts must be a list of {Alert.__class__}')
-
-        if alerts is not None:
-            for a in alerts:
-                if a is not None and not isinstance(a, Alert):
-                    raise ValueError(f'alerts must be a list of {Alert.__class__}')
-
         if visualizations is not None and not isinstance(visualizations, list):
             raise ValueError(
                 f'visualizations must be a list of {Visualization.__class__}')
@@ -1757,6 +1832,7 @@ class Workspace:
         self.tasks = WorkspaceTasks(self, tasks)
         self.models = WorkspaceModels(self, models)
         self.alerts = WorkspaceAlerts(self, alerts)
+        self.automations = WorkspaceAutomations(self, automations)
         self.sources = WorkspaceSources(self, sources)
         self.dashboards = WorkspaceDashboards(self, dashboards)
         self.visualizations = WorkspaceVisualizations(self, visualizations)
@@ -1798,7 +1874,7 @@ class Workspace:
         ws.load()
         ws.tasks.load()
         ws.models.load()
-        ws.alerts.load()
+        ws.automations.load()
         ws.sources.load()
         ws.dashboards.load()
         ws.visualizations.load()
@@ -1989,7 +2065,7 @@ class Workspace:
 
         return {"info": self.info.to_dict(), "tasks": [x.to_dict() for x in self.tasks.fetch_all()],
                 "models": [x.to_dict() for x in self.models.fetch_all()],
-                "alerts": [x.to_dict() for x in self.alerts.fetch_all()],
+                "automations": [x.to_dict() for x in self.automations.fetch_all()],
                 "sources": [x.to_dict() for x in self.sources.fetch_all()],
                 "dashboards": [x.to_dict() for x in self.dashboards.fetch_all()],
                 "visualizations": [x.to_dict() for x in self.visualizations.fetch_all()],
